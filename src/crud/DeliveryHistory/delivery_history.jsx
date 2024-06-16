@@ -162,7 +162,7 @@ const delivery_history = () => {
 function makeRow(SPAN, value, index) {
      return [
           SPAN(value.correction == 1, value.id),
-          SPAN(value.correction == 1, formatDateTime(value.created_at)),
+          SPAN(value.correction == 1, formatDateTime(value.updated_at)),
           SPAN(value.correction == 1, titleCase(value.courier_boy_id.name)),
           SPAN(value.correction == 1, titleCase(value.customer_id.name)),
           SPAN(value.correction == 1, value.customer_id.address),
@@ -178,7 +178,7 @@ function makeRow(SPAN, value, index) {
           SPAN(value.correction == 1, value.received_cylinder_quantity),
           <div key={index} className="flex flex-row items-center">
                <Link
-                    to="/edit_delivery_history"
+                    to="/admin/edit_delivery_history"
                     state={{
                          data: value,
                     }}

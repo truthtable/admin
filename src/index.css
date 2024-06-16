@@ -1,9 +1,41 @@
 * {
-  font-family: "Abril Fatface", cursive;
-  font-family: "Caprasimo", cursive;
-  font-family: "Montserrat", sans-serif;
+     font-family: "Abril Fatface", cursive;
+     font-family: "Caprasimo", cursive;
+     font-family: "Montserrat", sans-serif;
+}
+body {
+     background-color: #263043;
+}
+/* width */
+::-webkit-scrollbar {
+     width: 10px;
 }
 
+/* Track */
+::-webkit-scrollbar-track {
+     background: #263043;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+     background: #515969;
+     border-radius: 16px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+     background: #9e9ea4;
+}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+.mainBorder {
+     /* border-radius: 32px 0px 0px 0px;
+     -webkit-border-radius: 32px 0px 0px 0px;
+     -moz-border-radius: 32px 0px 0px 0px;
+     background-color: white; */
+     border-radius: 16px 0px 0px 0px;
+     -webkit-border-radius: 16px 0px 0px 0px;
+     -moz-border-radius: 16px 0px 0px 0px;
+     background-color: white;
+}

@@ -49,6 +49,7 @@ import {
      Button,
      Card,
      Chip,
+     CssVarsProvider,
      Input,
      LinearProgress,
      Modal,
@@ -103,255 +104,274 @@ function App() {
      }
 
      return (
-          <div>
-               {isLogoded ? (
-                    <BrowserRouter>
-                         <Box
-                              sx={{
+          <CssVarsProvider>
+               <Stack
+                    direction="row"
+                    justifyContent="flex-start"
+                    alignItems="center"
+                    spacing={1}
+                    sx={{ padding: "10px", backgroundColor: "#263043" }}
+               >
+                    <img src="vite.svg" style={{ height: "48px" }} alt="logo" />
+                    <Typography
+                         level="title-lg"
+                         sx={{ fontWeight: "bold", color: "#9e9ea4" }}
+                    >
+                         Shree Ram Distributer
+                    </Typography>
+               </Stack>
+               <div>
+                    {isLogoded ? (
+                         <BrowserRouter>
+                              <Box
+                                   sx={{
+                                        display: "flex",
+                                        flexDirection: "row",
+                                        alignItems: "flex-start",
+                                        justifyContent: "flex-start",
+                                        height: "100vh",
+                                   }}
+                              >
+                                   <Box
+                                        sx={{
+                                             height: "100vh",
+                                        }}
+                                   >
+                                        <Sidebar
+                                             openSidebarToggle={openSidebarToggle}
+                                             OpenSidebar={OpenSidebar}
+                                        />
+                                   </Box>
+                                   <Box
+                                        sx={{
+                                             flexGrow: 1,
+                                             height: "100vh",
+                                             display: "flex",
+                                        }}
+                                        className="mainBorder"
+
+                                   >
+                                        <Header OpenSidebar={OpenSidebar} />
+                                        <Routes>
+                                             <Route path="/admin/" Component={Home} />
+
+                                             {/* gas service */}
+                                             <Route
+                                                  path="/admin/insert"
+                                                  Component={insert}
+                                             />
+                                             <Route path="/admin/read" Component={read} />
+                                             <Route
+                                                  path="/admin/update"
+                                                  Component={update}
+                                             />
+
+                                             {/* delivery boy */}
+                                             <Route
+                                                  path="/admin/addDeliveryBoy"
+                                                  Component={addDeliveryBoy}
+                                             />
+                                             <Route
+                                                  path="/admin/readDeliveryBoy"
+                                                  Component={readDeliveryBoy}
+                                             />
+                                             <Route
+                                                  path="/admin/updateDeliveryBoy"
+                                                  Component={updateDeliveryBoy}
+                                             />
+
+                                             {/* wherehouse */}
+                                             <Route
+                                                  path="/admin/addWherehouse"
+                                                  Component={addWherehouse}
+                                             />
+                                             <Route
+                                                  path="/admin/readWherehouse"
+                                                  Component={readWherehouse}
+                                             />
+                                             <Route
+                                                  path="/admin/updateWherehouse"
+                                                  Component={updateWherehouse}
+                                             />
+
+                                             {/* //report */}
+                                             <Route
+                                                  path="/admin/InsertReport"
+                                                  Component={InsertReport}
+                                             />
+                                             <Route
+                                                  path="/admin/readReport"
+                                                  Component={readReport}
+                                             />
+                                             <Route
+                                                  path="/admin/readReport"
+                                                  Component={UpdateReport}
+                                             />
+                                             <Route
+                                                  path="/admin/PrintReport"
+                                                  Component={PrintReport}
+                                             />
+
+                                             {/* //delivery_history */}
+                                             <Route
+                                                  path="/admin/add_delivery_history"
+                                                  Component={add_delivery_history}
+                                             />
+                                             <Route
+                                                  path="/admin/delivery_history"
+                                                  Component={delivery_history}
+                                             />
+                                             <Route
+                                                  path="/admin/edit_delivery_history"
+                                                  Component={DeliveryEditForm}
+                                             />
+
+                                             {/* //Customers */}
+                                             <Route
+                                                  path="/admin/InsertCustomer"
+                                                  Component={InsertCustomer}
+                                             />
+                                             <Route
+                                                  path="/admin/ViewCustomer"
+                                                  Component={ViewCustomer}
+                                             />
+                                             <Route
+                                                  path="/admin/UpdateCustomer"
+                                                  Component={UpdateCustomer}
+                                             />
+
+                                             {/* //admin */}
+                                             <Route
+                                                  path="/admin/InsertAdmin"
+                                                  Component={InsertAdmin}
+                                             />
+                                             <Route
+                                                  path="/admin/ViewAdmin"
+                                                  Component={ViewAdmin}
+                                             />
+                                             <Route
+                                                  path="/admin/UpdateAdmin"
+                                                  Component={UpdateAdmin}
+                                             />
+                                        </Routes>
+                                   </Box>
+                              </Box>
+                         </BrowserRouter>
+                    ) : (
+                         <div
+                              style={{
+                                   justifyContent: "center",
                                    display: "flex",
-                                   flexDirection: "row",
-                                   alignItems: "flex-start",
-                                   justifyContent: "flex-start",
-                                   height: "100vh",
                               }}
                          >
-                              <Box
-                                   sx={{
-                                        height: "100vh",
-                                   }}
+                              <Card
+                                   orientation="vertical"
+                                   size="lg"
+                                   variant="outlined"
+                                   sx={{ mt: 10 }}
                               >
-                                   <Sidebar
-                                        openSidebarToggle={openSidebarToggle}
-                                        OpenSidebar={OpenSidebar}
-                                   />
-                              </Box>
-                              <Box
-                                   sx={{
-                                        flexGrow: 1,
-                                        height: "100vh",
-                                        display: "flex",
-                                   }}
-                              >
-                                   <Header OpenSidebar={OpenSidebar} />
-                                   <Routes>
-                                        <Route path="/admin" Component={Home} />
-
-                                        {/* gas service */}
-                                        <Route
-                                             path="/insert"
-                                             Component={insert}
-                                        />
-                                        <Route path="/read" Component={read} />
-                                        <Route
-                                             path="/update"
-                                             Component={update}
-                                        />
-
-                                        {/* delivery boy */}
-                                        <Route
-                                             path="/addDeliveryBoy"
-                                             Component={addDeliveryBoy}
-                                        />
-                                        <Route
-                                             path="/readDeliveryBoy"
-                                             Component={readDeliveryBoy}
-                                        />
-                                        <Route
-                                             path="/updateDeliveryBoy"
-                                             Component={updateDeliveryBoy}
-                                        />
-
-                                        {/* wherehouse */}
-                                        <Route
-                                             path="/addWherehouse"
-                                             Component={addWherehouse}
-                                        />
-                                        <Route
-                                             path="/readWherehouse"
-                                             Component={readWherehouse}
-                                        />
-                                        <Route
-                                             path="/updateWherehouse"
-                                             Component={updateWherehouse}
-                                        />
-
-                                        {/* //report */}
-                                        <Route
-                                             path="/InsertReport"
-                                             Component={InsertReport}
-                                        />
-                                        <Route
-                                             path="/readReport"
-                                             Component={readReport}
-                                        />
-                                        <Route
-                                             path="/readReport"
-                                             Component={UpdateReport}
-                                        />
-                                        <Route
-                                             path="/PrintReport"
-                                             Component={PrintReport}
-                                        />
-
-                                        {/* //delivery_history */}
-                                        <Route
-                                             path="/add_delivery_history"
-                                             Component={add_delivery_history}
-                                        />
-                                        <Route
-                                             path="/delivery_history"
-                                             Component={delivery_history}
-                                        />
-                                        <Route
-                                             path="/edit_delivery_history"
-                                             Component={DeliveryEditForm}
-                                        />
-
-                                        {/* //Customers */}
-                                        <Route
-                                             path="/InsertCustomer"
-                                             Component={InsertCustomer}
-                                        />
-                                        <Route
-                                             path="/ViewCustomer"
-                                             Component={ViewCustomer}
-                                        />
-                                        <Route
-                                             path="/UpdateCustomer"
-                                             Component={UpdateCustomer}
-                                        />
-
-                                        {/* //admin */}
-                                        <Route
-                                             path="/InsertAdmin"
-                                             Component={InsertAdmin}
-                                        />
-                                        <Route
-                                             path="/ViewAdmin"
-                                             Component={ViewAdmin}
-                                        />
-                                        <Route
-                                             path="/UpdateAdmin"
-                                             Component={UpdateAdmin}
-                                        />
-                                   </Routes>
-                              </Box>
-                         </Box>
-                    </BrowserRouter>
-               ) : (
-                    <div
-                         style={{
-                              justifyContent: "center",
-                              display: "flex",
-                         }}
-                    >
-                         <Card
-                              orientation="vertical"
-                              size="lg"
-                              variant="outlined"
-                              sx={{ mt: 10 }}
-                         >
-                              <Stack
-                                   direction="column"
-                                   justifyContent="center"
-                                   alignItems="stretch"
-                                   spacing={2}
-                              >
-                                   <Typography level="title-lg">
-                                        Admin Login
-                                   </Typography>
                                    <Stack
-                                        direction="row"
+                                        direction="column"
                                         justifyContent="center"
-                                        alignItems="center"
+                                        alignItems="stretch"
                                         spacing={2}
                                    >
-                                        <Chip
-                                             disabled={false}
+                                        <Typography level="title-lg">
+                                             Admin Login
+                                        </Typography>
+                                        <Stack
+                                             direction="row"
+                                             justifyContent="center"
+                                             alignItems="center"
+                                             spacing={2}
+                                        >
+                                             <Chip
+                                                  disabled={false}
+                                                  size="lg"
+                                                  variant="soft"
+                                             >
+                                                  USER NAME :
+                                             </Chip>
+                                             <Input
+                                                  placeholder="User Name"
+                                                  size="lg"
+                                                  variant="soft"
+                                                  onChange={(event) => {
+                                                       username = event.target.value;
+                                                  }}
+                                             />
+                                        </Stack>
+                                        <Stack
+                                             direction="row"
+                                             justifyContent="center"
+                                             alignItems="center"
+                                             spacing={2}
+                                        >
+                                             <Chip
+                                                  disabled={false}
+                                                  size="lg"
+                                                  variant="soft"
+                                             >
+                                                  PASSWORD :
+                                             </Chip>
+                                             <Input
+                                                  placeholder="Password"
+                                                  size="lg"
+                                                  variant="soft"
+                                                  onChange={(event) => {
+                                                       password = event.target.value;
+                                                  }}
+                                             />
+                                        </Stack>
+                                        <LinearProgress
+                                             sx={{
+                                                  display:
+                                                       loginData.isLoading ||
+                                                            checkLoginData.isLoading
+                                                            ? "block"
+                                                            : "none",
+                                             }}
+                                             color="primary"
+                                             variant="soft"
+                                        />
+                                        <Button
+                                             color="primary"
+                                             sx={{
+                                                  display:
+                                                       loginData.isLoading ||
+                                                            checkLoginData.isLoading
+                                                            ? "none"
+                                                            : "block",
+                                             }}
+                                             onClick={function () {
+                                                  if (
+                                                       username.trim() === "" ||
+                                                       password.trim() === ""
+                                                  ) {
+                                                       alert(
+                                                            "Please input username and password",
+                                                       );
+                                                  } else {
+                                                       dispatch(
+                                                            fetchLogin({
+                                                                 username,
+                                                                 password,
+                                                                 isLoadFromCookie: false,
+                                                            }),
+                                                       );
+                                                  }
+                                             }}
                                              size="lg"
                                              variant="soft"
                                         >
-                                             USER NAME :
-                                        </Chip>
-                                        <Input
-                                             placeholder="User Name"
-                                             size="lg"
-                                             variant="soft"
-                                             onChange={(event) => {
-                                                  username = event.target.value;
-                                             }}
-                                        />
+                                             LOGIN
+                                        </Button>
                                    </Stack>
-                                   <Stack
-                                        direction="row"
-                                        justifyContent="center"
-                                        alignItems="center"
-                                        spacing={2}
-                                   >
-                                        <Chip
-                                             disabled={false}
-                                             size="lg"
-                                             variant="soft"
-                                        >
-                                             PASSWORD :
-                                        </Chip>
-                                        <Input
-                                             placeholder="Password"
-                                             size="lg"
-                                             variant="soft"
-                                             onChange={(event) => {
-                                                  password = event.target.value;
-                                             }}
-                                        />
-                                   </Stack>
-                                   <LinearProgress
-                                        sx={{
-                                             display:
-                                                  loginData.isLoading ||
-                                                       checkLoginData.isLoading
-                                                       ? "block"
-                                                       : "none",
-                                        }}
-                                        color="primary"
-                                        variant="soft"
-                                   />
-                                   <Button
-                                        color="primary"
-                                        sx={{
-                                             display:
-                                                  loginData.isLoading ||
-                                                       checkLoginData.isLoading
-                                                       ? "none"
-                                                       : "block",
-                                        }}
-                                        onClick={function () {
-                                             if (
-                                                  username.trim() === "" ||
-                                                  password.trim() === ""
-                                             ) {
-                                                  alert(
-                                                       "Please input username and password",
-                                                  );
-                                             } else {
-                                                  dispatch(
-                                                       fetchLogin({
-                                                            username,
-                                                            password,
-                                                            isLoadFromCookie: false,
-                                                       }),
-                                                  );
-                                             }
-                                        }}
-                                        size="lg"
-                                        variant="soft"
-                                   >
-                                        LOGIN
-                                   </Button>
-                              </Stack>
-                         </Card>
-                    </div>
-               )}
-          </div>
+                              </Card>
+                         </div>
+                    )}
+               </div>
+          </CssVarsProvider>
      );
 }
 

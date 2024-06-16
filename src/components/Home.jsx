@@ -48,7 +48,7 @@ function Home() {
                     <h3>Admin Dashboard</h3>
                </div>
                <div className="main-cards">
-                    <Link to="/delivery_history" className="link shadow-lg">
+                    <Link to="/admin/delivery_history" className="link shadow-lg">
                          <div className="card-inner">
                               <h3>Delivery History</h3>
                               <BsBook className="card_icon" />
@@ -69,7 +69,7 @@ function Home() {
                          </div>
                     </Link>
 
-                    <Link to="/readWherehouse" className="link shadow-lg">
+                    <Link to="/admin/readWherehouse" className="link shadow-lg">
                          <div className="card-inner">
                               <h3>Wherehouse</h3>
                               <BsHouseCheck className="card_icon" />
@@ -90,7 +90,7 @@ function Home() {
                          </div>
                     </Link>
 
-                    <Link to="/read" className="link shadow-lg">
+                    <Link to="/admin/read" className="link shadow-lg">
                          <div className="card-inner">
                               <h3>Gas Cylinders </h3>
                               <BsFillArchiveFill className="card_icon" />
@@ -111,7 +111,7 @@ function Home() {
                          </div>
                     </Link>
 
-                    <Link to="/ViewCustomer" className="link shadow-lg">
+                    <Link to="/admin/ViewCustomer" className="link shadow-lg">
                          <div className="card-inner">
                               <h3>Customers</h3>
                               <BsFillGrid3X3GapFill className="card_icon" />
@@ -132,7 +132,7 @@ function Home() {
                          </div>
                     </Link>
 
-                    <Link to="/readDeliveryBoy" className="link shadow-lg">
+                    <Link to="/admin/readDeliveryBoy" className="link shadow-lg">
                          <div className="card-inner">
                               <h3>Delivery Boy</h3>
                               <BsPeopleFill className="card_icon" />
@@ -161,7 +161,7 @@ function Home() {
           <h1>42</h1>
         </Link> */}
 
-                    <Link to="/readReport" className="link shadow-lg">
+                    <Link to="/admin/readReport" className="link shadow-lg">
                          <div className="card-inner">
                               <h3>Report</h3>
                               <BsMenuButtonWideFill className="card_icon" />

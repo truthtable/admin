@@ -35,7 +35,7 @@ function Sidebar({ openSidebarToggle, OpenSidebar }) {
                id="sidebar"
                className={openSidebarToggle ? "sidebar-responsive" : ""}
           >
-               <div className="sidebar-title">
+               {/* <div className="sidebar-title">
                     <div className="sidebar-brand">
                          <GiGasStove className="icon_header" /> Shree Ram
                          Distributer
@@ -43,37 +43,37 @@ function Sidebar({ openSidebarToggle, OpenSidebar }) {
                     <span className="icon close_icon" onClick={OpenSidebar}>
                          X
                     </span>
-               </div>
+               </div> */}
 
                <ul className="sidebar-list">
-                    <Link to="">
+                    <Link to="/admin/">
                          <li className="sidebar-list-item">
                               <FcPieChart className="icon" /> Dashboard
                          </li>
                     </Link>
 
                     {/* NEW MENU */}
-                    <Link to="/delivery_history">
+                    <Link to="/admin/delivery_history">
                          <li className="sidebar-list-item">
                               <FcViewDetails className="icon" /> Deliveries
                          </li>
                     </Link>
-                    <Link to="/ViewCustomer">
+                    <Link to="/admin/ViewCustomer">
                          <li className="sidebar-list-item">
                               <FcContacts className="icon" /> Customers
                          </li>
                     </Link>
-                    <Link to="/readDeliveryBoy">
+                    <Link to="/admin/readDeliveryBoy">
                          <li className="sidebar-list-item">
                               <FcManager className="icon" /> Delivery Boys
                          </li>
                     </Link>
-                    <Link to="/readWherehouse">
+                    <Link to="/admin/readWherehouse">
                          <li className="sidebar-list-item">
                               <FcHome className="icon" /> Warehouse
                          </li>
                     </Link>
-                    <Link to="/read">
+                    <Link to="/admin/read">
                          <li className="sidebar-list-item">
                               <FcFullBattery className="icon" /> Gas Cylinders
                          </li>
@@ -89,54 +89,54 @@ function Sidebar({ openSidebarToggle, OpenSidebar }) {
                          </li>
                     </Link>
                     {/* NEW MENU */}
-
+                    {/* 
                     <Link to="addWherehouse">
                          <li className="sidebar-list-item">
                               <BsHouseCheck className="icon" /> Add Wherehouses
                          </li>
                     </Link>
 
-                    <Link to="/insert">
+                    <Link to="/admin/insert">
                          <li className="sidebar-list-item">
                               <BsFillArchiveFill className="icon" /> Add Gas
                               Cylinders
                          </li>
                     </Link>
 
-                    <Link to="/InsertCustomer">
+                    <Link to="/admin/InsertCustomer">
                          <li className="sidebar-list-item">
                               <BsFillGrid3X3GapFill className="icon" /> Add
                               Customers
                          </li>
                     </Link>
 
-                    <Link to="/addDeliveryBoy">
+                    <Link to="/admin/addDeliveryBoy">
                          <li className="sidebar-list-item">
                               <BsPeopleFill className="icon" /> Add Delivery
                               Boys
                          </li>
                     </Link>
 
-                    <Link to="/InsertAdmin">
+                    <Link to="/admin/InsertAdmin">
                          <li className="sidebar-list-item">
                               <BsFillPersonCheckFill className="icon" /> Add
                               Admins
                          </li>
                     </Link>
 
-                    <Link to="/add_delivery_history">
+                    <Link to="/admin/add_delivery_history">
                          <li className="sidebar-list-item">
                               <BsListCheck className="icon" /> Add Delivery
                               History
                          </li>
                     </Link>
 
-                    <Link to="/InsertReport">
+                    <Link to="/admin/InsertReport">
                          <li className="sidebar-list-item">
                               <BsMenuButtonWideFill className="icon" /> Add
                               Reports
                          </li>
-                    </Link>
+                    </Link> */}
 
                     <Link to="">
                          <li className="sidebar-list-item">
