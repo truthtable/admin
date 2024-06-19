@@ -8,6 +8,7 @@ import { TbLetterX } from "react-icons/tb";
 
 import { useDispatch, useSelector } from "react-redux";
 import { fetchDeliveryHistory } from "../../state/DeliveryAPI";
+import UpdateData from "../../components/edit/UpdateData";
 
 const delivery_history = () => {
      const dispatch = useDispatch();
@@ -28,9 +29,9 @@ const delivery_history = () => {
           "Gas kg",
           "Quantity",
           "Recived Amount",
-          "Recived Gas Company",
-          "Recived Gas kg",
-          "Recived Gas Quantity",
+          "Recived Company",
+          "Recived kg",
+          "Recived Quantity",
           "Mistake",
      ];
 
@@ -148,14 +149,7 @@ const delivery_history = () => {
 
      function SPAN(correction, value) {
           return (
-               <span
-                    style={{
-                         fontWeight: correction ? BOLD : NORMAL,
-                         color: correction ? RED : BLACK,
-                    }}
-               >
-                    {value}
-               </span>
+               <UpdateData text={value} />
           );
      }
 };
