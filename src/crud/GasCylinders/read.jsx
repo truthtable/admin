@@ -12,7 +12,9 @@ import {
 } from "react-icons/bs";
 import { URL } from "../../services/Api";
 import DataTable from "../../components/table/DataTable";
-import { Button } from "@mui/joy";
+import { Alert, Button } from "@mui/joy";
+import EditGasPrice from "../../components/edit/EditGasPrice";
+import { useSelector } from "react-redux";
 
 const GasList = () => {
      const [filter, setFilter] = useState({ company: "", weight: "" });
@@ -21,9 +23,14 @@ const GasList = () => {
 
      const [gasData, setGasData] = useState([]);
 
+     const response = useSelector((state) => state.updateGas);
+
      useEffect(() => {
           fechData();
      }, []);
+     if (response.isError) {
+          alert("Error updating gas price");
+     }
 
      async function fechData() {
           const api = URL + "api/gas_cylinder_data";
@@ -42,8 +49,7 @@ const GasList = () => {
                          value.id,
                          value.company_name,
                          value.kg + " kg",
-                         value.price + "₹",
-                         <Button>Edit</Button>,
+                         <EditGasPrice key={value.id} id={value.id} value={value.price} />,
                     ]);
                });
                setGasData(temp);
@@ -108,7 +114,7 @@ const GasList = () => {
                     </Button>
                </div>
                <DataTable
-                    thead={["Id", "Company Name", "Weight", "Price", "Edit"]}
+                    thead={["Id", "Company Name", "Weight", "Price",]}
                     tbody={gasData}
                     loading={loading}
                />
