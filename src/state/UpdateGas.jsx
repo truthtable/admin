@@ -54,7 +54,7 @@ const updateGasSlice = createSlice({
      },
 });
 export default updateGasSlice.reducer;
-function json_to_x_www_form_urlencoded(json) {
+export const json_to_x_www_form_urlencoded = (json) => {
      const data = Object.keys(json)
           .map(function (key) {
                return encodeURIComponent(key) + "=" + encodeURIComponent(json[key]);

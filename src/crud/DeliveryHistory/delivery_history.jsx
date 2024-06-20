@@ -8,7 +8,7 @@ import { TbLetterX } from "react-icons/tb";
 
 import { useDispatch, useSelector } from "react-redux";
 import { fetchDeliveryHistory } from "../../state/DeliveryAPI";
-import UpdateData from "../../components/edit/UpdateData";
+import { TEXT_INPUT, NUMBER_INPUT, CUSTOMER, UpdateData } from "../../components/edit/UpdateData";
 
 const delivery_history = () => {
      const dispatch = useDispatch();
@@ -147,29 +147,32 @@ const delivery_history = () => {
           </div>
      );
 
-     function SPAN(correction, value) {
+     function SPAN(correction, value, text, disabled = false, src = "", inputType = TEXT_INPUT, inputTitle = "", id) {
           return (
-               <UpdateData text={value} />
+               <UpdateData id={id} text={text} bool={correction} value={value} disabled={disabled} src={src} type={inputType} inputTitle={inputTitle} />
           );
      }
 };
 function makeRow(SPAN, value, index) {
+     const scr = makeRowSting(value)
      return [
-          SPAN(value.correction == 1, value.id),
-          SPAN(value.correction == 1, formatDateTime(value.updated_at)),
-          SPAN(value.correction == 1, titleCase(value.courier_boy_id.name)),
-          SPAN(value.correction == 1, titleCase(value.customer_id.name)),
-          SPAN(value.correction == 1, value.customer_id.address),
-          SPAN(value.correction == 1, titleCase(value.gas_id.company_name)),
-          SPAN(value.correction == 1, value.gas_id.kg + " KG"),
-          SPAN(value.correction == 1, value.quantity),
-          SPAN(value.correction == 1, value.received_amount + "₹"),
+          SPAN(value.correction == 1, value.id, value.id, true, "", value, value.id),
+          SPAN(value.correction == 1, value.updated_at, formatDateTime(value.updated_at), true, "", value.id),
+          SPAN(value.correction == 1, value.courier_boy_id.name, titleCase(value.courier_boy_id.name), true, "", value.id),
+          SPAN(value.correction == 1, value.customer_id.name, titleCase(value.customer_id.name), false, scr, CUSTOMER, "Customer Name", value.id),
+          SPAN(value.correction == 1, value.customer_id.address, value.customer_id.address, true, scr, TEXT_INPUT, "Address", value.id),
+          SPAN(value.correction == 1, value.gas_id.company_name, titleCase(value.gas_id.company_name), false, scr, TEXT_INPUT, "Gas Company", value.id),
+          SPAN(value.correction == 1, value.gas_id.kg, value.gas_id.kg + " KG", false, scr, NUMBER_INPUT, "Gas KG", value.id),
+          SPAN(value.correction == 1, value.quantity, value.quantity, false, scr, NUMBER_INPUT, "Quantity", value.id),
+          SPAN(value.correction == 1, value.received_amount, value.received_amount + "₹", false, scr, NUMBER_INPUT, "Received Amount", value.id),
           SPAN(
                value.correction == 1,
+               value.received_cylinder.company_name,
                titleCase(value.received_cylinder.company_name),
+               false, scr, value.id
           ),
-          SPAN(value.correction == 1, value.received_cylinder.kg + " KG"),
-          SPAN(value.correction == 1, value.received_cylinder_quantity),
+          SPAN(value.correction == 1, value.received_cylinder.kg, value.received_cylinder.kg + " KG", false, scr, value.id),
+          SPAN(value.correction == 1, value.received_cylinder_quantity, value.received_cylinder_quantity, false, scr, value.id),
           <div key={index} className="flex flex-row items-center">
                <Link
                     to="/admin/edit_delivery_history"
@@ -190,7 +193,21 @@ function makeRow(SPAN, value, index) {
           </div>,
      ];
 }
-
+function makeRowSting(value) {
+     var data = ""
+     data =
+          "/nCourier Boy : " + titleCase(value.courier_boy_id.name) +
+          "/nCustomer Name : " + titleCase(value.customer_id.name) +
+          "/nAddress : " + value.customer_id.address +
+          "/nGas : " + titleCase(value.gas_id.company_name) +
+          "/nKg : " + value.gas_id.kg +
+          "/nQuantity : " + value.quantity +
+          "/nAmount : " + value.received_amount +
+          "/nReceived Gas : " + titleCase(value.received_cylinder.company_name) +
+          "/nReceived Kg : " + value.received_cylinder.kg +
+          "/nReceived Quantit : " + value.received_cylinder_quantity
+     return data
+}
 function titleCase(str) {
      return str
           .toLowerCase()

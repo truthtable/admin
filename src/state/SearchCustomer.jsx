@@ -20,6 +20,7 @@ export const fetchCustomerData = createAsyncThunk(
                let res = await response.json();
                data = res.data;
                error = false;
+               //console.log(data);
           } catch (e) {
                console.warn(e);
                error = true;

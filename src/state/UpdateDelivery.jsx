@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { UPDATE_DELIVERY } from "../services/Api";
+import { json_to_x_www_form_urlencoded } from "./UpdateGas";
 
 export const updateDelivery = createAsyncThunk(
      "delivery/updateDelivery",
@@ -11,14 +12,13 @@ export const updateDelivery = createAsyncThunk(
                const response = await fetch(UPDATE_DELIVERY + data.id, {
                     method: "put",
                     headers: new Headers({
-                         "Content-Type": "application/json",
-                         "ngrok-skip-browser-warning": "69420",
+                         "Content-Type": "application/x-www-form-urlencoded",
                     }),
-                    body: JSON.stringify(data.data),
+                    body: json_to_x_www_form_urlencoded(data.data),
                });
                const result = await response.json();
                isSuccessful = result.isSuccessful;
-               //console.log(result);
+               console.log(result);
                error = false;
           } catch (e) {
                console.warn(e);
