@@ -11,11 +11,17 @@ import UpdateGasReducer from "./UpdateGas";
 export const store = configureStore({
      reducer: {
           login: loginReducer,
+
           checkLogin: checkLoginReducer,
+
           delivery: deliveryReducer,
+
           count: countReducer,
+
           gas: gasReducer,
+
           search_customer: customerSearhReducer,
+
           updateDeliveryData: UpdateDeliveryReducer,
           updateGas: UpdateGasReducer,
      },

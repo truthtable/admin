@@ -8,7 +8,8 @@ import { TbLetterX } from "react-icons/tb";
 
 import { useDispatch, useSelector } from "react-redux";
 import { fetchDeliveryHistory } from "../../state/DeliveryAPI";
-import { TEXT_INPUT, NUMBER_INPUT, CUSTOMER, UpdateDeliveryCell as UpdateData } from "../../components/edit/UpdateDeliveryCell";
+import { fetchGasData } from "../../state/GasList";
+import { TEXT_INPUT, NUMBER_INPUT, CUSTOMER, UpdateDeliveryCell as UpdateData, GAS, RECEVIED_GAS, GAS_QUANTITY, RECEVIED_GAS_QUANTITY } from "../../components/edit/UpdateDeliveryCell";
 
 const delivery_history = () => {
      const dispatch = useDispatch();
@@ -28,11 +29,11 @@ const delivery_history = () => {
           "Gas Company",
           "Gas kg",
           "Quantity",
-          "Recived Amount",
           "Recived Company",
           "Recived kg",
           "Recived Quantity",
-          "Mistake",
+          "Recived Amount",
+          // "Mistake",
      ];
 
      let show = false;
@@ -63,6 +64,7 @@ const delivery_history = () => {
      useEffect(() => {
           gasDataService.listenDataChange(() => {
                dispatch(fetchDeliveryHistory());
+               dispatch(fetchGasData());
           });
      }, []);
 
@@ -90,6 +92,10 @@ const delivery_history = () => {
           setSnackbarError(deliveryData.errorMessage);
      }
 
+     const updateDeliveryData = useSelector((state) => state.updateDeliveryData);
+     if (updateDeliveryData.isSuccessful) {
+          dispatch(fetchDeliveryHistory());
+     }
      return (
           <div className="table-container">
                <Snackbar
@@ -161,36 +167,31 @@ function makeRow(SPAN, value, index) {
           SPAN(value.correction == 1, value.courier_boy_id.name, titleCase(value.courier_boy_id.name), true, "", value.id),
           SPAN(value.correction == 1, value.customer_id.name, titleCase(value.customer_id.name), false, scr, CUSTOMER, "Customer Name", value.id),
           SPAN(value.correction == 1, value.customer_id.address, value.customer_id.address, true, scr, TEXT_INPUT, "Address", value.id),
-          SPAN(value.correction == 1, value.gas_id.company_name, titleCase(value.gas_id.company_name), false, scr, TEXT_INPUT, "Gas Company", value.id),
-          SPAN(value.correction == 1, value.gas_id.kg, value.gas_id.kg + " KG", false, scr, NUMBER_INPUT, "Gas KG", value.id),
-          SPAN(value.correction == 1, value.quantity, value.quantity, false, scr, NUMBER_INPUT, "Quantity", value.id),
+          SPAN(value.correction == 1, value.gas_id.company_name, titleCase(value.gas_id.company_name), false, scr, GAS, "Gas", value.id,),
+          SPAN(value.correction == 1, value.gas_id.kg, value.gas_id.kg + " KG", false, scr, GAS, "Gas", value.id),
+          SPAN(value.correction == 1, value.quantity, value.quantity, false, scr, GAS_QUANTITY, "Quantity", value.id),
+          SPAN(value.correction == 1, value.received_cylinder.company_name, titleCase(value.received_cylinder.company_name), false, scr, RECEVIED_GAS, "Recevid Gas", value.id),
+          SPAN(value.correction == 1, value.received_cylinder.kg, value.received_cylinder.kg + " KG", false, scr, RECEVIED_GAS, "Recevid Gas", value.id),
+          SPAN(value.correction == 1, value.received_cylinder_quantity, value.received_cylinder_quantity, false, scr, RECEVIED_GAS_QUANTITY, "Recevid Quantity", value.id),
+          // <div key={index} className="flex flex-row items-center">
+          //      <Link
+          //           to="/admin/edit_delivery_history"
+          //           state={{
+          //                data: value,
+          //           }}
+          //      >
+          //           <button
+          //                style={{
+          //                     backgroundColor: "#114232",
+          //                     border: "1px solid black",
+          //                }}
+          //                className="px-4 py-2 text-white rounded-lg"
+          //           >
+          //                Edit
+          //           </button>
+          //      </Link>
+          // </div>,
           SPAN(value.correction == 1, value.received_amount, value.received_amount + "₹", false, scr, NUMBER_INPUT, "Received Amount", value.id),
-          SPAN(
-               value.correction == 1,
-               value.received_cylinder.company_name,
-               titleCase(value.received_cylinder.company_name),
-               false, scr, value.id
-          ),
-          SPAN(value.correction == 1, value.received_cylinder.kg, value.received_cylinder.kg + " KG", false, scr, value.id),
-          SPAN(value.correction == 1, value.received_cylinder_quantity, value.received_cylinder_quantity, false, scr, value.id),
-          <div key={index} className="flex flex-row items-center">
-               <Link
-                    to="/admin/edit_delivery_history"
-                    state={{
-                         data: value,
-                    }}
-               >
-                    <button
-                         style={{
-                              backgroundColor: "#114232",
-                              border: "1px solid black",
-                         }}
-                         className="px-4 py-2 text-white rounded-lg"
-                    >
-                         Edit
-                    </button>
-               </Link>
-          </div>,
      ];
 }
 function makeRowSting(value) {
@@ -200,12 +201,12 @@ function makeRowSting(value) {
           "/nCustomer Name : " + titleCase(value.customer_id.name) +
           "/nAddress : " + value.customer_id.address +
           "/nGas : " + titleCase(value.gas_id.company_name) +
-          "/nKg : " + value.gas_id.kg +
-          "/nQuantity : " + value.quantity +
-          "/nAmount : " + value.received_amount +
+          " - " + value.gas_id.kg + "Kg" +
+          " - Qty : " + value.quantity +
           "/nReceived Gas : " + titleCase(value.received_cylinder.company_name) +
-          "/nReceived Kg : " + value.received_cylinder.kg +
-          "/nReceived Quantit : " + value.received_cylinder_quantity
+          " - " + value.received_cylinder.kg + "Kg" +
+          " - Qty : " + value.received_cylinder_quantity +
+          "/nAmount : " + value.received_amount + "₹"
      return data
 }
 function titleCase(str) {
