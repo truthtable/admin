@@ -7,6 +7,11 @@ export const fetchCustomerData = createAsyncThunk(
           let error = true;
           let data = [];
           let errorMessage = "";
+          //reset if empty ot " " use trim
+          if (search.trim() === "") {
+               error = false;
+               return { data, error, errorMessage };
+          }
           try {
                const response = await fetch(
                     SEARCH_CUSTOMER + "?name=" + search,

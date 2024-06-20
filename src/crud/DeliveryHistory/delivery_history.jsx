@@ -8,7 +8,7 @@ import { TbLetterX } from "react-icons/tb";
 
 import { useDispatch, useSelector } from "react-redux";
 import { fetchDeliveryHistory } from "../../state/DeliveryAPI";
-import { TEXT_INPUT, NUMBER_INPUT, CUSTOMER, UpdateData } from "../../components/edit/UpdateData";
+import { TEXT_INPUT, NUMBER_INPUT, CUSTOMER, UpdateDeliveryCell as UpdateData } from "../../components/edit/UpdateDeliveryCell";
 
 const delivery_history = () => {
      const dispatch = useDispatch();

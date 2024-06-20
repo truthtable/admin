@@ -8,6 +8,12 @@ export const updateDelivery = createAsyncThunk(
           let isSuccessful = false;
           let error = true;
           let errorMessage = "";
+
+          if (data.reset) {
+               error = false;
+               return { isSuccessful, error, errorMessage };
+          }
+
           try {
                const response = await fetch(UPDATE_DELIVERY + data.id, {
                     method: "put",
@@ -28,7 +34,6 @@ export const updateDelivery = createAsyncThunk(
           return { isSuccessful, error, errorMessage };
      },
 );
-
 const updateDeliverySlice = createSlice({
      name: "updateDelivery",
      initialState: {

@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchGasData } from "../../state/GasList";
 import { fetchCustomerData } from "../../state/SearchCustomer";
 import { updateDelivery } from "../../state/UpdateDelivery";
+import { fetchDeliveryHistory } from "../../state/DeliveryAPI";
 import React from "react";
 import { json_to_x_www_form_urlencoded } from "../../state/UpdateGas";
 
@@ -20,7 +21,7 @@ export const MULTIPLE_CHOICE = 3;
 
 export const CUSTOMER = 4;
 
-export const UpdateData = (props) => {
+export const UpdateDeliveryCell = (props) => {
      const dispatch = useDispatch();
      const { text, value, bool, disabled, src, inputTitle, type, id } = props;
      const [open, setOpen] = React.useState(false);
@@ -29,6 +30,7 @@ export const UpdateData = (props) => {
           return <p key={idx}>{item}</p>;
      });
 
+     //CUSTOMER
      const searchCustomerData = useSelector((state) => state.search_customer);
      let customer_search_input = value;
      const handleSearchCustomer = () => {
@@ -42,8 +44,19 @@ export const UpdateData = (props) => {
           }));
      }
      const updateDeliveryData = useSelector((state) => state.updateDeliveryData);
-     if (open) { console.log(updateDeliveryData); }
-
+     if (open) {
+          if (updateDeliveryData.isSuccessful) {
+               setOpen(false);
+               dispatch(
+                    updateDelivery({
+                         reset: true,
+                    }),
+                    fetchDeliveryHistory(),
+                    fetchCustomerData("")
+               )
+          }
+     }
+     //GAS
      return (
           <>
                <Box
@@ -104,6 +117,7 @@ export const UpdateData = (props) => {
                          }}
                     >
                          <ModalClose variant="plain" sx={{ m: 1 }} />
+
                          <Typography
                               component="h2"
                               id="modal-title"
@@ -123,6 +137,12 @@ export const UpdateData = (props) => {
                          >
                               {inputTitle}
                          </Typography>
+                         <LinearProgress
+                              sx={{
+                                   display: (searchCustomerData.isLoading || updateDeliveryData.isLoading) ? "block" : "none",
+                                   marginTop: "10px",
+                              }}
+                         />
                          {type === CUSTOMER && (
                               <Input
                                    placeholder={text}
@@ -156,7 +176,7 @@ export const UpdateData = (props) => {
                                                        }
                                                        variant="soft"
                                                        onClick={() => {
-                                                            handleUpdate({ customer_id: item.id });
+                                                            handleUpdate({ customer_id: item.id, correction: 0 });
                                                        }}
                                                   >
                                                        <ListItemContent>
@@ -180,12 +200,7 @@ export const UpdateData = (props) => {
                                    </Box>
                               ),
                          )}</div>}
-                         <LinearProgress
-                              sx={{
-                                   display: (searchCustomerData.isLoading) ? "block" : "none",
-                                   marginTop: "10px",
-                              }}
-                         />
+
                          <div
                               style={{
                                    display: "flex",
@@ -195,14 +210,10 @@ export const UpdateData = (props) => {
                          >
                               <Button
                                    onClick={() => {
-                                        setLoading(true);
-                                        setTimeout(() => {
-                                             setLoading(false);
-                                             setOpen(false);
-                                        }, 2000);
+
                                    }}
                               >
-                                   Save
+                                   Back
                               </Button>
                          </div>
                     </Sheet>
