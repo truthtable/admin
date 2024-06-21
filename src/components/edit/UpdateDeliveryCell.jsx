@@ -24,6 +24,8 @@ export const GAS = 5;
 export const RECEVIED_GAS = 6;
 export const GAS_QUANTITY = 7;
 export const RECEVIED_GAS_QUANTITY = 8;
+export const AMOUNT = 9;
+export const CLEAR_MISTAKE = 10;
 
 export const UpdateDeliveryCell = (props) => {
      const dispatch = useDispatch();
@@ -126,7 +128,20 @@ export const UpdateDeliveryCell = (props) => {
                })
           );
      }
-     let gas_quantity = value
+
+
+     let gas_value = value
+
+     let backgroundColor = "transparent";
+     if (bool) {
+          backgroundColor = "#ff00007d";
+     }
+
+     let hoverColor = "rgb(75 112 245 / 25%)";
+     if (disabled) {
+          hoverColor = backgroundColor;
+     }
+
      return (
           <>
                <Box
@@ -134,10 +149,10 @@ export const UpdateDeliveryCell = (props) => {
                          //hover
                          padding: "0px",
                          // mx: "2px",
-                         backgroundColor: bool ? "#ff00007d" : "transparent",
+                         backgroundColor: backgroundColor,
                          transition: "background-color 0.3s",
                          "&:hover": {
-                              backgroundColor: "rgb(75 112 245 / 25%)",
+                              backgroundColor: hoverColor,
                          },
                     }}
                >
@@ -298,7 +313,12 @@ export const UpdateDeliveryCell = (props) => {
                                    </Button>
                               ))}
                          </Stack>}
-                         {type === RECEVIED_GAS && <Stack>
+                         {type === RECEVIED_GAS && <Stack
+                              direction="column"
+                              justifyContent="center"
+                              alignItems="stretch"
+                              spacing={1}
+                         >
                               {
                                    gasData.data.data.map((item, index) => (
                                         <Button
@@ -316,37 +336,79 @@ export const UpdateDeliveryCell = (props) => {
                          }
                          {type === GAS_QUANTITY && <Stack>
                               <Input
-                                   placeholder={gas_quantity}
-                                   defaultValue={gas_quantity}
+
+                                   defaultValue={gas_value}
                                    fullWidth
+                                   type="number"
                                    sx={{ my: 2 }}
                                    onChange={(e) => {
-                                        gas_quantity = e.target.value;
+                                        gas_value = e.target.value;
                                    }}
                               />
                               <Button
                                    onClick={() => {
-                                        handleUpdate({ quantity: gas_quantity });
+                                        handleUpdate({ quantity: gas_value });
                                    }}
                               >Save</Button>
                          </Stack>
                          }
+                         {
+                              type === AMOUNT && <Stack>
+                                   <Input
+
+                                        defaultValue={gas_value}
+                                        fullWidth
+                                        type="number"
+                                        sx={{ my: 2 }}
+                                        onChange={(e) => {
+                                             gas_value = e.target.value;
+                                        }}
+                                   />
+                                   <Button
+                                        onClick={() => {
+                                             handleUpdate({ received_amount: gas_value });
+                                        }}
+                                   >Save</Button>
+                              </Stack>
+                         }
                          {type === RECEVIED_GAS_QUANTITY && <Stack>
                               <Input
-                                   placeholder={gas_quantity}
-                                   defaultValue={gas_quantity}
+
+                                   defaultValue={gas_value}
                                    fullWidth
+                                   type="number"
                                    sx={{ my: 2 }}
                                    onChange={(e) => {
-                                        gas_quantity = e.target.value;
+                                        gas_value = e.target.value;
                                    }}
                               />
                               <Button
+                                   sx={{
+                                        mt: 2
+                                   }}
                                    onClick={() => {
-                                        handleUpdate({ received_cylinder_quantity: gas_quantity });
+                                        handleUpdate({ received_amount: gas_value });
                                    }}
                               >Save</Button>
                          </Stack>
+                         }
+                         {
+                              (type === CLEAR_MISTAKE && bool) && <Stack>
+                                   <Button
+                                        onClick={() => {
+                                             handleUpdate({ correction: 0 });
+                                        }}
+                                   >Clear Mistake</Button>
+                              </Stack>
+                         }
+                         {
+                              (type === CLEAR_MISTAKE && !bool) && <Stack>
+                                   <Button
+                                        onClick={() => {
+                                             handleUpdate({ correction: 1 });
+                                        }}
+                                   >Mark Mistake</Button>
+                              </Stack>
                          }
                          <div
                               style={{
@@ -356,6 +418,7 @@ export const UpdateDeliveryCell = (props) => {
                               }}
                          >
                               <Button
+
                                    variant="soft"
                                    onClick={() => {
                                         setOpen(false);

@@ -7,6 +7,7 @@ import gasReducer from "./GasList";
 import customerSearhReducer from "./SearchCustomer";
 import UpdateDeliveryReducer from "./UpdateDelivery";
 import UpdateGasReducer from "./UpdateGas";
+import customerReducer from "./Customers";
 
 export const store = configureStore({
      reducer: {
@@ -21,6 +22,8 @@ export const store = configureStore({
           gas: gasReducer,
 
           search_customer: customerSearhReducer,
+
+          customers: customerReducer,
 
           updateDeliveryData: UpdateDeliveryReducer,
           updateGas: UpdateGasReducer,

@@ -20,8 +20,12 @@ export default function DataTable(props) {
                               {thead.map((value, index) => (
                                    <th
                                         key={index}
-                                   // scope="col"
-                                   // className="px-2 py-1"
+                                        // scope="col"
+                                        // className="px-2 py-1"
+                                        style={{
+                                             padding: "0px",
+                                             margin: "0px",
+                                        }}
                                    >
                                         {value}
                                    </th>

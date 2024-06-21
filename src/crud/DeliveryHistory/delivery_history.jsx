@@ -3,13 +3,13 @@ import { Link } from "react-router-dom";
 import "../crud-css/read.css";
 import gasDataService from "../../services/gas-services";
 import DataTable from "../../components/table/DataTable";
-import { Button, Chip, Snackbar, Tab, TabList, TabPanel, Tabs } from "@mui/joy";
+import { Box, Button, Chip, Snackbar, Stack, Tab, TabList, TabPanel, Tabs } from "@mui/joy";
 import { TbLetterX } from "react-icons/tb";
 
 import { useDispatch, useSelector } from "react-redux";
 import { fetchDeliveryHistory } from "../../state/DeliveryAPI";
 import { fetchGasData } from "../../state/GasList";
-import { TEXT_INPUT, NUMBER_INPUT, CUSTOMER, UpdateDeliveryCell as UpdateData, GAS, RECEVIED_GAS, GAS_QUANTITY, RECEVIED_GAS_QUANTITY } from "../../components/edit/UpdateDeliveryCell";
+import { TEXT_INPUT, NUMBER_INPUT, CUSTOMER, UpdateDeliveryCell as UpdateData, GAS, RECEVIED_GAS, GAS_QUANTITY, RECEVIED_GAS_QUANTITY, AMOUNT, CLEAR_MISTAKE } from "../../components/edit/UpdateDeliveryCell";
 
 const delivery_history = () => {
      const dispatch = useDispatch();
@@ -20,20 +20,102 @@ const delivery_history = () => {
      const RED = "red";
      const BLACK = "black";
 
+     const makeHead = (text) => {
+          return (<Box
+               sx={{
+                    padding: "0px",
+                    margin: "0px",
+                    backgroundColor: "transparent",
+                    mx: "8px",
+               }}>
+               <Button
+                    style={{
+                         flexGrow: 1,
+                         width: "100%",
+                         height: "100%",
+                         margin: "0px",
+                         padding: "0px",
+                         borderRadius: "0px",
+                         color: "black",
+                         backgroundColor: "transparent",
+                         whiteSpace: "nowrap",
+                         disabled: true
+                    }}
+               >
+                    {text}
+               </Button>
+          </Box>)
+     }
+
      const colomnNames = [
-          "ID",
-          "Date & Time",
-          "Courier Boy Name",
-          "Customer Name",
-          "Address",
-          "Gas Company",
-          "Gas kg",
-          "Quantity",
-          "Recived Company",
-          "Recived kg",
-          "Recived Quantity",
-          "Recived Amount",
-          // "Mistake",
+          <Box
+               key="created_at"
+               sx={{
+                    padding: "0px",
+                    margin: "0px",
+                    backgroundColor: "transparent",
+                    transition: "background-color 0.3s",
+                    "&:hover": {
+                         backgroundColor: "rgb(75 112 245 / 25%)",
+                    },
+               }}
+          >
+               <Button
+                    style={{
+                         flexGrow: 1,
+                         width: "100%",
+                         height: "100%",
+                         margin: "0px",
+                         padding: "0px",
+                         borderRadius: "0px",
+                         color: "black",
+                         backgroundColor: "transparent",
+                         whiteSpace: "nowrap",
+                    }}
+               >
+                    Entry
+               </Button>
+          </Box>,
+          <Box
+               key="updated_at"
+               sx={{
+                    padding: "0px",
+                    margin: "0px",
+                    backgroundColor: "transparent",
+                    transition: "background-color 0.3s",
+                    "&:hover": {
+                         backgroundColor: "rgb(75 112 245 / 25%)",
+                    },
+               }}
+          >
+               <Button
+
+                    style={{
+                         flexGrow: 1,
+                         width: "100%",
+                         height: "100%",
+                         margin: "0px",
+                         padding: "0px",
+                         borderRadius: "0px",
+                         color: "black",
+                         backgroundColor: "transparent",
+                         whiteSpace: "nowrap",
+                    }}
+               >
+                    Update
+               </Button>
+          </Box>,
+          makeHead("Delivery Boy"),
+          makeHead("Customer"),
+          makeHead("Address"),
+          makeHead("Gas"),
+          makeHead("kg"),
+          makeHead("Quantity"),
+          makeHead("Recived Gas"),
+          makeHead("Recived kg"),
+          makeHead("Recived Qty"),
+          makeHead("Amount"),
+          makeHead("Correction"),
      ];
 
      let show = false;
@@ -68,7 +150,7 @@ const delivery_history = () => {
           });
      }, []);
 
-     gasDataService.notifyDataChange();
+     //gasDataService.notifyDataChange();
 
      if (
           !deliveryData.isError &&
@@ -97,7 +179,8 @@ const delivery_history = () => {
           dispatch(fetchDeliveryHistory());
      }
      return (
-          <div className="table-container">
+          <div style={{ width: "100%" }}>
+
                <Snackbar
                     open={show}
                     onClose={() => {
@@ -162,7 +245,7 @@ const delivery_history = () => {
 function makeRow(SPAN, value, index) {
      const scr = makeRowSting(value)
      return [
-          SPAN(value.correction == 1, value.id, value.id, true, "", value, value.id),
+          SPAN(value.correction == 1, value.created_at, formatDateTime(value.created_at), true, "", value.id),
           SPAN(value.correction == 1, value.updated_at, formatDateTime(value.updated_at), true, "", value.id),
           SPAN(value.correction == 1, value.courier_boy_id.name, titleCase(value.courier_boy_id.name), true, "", value.id),
           SPAN(value.correction == 1, value.customer_id.name, titleCase(value.customer_id.name), false, scr, CUSTOMER, "Customer Name", value.id),
@@ -173,25 +256,8 @@ function makeRow(SPAN, value, index) {
           SPAN(value.correction == 1, value.received_cylinder.company_name, titleCase(value.received_cylinder.company_name), false, scr, RECEVIED_GAS, "Recevid Gas", value.id),
           SPAN(value.correction == 1, value.received_cylinder.kg, value.received_cylinder.kg + " KG", false, scr, RECEVIED_GAS, "Recevid Gas", value.id),
           SPAN(value.correction == 1, value.received_cylinder_quantity, value.received_cylinder_quantity, false, scr, RECEVIED_GAS_QUANTITY, "Recevid Quantity", value.id),
-          // <div key={index} className="flex flex-row items-center">
-          //      <Link
-          //           to="/admin/edit_delivery_history"
-          //           state={{
-          //                data: value,
-          //           }}
-          //      >
-          //           <button
-          //                style={{
-          //                     backgroundColor: "#114232",
-          //                     border: "1px solid black",
-          //                }}
-          //                className="px-4 py-2 text-white rounded-lg"
-          //           >
-          //                Edit
-          //           </button>
-          //      </Link>
-          // </div>,
-          SPAN(value.correction == 1, value.received_amount, value.received_amount + "₹", false, scr, NUMBER_INPUT, "Received Amount", value.id),
+          SPAN(value.correction == 1, value.received_amount, value.received_amount + "₹", false, scr, AMOUNT, "Received Amount", value.id),
+          SPAN(value.correction == 1, value.correction, value.correction == 1 ? "Yes" : "No", false, scr, CLEAR_MISTAKE, "Correction", value.id),
      ];
 }
 function makeRowSting(value) {
@@ -219,15 +285,19 @@ function titleCase(str) {
           .join(" ");
 }
 function formatDateTime(dateString) {
-     const date = new Date(dateString);
-     const day = date.getDate().toString().padStart(2, "0");
-     const month = (date.getMonth() + 1).toString().padStart(2, "0"); // Month is zero-indexed
-     const year = date.getFullYear().toString();
-     const hours = date.getHours().toString().padStart(2, "0");
-     const minutes = date.getMinutes().toString().padStart(2, "0");
-     const seconds = date.getSeconds().toString().padStart(2, "0");
-
-     return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+     //convert to epoch
+     var date = new Date(dateString);
+     var epoch = date.getTime();
+     //convert to date with 5:30 UTC use 12 hour format
+     var date = new Date(epoch);
+     var hours = date.getHours();
+     var minutes = date.getMinutes();
+     var ampm = hours >= 12 ? "PM" : "AM";
+     hours = hours % 12;
+     hours = hours ? hours : 12; // the hour '0' should be '12'
+     minutes = minutes < 10 ? "0" + minutes : minutes;
+     var strTime = hours + ":" + minutes + " " + ampm;
+     return date.getDate() + "/" + (date.getMonth() + 1) + "/" + date.getFullYear() + " " + strTime;
 }
 
 export default delivery_history;
