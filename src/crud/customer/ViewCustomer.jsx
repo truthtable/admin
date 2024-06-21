@@ -17,6 +17,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchCustomerData } from "../../state/Customers";
 
 const ViewCustomer = () => {
+     //.
 
      const dispatch = useDispatch();
      const customerData = useSelector((state) => state.customers);
