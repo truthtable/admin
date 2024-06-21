@@ -38,6 +38,10 @@ export const UpdateDeliveryCell = (props) => {
 
      //CUSTOMER
      const searchCustomerData = useSelector((state) => state.search_customer);
+     let searchData = []
+     if (searchCustomerData.data != null) {
+          searchData = searchCustomerData.data;
+     }
      let customer_search_input = value;
      const handleSearchCustomer = () => {
           setLoading(true)
@@ -61,60 +65,11 @@ export const UpdateDeliveryCell = (props) => {
                )
           }
      }
+
+     //SEARCH CUSTOMER
+
      //GAS
      const gasData = useSelector((state) => state.gas);
-     /*
-     [
-    {
-        "id": 1,
-        "company_name": "jio",
-        "kg": 9,
-        "price": 100,
-        "created_at": "2024-03-26T11:04:53.000000Z",
-        "updated_at": "2024-06-17T04:05:58.000000Z"
-    },
-    {
-        "id": 2,
-        "company_name": "GO GASS",
-        "kg": 12,
-        "price": 870,
-        "created_at": "2024-03-26T11:05:44.000000Z",
-        "updated_at": "2024-03-26T11:05:44.000000Z"
-    },
-    {
-        "id": 3,
-        "company_name": "GO GASS",
-        "kg": 15,
-        "price": 33,
-        "created_at": "2024-03-26T11:05:55.000000Z",
-        "updated_at": "2024-06-17T07:51:39.000000Z"
-    },
-    {
-        "id": 4,
-        "company_name": "GO GASS",
-        "kg": 17,
-        "price": 445,
-        "created_at": "2024-03-26T11:06:05.000000Z",
-        "updated_at": "2024-06-17T07:51:52.000000Z"
-    },
-    {
-        "id": 5,
-        "company_name": "GO GASS",
-        "kg": 21,
-        "price": 999,
-        "created_at": "2024-03-26T11:06:14.000000Z",
-        "updated_at": "2024-06-17T04:07:16.000000Z"
-    },
-    {
-        "id": 6,
-        "company_name": "RELIANCE",
-        "kg": 12,
-        "price": 5645,
-        "created_at": "2024-03-26T11:06:48.000000Z",
-        "updated_at": "2024-06-17T07:52:04.000000Z"
-    }
-]
-     */
      //filter go gas  
      let gasDataFiltered = [];
      if (gasData.data && type === GAS) {
@@ -252,7 +207,7 @@ export const UpdateDeliveryCell = (props) => {
                          {type === CUSTOMER && <Button
                               onClick={handleSearchCustomer}
                          >Search</Button>}
-                         {type == CUSTOMER && <div>{searchCustomerData.data.map(
+                         {type == CUSTOMER && <div>{searchData.map(
                               (item, index) => (
                                    <Box
                                         key={index + "box"}

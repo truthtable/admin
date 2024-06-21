@@ -5,7 +5,7 @@ export const fetchCustomerData = createAsyncThunk(
      "customer/fetchCustomerData",
      async () => {
           let error = true;
-          let data = [];
+          let data = null;
           let errorMessage = "";
           try {
                const response = await fetch(CUSTOMER_DATA, {
@@ -29,7 +29,7 @@ const customerSlice = createSlice({
      name: "customer",
      initialState: {
           isLoading: false,
-          data: [],
+          data: null,
           isError: false,
           errorMessage: "",
      },

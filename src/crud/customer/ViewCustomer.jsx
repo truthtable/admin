@@ -15,6 +15,7 @@ import TableHead from "../../components/table/TableHead";
 
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCustomerData } from "../../state/Customers";
+import UpdateCustomerCell, { NUMBER, TEXT } from "../../components/edit/UpdateCustomerCell";
 
 const ViewCustomer = () => {
      //.
@@ -22,30 +23,39 @@ const ViewCustomer = () => {
      const dispatch = useDispatch();
      const customerData = useSelector((state) => state.customers);
 
-     const data = [];
-     //customerData.data = []
-     //check if data is not empty
-     if (customerData.data.data.length > 0) {
-          const temp = combineData(customerData.data.data, customerData.data.userdata);
-          temp.forEach((item) => {
-               data.push(makeRow(item));
-          });
-          console.log(temp);
-     }
+     const [searchText, setSearchText] = useState("");
 
+     const data = [];
+     if (customerData.data != null) {
+          if (customerData.data.data.length > 0) {
+               let temp = combineData(customerData.data.data, customerData.data.userdata);
+
+               if (searchText.length > 0) {
+                    temp = temp.filter((item) => {
+                         return item.user.name.toLowerCase().includes(searchText.toLowerCase());
+                    });
+               }
+
+               temp.forEach((item) => {
+                    data.push(makeRow(item));
+               });
+
+          }
+     }
      useEffect(() => {
           gasDataService.listenDataChange(() => {
                dispatch(fetchCustomerData());
-               //console.log("Data changed");
           });
      }, []);
 
      return (
           <div style={{
                width: "100%",
+
+               overflow: "auto",
                padding: "10px",
           }}>
-               <Stack direction="row" mb={1} spacing={2} justifyContent="flex-end">
+               <Stack direction="row" mb={1} spacing={1} justifyContent="flex-end">
                     <Typography
                          variant="h4"
                          style={{
@@ -54,9 +64,11 @@ const ViewCustomer = () => {
                          }}
                     >Search Customer</Typography>
                     <Input
-                         startDecorator={<BsSearch />}
                          placeholder="Name"
+                         value={searchText}
+                         onChange={(e) => setSearchText(e.target.value)}
                     />
+                    <Button startDecorator={<BsSearch />}>Search</Button>
 
                </Stack>
                <DataTable
@@ -65,7 +77,8 @@ const ViewCustomer = () => {
                          <TableHead>Address</TableHead>,
                          <TableHead>Phone No.</TableHead>,
                          <TableHead>Balance</TableHead>,
-                         <TableHead>Action</TableHead>,]}
+                         // <TableHead>Action</TableHead>,
+                    ]}
                     tbody={data}
                     loading={customerData.isLoading}
                />
@@ -86,13 +99,27 @@ function combineData(data, userdata) {
 }
 
 function makeRow(data) {
+     //console.log(data);
      return [
-          data.user.name,
-          data.user.address,
-          data.user.phone_no,
-          data.Balance,
-          <Button variant="solid" startDecorator={<BsFillPencilFill />}>
-               Edit
-          </Button>,
+          <UpdateCustomerCell
+               userId={data.user_id}
+               custId={data.id}
+               key="name"
+               name="name" type={TEXT} text={data.user.name} value={data.user.name} />,
+          <UpdateCustomerCell
+               userId={data.user_id}
+               custId={data.id}
+               key="address"
+               name="address" type={TEXT} text={data.user.address} value={data.user.address} />,
+          <UpdateCustomerCell
+               userId={data.user_id}
+               custId={data.id}
+               key="phone_no"
+               name="phone_no" type={NUMBER} text={data.user.phone_no} value={data.user.phone_no} />,
+          <UpdateCustomerCell
+               userId={data.user_id}
+               custId={data.id}
+               key="Balance"
+               name="Balance" type={NUMBER} text={`${data.Balance}₹`} value={data.Balance} />,
      ];
 }

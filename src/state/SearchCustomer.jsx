@@ -5,7 +5,7 @@ export const fetchCustomerData = createAsyncThunk(
      "customer/fetchCustomerData",
      async (search) => {
           let error = true;
-          let data = [];
+          let data = null;
           let errorMessage = "";
           //reset if empty ot " " use trim
           if (search.trim() === "") {
@@ -39,7 +39,7 @@ const customerSlice = createSlice({
      name: "search_customer",
      initialState: {
           isLoading: false,
-          data: [],
+          data: null,
           isError: false,
           errorMessage: "",
      },

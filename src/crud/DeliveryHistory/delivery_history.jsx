@@ -157,15 +157,18 @@ const delivery_history = () => {
           !deliveryData.isLoading &&
           deliveryData.data !== null
      ) {
-          deliveryData.data.data.map((value, index) =>
-               tableData.push(makeRow(SPAN, value, index)),
-          );
-          const filteredData = deliveryData.data.data.filter((user) => {
-               return user.correction == 1;
-          });
-          filteredData.map((value, index) =>
-               correctionTableData.push(makeRow(SPAN, value, index)),
-          );
+
+          if (deliveryData.data.data.length > 0) {
+               deliveryData.data.data.map((value, index) =>
+                    tableData.push(makeRow(SPAN, value, index)),
+               );
+               const filteredData = deliveryData.data.data.filter((user) => {
+                    return user.correction == 1;
+               });
+               filteredData.map((value, index) =>
+                    correctionTableData.push(makeRow(SPAN, value, index)),
+               );
+          }
      }
      if (deliveryData.isLoading) {
           setSnackbarLoading("Loading data");
