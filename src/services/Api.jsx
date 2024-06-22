@@ -12,6 +12,7 @@ export const UPDATE_DELIVERY = URL + "api/delivery_update/";
 export const UPDATE_GAS = URL + "api/update_cylinder/";
 export const UPDATE_CUSTOMER = URL + "api/update_customer/";
 export const UPDATE_USER = URL + "api/update_user/";
+export const GET_COURIER_BOY_DATA = URL + "api/courier_boy_info";
 
 export const getUserDataFromCookie = () => {
      let data = null;

@@ -6,6 +6,8 @@ import { Header, Sidebar, Home } from "./components";
 
 import DeliveryEditForm from "./components/edit/DeliveryEditForm";
 
+//import DeliveryBoyDetails from "./crud/addDeliveryBoy/DeliveryBoyDetails";
+
 import {
      // product
      insert,
@@ -15,8 +17,8 @@ import {
 
      // delivery boy
      addDeliveryBoy,
-     readDeliveryBoy,
      updateDeliveryBoy,
+     DeliveryBoyDetails,
 
      // wherehouse
      addWherehouse,
@@ -173,7 +175,7 @@ function App() {
                                              />
                                              <Route
                                                   path="/admin/readDeliveryBoy"
-                                                  Component={readDeliveryBoy}
+                                                  Component={DeliveryBoyDetails}
                                              />
                                              <Route
                                                   path="/admin/updateDeliveryBoy"
