@@ -7,12 +7,13 @@ import { Box, Input, LinearProgress, Button, ListItemContent, List, ListItem, Li
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchCustomerData } from "../../state/SearchCustomer";
+import { fetchCustomerSearchData } from "../../state/SearchCustomer";
 import { updateDelivery } from "../../state/UpdateDelivery";
 import { fetchDeliveryHistory } from "../../state/DeliveryAPI";
 
 import React from "react";
 import { json_to_x_www_form_urlencoded } from "../../state/UpdateGas";
+import { notNull } from "../../helpers.jsx/Validation";
 
 export const TEXT_INPUT = 0;
 export const NUMBER_INPUT = 1;
@@ -39,13 +40,14 @@ export const UpdateDeliveryCell = (props) => {
      //CUSTOMER
      const searchCustomerData = useSelector((state) => state.search_customer);
      let searchData = []
-     if (searchCustomerData.data != null) {
+     if (notNull(searchCustomerData.data)) {
           searchData = searchCustomerData.data;
      }
+
      let customer_search_input = value;
      const handleSearchCustomer = () => {
           setLoading(true)
-          dispatch(fetchCustomerData(customer_search_input));
+          dispatch(fetchCustomerSearchData(customer_search_input));
      };
      const handleUpdate = (data) => {
           dispatch(updateDelivery({
@@ -61,7 +63,7 @@ export const UpdateDeliveryCell = (props) => {
                     updateDelivery({
                          reset: true,
                     }),
-                    fetchCustomerData(""),
+                    fetchCustomerSearchData(""),
                )
           }
      }
@@ -207,49 +209,50 @@ export const UpdateDeliveryCell = (props) => {
                          {type === CUSTOMER && <Button
                               onClick={handleSearchCustomer}
                          >Search</Button>}
-                         {type == CUSTOMER && <div>{searchData.map(
-                              (item, index) => (
-                                   <Box
-                                        key={index + "box"}
-                                        sx={{
-                                             overflow: "auto",
-                                        }}
-                                   >
-                                        <List>
-                                             <ListItem
-                                                  key={index + "list"}
-                                             >
-                                                  <ListItemButton
-                                                       color="primary"
-                                                       selected={
-                                                            false
-                                                       }
-                                                       variant="soft"
-                                                       onClick={() => {
-                                                            handleUpdate({ customer_id: item.id });
-                                                       }}
+                         {(type == CUSTOMER && notNull(searchData)) && <div>{
+                              searchData.map(
+                                   (item, index) => (
+                                        <Box
+                                             key={index + "box"}
+                                             sx={{
+                                                  overflow: "auto",
+                                             }}
+                                        >
+                                             <List>
+                                                  <ListItem
+                                                       key={index + "list"}
                                                   >
-                                                       <ListItemContent>
-                                                            <strong>
+                                                       <ListItemButton
+                                                            color="primary"
+                                                            selected={
+                                                                 false
+                                                            }
+                                                            variant="soft"
+                                                            onClick={() => {
+                                                                 handleUpdate({ customer_id: item.id });
+                                                            }}
+                                                       >
+                                                            <ListItemContent>
+                                                                 <strong>
+                                                                      {
+                                                                           item.name
+                                                                      }
+                                                                 </strong>
+                                                                 :
                                                                  {
-                                                                      item.name
+                                                                      item.address
                                                                  }
-                                                            </strong>
-                                                            :
-                                                            {
-                                                                 item.address
-                                                            }
-                                                            :
-                                                            {
-                                                                 item.phone_no
-                                                            }
-                                                       </ListItemContent>
-                                                  </ListItemButton>
-                                             </ListItem>
-                                        </List>
-                                   </Box>
-                              ),
-                         )}</div>}
+                                                                 :
+                                                                 {
+                                                                      item.phone_no
+                                                                 }
+                                                            </ListItemContent>
+                                                       </ListItemButton>
+                                                  </ListItem>
+                                             </List>
+                                        </Box>
+                                   ),
+                              )}</div>}
                          {type === GAS && <Stack
                               direction="column"
                               justifyContent="center"
@@ -268,7 +271,7 @@ export const UpdateDeliveryCell = (props) => {
                                    </Button>
                               ))}
                          </Stack>}
-                         {type === RECEVIED_GAS && <Stack
+                         {(type === RECEVIED_GAS && notNull(gasData.data.data)) && <Stack
                               direction="column"
                               justifyContent="center"
                               alignItems="stretch"

@@ -16,6 +16,7 @@ import TableHead from "../../components/table/TableHead";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCustomerData } from "../../state/Customers";
 import UpdateCustomerCell, { NUMBER, TEXT } from "../../components/edit/UpdateCustomerCell";
+import { notNull } from "../../helpers.jsx/Validation";
 
 const ViewCustomer = () => {
      //.
@@ -26,7 +27,7 @@ const ViewCustomer = () => {
      const [searchText, setSearchText] = useState("");
 
      const data = [];
-     if (customerData.data != null) {
+     if (notNull(customerData.data)) {
           if (customerData.data.data.length > 0) {
                let temp = combineData(customerData.data.data, customerData.data.userdata);
 

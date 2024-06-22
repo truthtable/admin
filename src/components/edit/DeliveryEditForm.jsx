@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchGasData } from "../../state/GasList";
-import { fetchCustomerData } from "../../state/SearchCustomer";
+import { fetchCustomerSearchData } from "../../state/SearchCustomer";
 import { updateDelivery } from "../../state/UpdateDelivery";
 import {
      Box,
@@ -136,7 +136,7 @@ const DeliveryEditForm = () => {
                                                        1
                                                   ) {
                                                        dispatch(
-                                                            fetchCustomerData(
+                                                            fetchCustomerSearchData(
                                                                  customer_search_input,
                                                             ),
                                                        );

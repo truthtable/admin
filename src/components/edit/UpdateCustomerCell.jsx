@@ -20,7 +20,25 @@ export default function UpdateCustomerCell({ userId, custId, text, type, name, v
      const [open, setOpen] = useState(false);
 
      const handleUpdate = () => {
-          console.log(userId, custId, name, inputValue);
+
+          let valid = true;
+
+          const uid = Number(userId);
+          const cid = Number(custId);
+
+          const value = (type === NUMBER) ? Number(inputValue) : inputValue;
+
+          //if type is number validate only contains 0-9
+
+          if (type == NUMBER) {
+               if (!/^[0-9]*$/.test(value)) {
+                    valid = false;
+                    alert("Invalid Number");
+               }
+          }
+          if (valid) {
+               console.log(uid, cid, name, value);
+          }
      }
 
      return (
@@ -117,6 +135,7 @@ export default function UpdateCustomerCell({ userId, custId, text, type, name, v
                               variant="soft"
                               placeholder={text}
                               type={type}
+                              //only allow numbers not e
                               sx={{
                                    marginTop: "10px",
                               }}
