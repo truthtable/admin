@@ -2,14 +2,10 @@
 import React, { useEffect, useState } from "react";
 import "../crud-css/read.css";
 import {
-     BsFillExclamationOctagonFill,
-     BsFillPencilFill,
-     BsFilter,
      BsSearch,
 } from "react-icons/bs";
 import gasDataService from "../../services/gas-services";
 import DataTable from "../../components/table/DataTable";
-import { CUSTOMER_DATA } from "../../services/Api";
 import { Button, Input, Stack, Typography } from "@mui/joy";
 import TableHead from "../../components/table/TableHead";
 
@@ -17,12 +13,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchCustomerData } from "../../state/Customers";
 import UpdateCustomerCell, { NUMBER, TEXT } from "../../components/edit/UpdateCustomerCell";
 import { notNull } from "../../helpers.jsx/Validation";
+import { UPDATE_CUSTOMER, UPDATE_USER } from "../../services/Api";
 
 const ViewCustomer = () => {
-     //.
 
      const dispatch = useDispatch();
      const customerData = useSelector((state) => state.customers);
+     const updateCustomer = useSelector((state) => state.updateCustomer);
 
      const [searchText, setSearchText] = useState("");
 
@@ -49,10 +46,15 @@ const ViewCustomer = () => {
           });
      }, []);
 
+     useEffect(() => {
+          if (updateCustomer.isSuccessful) {
+               dispatch(fetchCustomerData());
+          }
+     });
+
      return (
           <div style={{
                width: "100%",
-
                overflow: "auto",
                padding: "10px",
           }}>
@@ -105,22 +107,46 @@ function makeRow(data) {
           <UpdateCustomerCell
                userId={data.user_id}
                custId={data.id}
+               updateUser={true}
                key="name"
-               name="name" type={TEXT} text={data.user.name} value={data.user.name} />,
+               name="name"
+               type={TEXT}
+               text={data.user.name}
+               value={data.user.name}
+               table={UPDATE_USER}
+          />,
           <UpdateCustomerCell
                userId={data.user_id}
                custId={data.id}
+               updateUser={true}
                key="address"
-               name="address" type={TEXT} text={data.user.address} value={data.user.address} />,
+               name="address"
+               type={TEXT}
+               text={data.user.address}
+               value={data.user.address}
+               table={UPDATE_USER}
+          />,
           <UpdateCustomerCell
                userId={data.user_id}
                custId={data.id}
+               updateUser={true}
                key="phone_no"
-               name="phone_no" type={NUMBER} text={data.user.phone_no} value={data.user.phone_no} />,
+               name="phone_no"
+               type={NUMBER}
+               text={data.user.phone_no}
+               value={data.user.phone_no}
+               table={UPDATE_USER}
+          />,
           <UpdateCustomerCell
                userId={data.user_id}
                custId={data.id}
+               updateUser={false}
                key="Balance"
-               name="Balance" type={NUMBER} text={`${data.Balance}₹`} value={data.Balance} />,
+               name="Balance"
+               type={NUMBER}
+               text={`${data.Balance}₹`}
+               value={data.Balance}
+               table={UPDATE_CUSTOMER}
+          />,
      ];
 }

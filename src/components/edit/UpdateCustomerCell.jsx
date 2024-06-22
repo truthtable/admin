@@ -1,7 +1,10 @@
 import { Sheet, Typography, ModalClose, Modal, Box, Input, LinearProgress, Button, ListItemContent, List, ListItem, ListItemButton, Divider, Stack, Table } from "@mui/joy";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useDispatch, useSelector } from "react-redux";
+import { updateCustomer } from "../../state/CustomerUpdate";
+import { UPDATE_CUSTOMER, UPDATE_USER } from "../../services/Api";
+import { notNull } from "../../helpers.jsx/Validation";
 
 export const NAME = "name";
 export const ADDRESS = "address";
@@ -10,14 +13,18 @@ export const PHONE = "phone";
 export const TEXT = "text";
 export const NUMBER = "number";
 
-export default function UpdateCustomerCell({ userId, custId, text, type, name, value }) {
+export default function UpdateCustomerCell({ userId, custId, text, type, name, value, updateUser, table }) {
 
      //Capitalized the first letter of the name and removed the underscore
      const src = name.charAt(0).toUpperCase() + name.slice(1).replace("_", " ");
 
      let inputValue = value;
+     let disp = value
 
      const [open, setOpen] = useState(false);
+
+     const dispatch = useDispatch();
+     const result = useSelector((state) => state.updateCustomer);
 
      const handleUpdate = () => {
 
@@ -29,17 +36,41 @@ export default function UpdateCustomerCell({ userId, custId, text, type, name, v
           const value = (type === NUMBER) ? Number(inputValue) : inputValue;
 
           //if type is number validate only contains 0-9
+          if (open) {
+               if (type == NUMBER) {
+                    if (!/^[0-9]*$/.test(value)) {
+                         valid = false;
+                         alert("Invalid Number");
+                    }
+               }
+               if (valid && (notNull(table))) {
 
-          if (type == NUMBER) {
-               if (!/^[0-9]*$/.test(value)) {
-                    valid = false;
-                    alert("Invalid Number");
+                    const id = (updateUser) ? uid : cid;
+
+                    let url = `${table}+${id}`
+
+                    dispatch(
+                         updateCustomer({
+                              url: url,
+                              data: {
+                                   [name]: value,
+                              },
+                         })
+                    )
                }
           }
-          if (valid) {
-               console.log(uid, cid, name, value);
-          }
      }
+
+     useEffect(() => {
+          if (result.isSuccessful) {
+               dispatch(
+                    updateCustomer({
+                         reset: true,
+                    })
+               )
+               setOpen(false);
+          }
+     })
 
      return (
           <>
@@ -82,7 +113,14 @@ export default function UpdateCustomerCell({ userId, custId, text, type, name, v
                     aria-labelledby="modal-title"
                     aria-describedby="modal-desc"
                     open={open}
-                    onClose={() => setOpen(false)}
+                    onClose={() => {
+                         dispatch(
+                              updateCustomer({
+                                   reset: true,
+                              })
+                         )
+                         setOpen(false);
+                    }}
                     sx={{
                          display: "flex",
                          justifyContent: "center",
@@ -125,7 +163,7 @@ export default function UpdateCustomerCell({ userId, custId, text, type, name, v
                          </Typography>
                          <LinearProgress
                               sx={{
-                                   display: (false) ? "block" : "none",
+                                   display: (result.isLoading) ? "block" : "none",
                                    marginTop: "10px",
                               }}
                          />
@@ -136,6 +174,7 @@ export default function UpdateCustomerCell({ userId, custId, text, type, name, v
                               placeholder={text}
                               type={type}
                               //only allow numbers not e
+                              defaultValue={disp}
                               sx={{
                                    marginTop: "10px",
                               }}
@@ -154,9 +193,13 @@ export default function UpdateCustomerCell({ userId, custId, text, type, name, v
                               }}
                          >
                               <Button
-
                                    variant="soft"
                                    onClick={() => {
+                                        dispatch(
+                                             updateCustomer({
+                                                  reset: true,
+                                             })
+                                        )
                                         setOpen(false);
                                    }}
                               >

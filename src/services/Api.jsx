@@ -10,6 +10,8 @@ export const GAS_DATA = URL + "api/gas_cylinder_data";
 export const SEARCH_CUSTOMER = URL + "api/search";
 export const UPDATE_DELIVERY = URL + "api/delivery_update/";
 export const UPDATE_GAS = URL + "api/update_cylinder/";
+export const UPDATE_CUSTOMER = URL + "api/update_customer/";
+export const UPDATE_USER = URL + "api/update_user/";
 
 export const getUserDataFromCookie = () => {
      let data = null;

@@ -259,7 +259,7 @@ function makeRow(SPAN, value, index) {
           SPAN(value.correction == 1, value.received_cylinder.company_name, titleCase(value.received_cylinder.company_name), false, scr, RECEVIED_GAS, "Recevid Gas", value.id),
           SPAN(value.correction == 1, value.received_cylinder.kg, value.received_cylinder.kg + " KG", false, scr, RECEVIED_GAS, "Recevid Gas", value.id),
           SPAN(value.correction == 1, value.received_cylinder_quantity, value.received_cylinder_quantity, false, scr, RECEVIED_GAS_QUANTITY, "Recevid Quantity", value.id),
-          SPAN(value.correction == 1, value.received_amount, value.received_amount + "₹", false, scr, AMOUNT, "Received Amount", value.id),
+          SPAN(value.correction == 1, value.received_amount, `${(value.payment_method == 0) ? "Cash" : "UPI"} : ${value.received_amount} ₹`, false, scr, AMOUNT, "Received Amount", value.id),
           SPAN(value.correction == 1, value.correction, value.correction == 1 ? "Yes" : "No", false, scr, CLEAR_MISTAKE, "Correction", value.id),
      ];
 }
