@@ -4,7 +4,7 @@ import update from "./GasCylinders/update";
 import deletegas from "./GasCylinders/delete";
 
 import addDeliveryBoy from "./addDeliveryBoy/insert";
-import DeliveryBoyDetails from "./addDeliveryBoy/DeliveryBoyDetails";
+//import DeliveryBoyDetails from "./addDeliveryBoy/DeliveryBoyDetails";
 import updateDeliveryBoy from "./addDeliveryBoy/update";
 
 import addWherehouse from "./wherehouse/insert";
@@ -37,7 +37,7 @@ export {
 
      // delivery boy
      addDeliveryBoy,
-     DeliveryBoyDetails,
+     // DeliveryBoyDetails,
      updateDeliveryBoy,
 
      // wherehouse

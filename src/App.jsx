@@ -6,6 +6,10 @@ import { Header, Sidebar, Home } from "./components";
 
 import DeliveryEditForm from "./components/edit/DeliveryEditForm";
 
+import GasDataView from "./components/edit/GasDataView";
+
+import Warehouse from "./components/edit/Warehouse";
+
 //import DeliveryBoyDetails from "./crud/addDeliveryBoy/DeliveryBoyDetails";
 
 import {
@@ -18,7 +22,7 @@ import {
      // delivery boy
      addDeliveryBoy,
      updateDeliveryBoy,
-     DeliveryBoyDetails,
+     //DeliveryBoyDetails,
 
      // wherehouse
      addWherehouse,
@@ -64,6 +68,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchLogin } from "./state/LoginAPI";
 import { fetchCheckLogin } from "./state/CheckLogin";
 import { getUserDataFromCookie } from "./services/Api";
+import DeliveryBoyDetails from "./components/edit/DeliveryBoyDetails";
 
 function App() {
      const dispatch = useDispatch();
@@ -162,7 +167,7 @@ function App() {
                                                   path="/admin/insert"
                                                   Component={insert}
                                              />
-                                             <Route path="/admin/read" Component={read} />
+                                             <Route path="/admin/read" Component={GasDataView} />
                                              <Route
                                                   path="/admin/update"
                                                   Component={update}
@@ -189,7 +194,7 @@ function App() {
                                              />
                                              <Route
                                                   path="/admin/readWherehouse"
-                                                  Component={readWherehouse}
+                                                  Component={Warehouse}
                                              />
                                              <Route
                                                   path="/admin/updateWherehouse"

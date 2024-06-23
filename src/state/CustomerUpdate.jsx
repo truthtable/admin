@@ -12,6 +12,7 @@ export const updateCustomer = createAsyncThunk(
 
           if (data.reset) {
                error = false;
+               console.log("reset");
                return { isSuccessful, error, errorMessage };
           }
 
@@ -30,8 +31,8 @@ export const updateCustomer = createAsyncThunk(
                     body: json_to_x_www_form_urlencoded(data.data),
                });
                const result = await response.json();
-               isSuccessful = result.isSuccesfull;
-               //console.log(result);
+               isSuccessful = result.isSuccessful;
+               //console.log(result, isSuccessful);
                error = false;
           } catch (e) {
                console.warn(e);

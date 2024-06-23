@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 
 import { useDispatch, useSelector } from "react-redux";
 import { updateCustomer } from "../../state/CustomerUpdate";
-import { UPDATE_CUSTOMER, UPDATE_USER } from "../../services/Api";
 import { notNull } from "../../helpers.jsx/Validation";
 
 export const NAME = "name";
@@ -47,7 +46,9 @@ export default function UpdateCustomerCell({ userId, custId, text, type, name, v
 
                     const id = (updateUser) ? uid : cid;
 
-                    let url = `${table}+${id}`
+                    let url = `${table}${id}`
+
+                    //console.log(url)
 
                     dispatch(
                          updateCustomer({

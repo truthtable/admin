@@ -6,13 +6,9 @@ export const fetchGetData = createAsyncThunk(
           let error = true;
           let data = null;
           let errorMessage = "";
-          console.log(url);
           try {
                const response = await fetch(url, {
                     method: "get",
-                    headers: new Headers({
-                         "ngrok-skip-browser-warning": "69420",
-                    }),
                });
                data = await response.json();
                error = false;
@@ -20,8 +16,9 @@ export const fetchGetData = createAsyncThunk(
                console.warn(e);
                error = true;
                errorMessage = e.message;
+               console.error(errorMessage);
           }
-          return { data, error, errorMessage };
+          return { data, error, errorMessage, url };
      },
 );
 const getDataSlice = createSlice(
@@ -32,6 +29,7 @@ const getDataSlice = createSlice(
                isLoading: false,
                isError: false,
                errorMessage: "",
+               url: "",
           },
           extraReducers: (builder) => {
                builder.addCase(fetchGetData.pending, (state, action) => {
@@ -42,6 +40,7 @@ const getDataSlice = createSlice(
                     state.isError = action.payload.error;
                     state.errorMessage = action.payload.errorMessage;
                     state.data = action.payload.data;
+                    state.url = action.payload.url;
                });
                builder.addCase(fetchGetData.rejected, (state, action) => {
                     state.isLoading = false;
@@ -52,3 +51,5 @@ const getDataSlice = createSlice(
 );
 
 export default getDataSlice.reducer;
+
+//funtion for json to object
