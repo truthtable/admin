@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import "./App.css";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, HashRouter } from "react-router-dom";
 import { Header, Sidebar, Home } from "./components";
 
 import DeliveryEditForm from "./components/edit/DeliveryEditForm";
@@ -9,6 +9,8 @@ import DeliveryEditForm from "./components/edit/DeliveryEditForm";
 import GasDataView from "./components/edit/GasDataView";
 
 import Warehouse from "./components/edit/Warehouse";
+
+import ReportSection from "./components/report/ReportSection";
 
 //import DeliveryBoyDetails from "./crud/addDeliveryBoy/DeliveryBoyDetails";
 
@@ -129,7 +131,7 @@ function App() {
                </Stack>
                <div>
                     {isLogoded ? (
-                         <BrowserRouter>
+                         <HashRouter>
                               <Box
                                    sx={{
                                         display: "flex",
@@ -208,7 +210,7 @@ function App() {
                                              />
                                              <Route
                                                   path="/admin/readReport"
-                                                  Component={readReport}
+                                                  Component={ReportSection}
                                              />
                                              <Route
                                                   path="/admin/readReport"
@@ -263,7 +265,7 @@ function App() {
                                         </Routes>
                                    </Box>
                               </Box>
-                         </BrowserRouter>
+                         </HashRouter>
                     ) : (
                          <div
                               style={{

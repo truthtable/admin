@@ -25,7 +25,7 @@ export default function DeliveryBoyDetails() {
           }
      }
 
-     console.log(data);
+     console.log(update);
 
      useEffect(() => {
           if (data.data == null || data.url != GET_COURIER_BOY_DATA) {
@@ -41,7 +41,7 @@ export default function DeliveryBoyDetails() {
           //dispatch(fetchGetData(GET_COURIER_BOY_DATA));
 
           // console.log(update);
-     }, []); // Add an empty dependency array here
+     },); // Add an empty dependency array here
 
      return (
           <div

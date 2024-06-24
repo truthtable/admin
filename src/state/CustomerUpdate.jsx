@@ -32,7 +32,7 @@ export const updateCustomer = createAsyncThunk(
                });
                const result = await response.json();
                isSuccessful = result.isSuccessful;
-               //console.log(result, isSuccessful);
+               console.log(result, isSuccessful);
                error = false;
           } catch (e) {
                console.warn(e);

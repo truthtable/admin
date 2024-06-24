@@ -271,7 +271,7 @@ export const UpdateDeliveryCell = (props) => {
                                    </Button>
                               ))}
                          </Stack>}
-                         {(type === RECEVIED_GAS && notNull(gasData.data.data)) && <Stack
+                         {(type === RECEVIED_GAS && notNull(gasData.data) && notNull(gasData.data.data)) && <Stack
                               direction="column"
                               justifyContent="center"
                               alignItems="stretch"

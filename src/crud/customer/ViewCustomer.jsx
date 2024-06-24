@@ -42,16 +42,21 @@ const ViewCustomer = () => {
      }
      useEffect(() => {
           gasDataService.listenDataChange(() => {
+               console.log("Data Changed");
                dispatch(fetchCustomerData());
           });
      }, []);
 
      useEffect(() => {
+          console.log("Update Customer", updateCustomer);
           if (updateCustomer.isSuccessful) {
                dispatch(fetchCustomerData());
           }
      });
 
+     // if (updateCustomer.isSuccessful) {
+     //      dispatch(fetchCustomerData());
+     // }
      return (
           <div style={{
                width: "100%",
