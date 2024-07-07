@@ -6,7 +6,7 @@ import {
 } from "react-icons/bs";
 import gasDataService from "../../services/gas-services";
 import DataTable from "../../components/table/DataTable";
-import { Button, Input, Stack, Typography } from "@mui/joy";
+import { Box, Button, Input, Stack, Typography } from "@mui/joy";
 import TableHead from "../../components/table/TableHead";
 
 import { useDispatch, useSelector } from "react-redux";
@@ -14,6 +14,8 @@ import { fetchCustomerData } from "../../state/Customers";
 import UpdateCustomerCell, { NUMBER, TEXT } from "../../components/edit/UpdateCustomerCell";
 import { notNull } from "../../helpers.jsx/Validation";
 import { UPDATE_CUSTOMER, UPDATE_USER } from "../../services/Api";
+
+import { TbHomePlus } from "react-icons/tb";
 
 const ViewCustomer = () => {
 
@@ -64,6 +66,8 @@ const ViewCustomer = () => {
                padding: "10px",
           }}>
                <Stack direction="row" mb={1} spacing={1} justifyContent="flex-end">
+                    <Button startDecorator={<TbHomePlus />}>New Connection</Button>
+                    <div style={{ flexGrow: 1 }} />
                     <Typography
                          variant="h4"
                          style={{
@@ -85,7 +89,7 @@ const ViewCustomer = () => {
                          <TableHead>Address</TableHead>,
                          <TableHead>Phone No.</TableHead>,
                          <TableHead>Balance</TableHead>,
-                         // <TableHead>Action</TableHead>,
+                         <TableHead>History</TableHead>,
                     ]}
                     tbody={data}
                     loading={customerData.isLoading}
@@ -153,5 +157,35 @@ function makeRow(data) {
                value={data.Balance}
                table={UPDATE_CUSTOMER}
           />,
+          <Box
+               key="chb"
+               sx={{
+                    padding: "0px",
+                    margin: "0px",
+                    backgroundColor: "transparent",
+                    mx: "2px",
+                    transition: "background-color 0.3s",
+                    "&:hover": {
+                         backgroundColor: "rgb(75 112 245 / 25%)",
+                    },
+                    pl: 1
+
+               }}>
+               <Button style={{
+                    flexGrow: 1,
+                    width: "100%",
+                    height: "100%",
+                    margin: "0px",
+                    padding: "0px",
+                    borderRadius: "0px",
+                    backgroundColor: "transparent",
+                    whiteSpace: "nowrap",
+                    textAlign: "center",
+                    disabled: true,
+                    justifyContent: "flex-start",
+                    color: "#185ea5",
+
+               }} >History</Button>
+          </Box>
      ];
 }

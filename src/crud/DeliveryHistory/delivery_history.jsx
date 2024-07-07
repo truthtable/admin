@@ -3,13 +3,14 @@ import { Link } from "react-router-dom";
 import "../crud-css/read.css";
 import gasDataService from "../../services/gas-services";
 import DataTable from "../../components/table/DataTable";
-import { Box, Button, Chip, Snackbar, Stack, Tab, TabList, TabPanel, Tabs } from "@mui/joy";
+import { Box, Button, Chip, Snackbar, Stack, Tab, TabList, TabPanel, Tabs, Input } from "@mui/joy";
 import { TbLetterX } from "react-icons/tb";
 
 import { useDispatch, useSelector } from "react-redux";
 import { fetchDeliveryHistory } from "../../state/DeliveryAPI";
 import { fetchGasData } from "../../state/GasList";
 import { TEXT_INPUT, NUMBER_INPUT, CUSTOMER, UpdateDeliveryCell as UpdateData, GAS, RECEVIED_GAS, GAS_QUANTITY, RECEVIED_GAS_QUANTITY, AMOUNT, CLEAR_MISTAKE } from "../../components/edit/UpdateDeliveryCell";
+import { FaSearch } from "react-icons/fa";
 
 const delivery_history = () => {
      const dispatch = useDispatch();
@@ -115,6 +116,7 @@ const delivery_history = () => {
           makeHead("Recived kg"),
           makeHead("Recived Qty"),
           makeHead("Amount"),
+          makeHead("balance"),
           makeHead("Correction"),
      ];
 
@@ -206,6 +208,12 @@ const delivery_history = () => {
                >
                     {message}
                </Snackbar>
+               {/* <Stack direction="row" justifyContent="end" alignItems="center" gap={1} m={1}>
+                    <Input
+                         placeholder="Name"
+                    />
+                    <Button startDecorator={<FaSearch />}>Search</Button>
+               </Stack> */}
                <Tabs aria-label="Basic tabs" defaultValue={0}>
                     <TabList>
                          <Tab>All Deliveries</Tab>
@@ -260,6 +268,7 @@ function makeRow(SPAN, value, index) {
           SPAN(value.correction == 1, value.received_cylinder.kg, value.received_cylinder.kg + " KG", false, scr, RECEVIED_GAS, "Recevid Gas", value.id),
           SPAN(value.correction == 1, value.received_cylinder_quantity, value.received_cylinder_quantity, false, scr, RECEVIED_GAS_QUANTITY, "Recevid Quantity", value.id),
           SPAN(value.correction == 1, value.received_amount, `${(value.payment_method == 0) ? "Cash" : "UPI"} : ${value.received_amount} ₹`, false, scr, AMOUNT, "Received Amount", value.id),
+          SPAN(value.correction == 1, value.balance, `${(value.balance)} ₹`, true, scr, "", "Balance", value.id),
           SPAN(value.correction == 1, value.correction, value.correction == 1 ? "Yes" : "No", false, scr, CLEAR_MISTAKE, "Correction", value.id),
      ];
 }

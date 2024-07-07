@@ -48,26 +48,6 @@ function Home() {
                     <h3>Admin Dashboard</h3>
                </div>
                <div className="main-cards">
-                    <Link to="/admin/delivery_history" className="link shadow-lg">
-                         <div className="card-inner">
-                              <h3>Delivery History</h3>
-                              <BsBook className="card_icon" />
-                         </div>
-                         <div>
-                              <CircularProgress
-                                   sx={{ display: loadingView }}
-                                   color="primary"
-                                   variant="soft"
-                              />
-                              <span
-                                   style={{
-                                        display: loading ? "none" : "block",
-                                   }}
-                              >
-                                   {counts.today_delivery}
-                              </span>
-                         </div>
-                    </Link>
 
                     <Link to="/admin/readWherehouse" className="link shadow-lg">
                          <div className="card-inner">
@@ -90,10 +70,11 @@ function Home() {
                          </div>
                     </Link>
 
-                    <Link to="/admin/read" className="link shadow-lg">
+
+                    <Link to="/admin/delivery_history" className="link shadow-lg">
                          <div className="card-inner">
-                              <h3>Gas Cylinders </h3>
-                              <BsFillArchiveFill className="card_icon" />
+                              <h3>Delivery History</h3>
+                              <BsBook className="card_icon" />
                          </div>
                          <div>
                               <CircularProgress
@@ -106,7 +87,7 @@ function Home() {
                                         display: loading ? "none" : "block",
                                    }}
                               >
-                                   {counts.gas_count}
+                                   {counts.today_delivery}
                               </span>
                          </div>
                     </Link>
@@ -153,14 +134,6 @@ function Home() {
                          </div>
                     </Link>
 
-                    {/* <Link to="ViewAdmin" className="link shadow-lg">
-          <div className="card-inner">
-            <h3>Admins</h3>
-            <BsFillPersonCheckFill className="card_icon" />
-          </div>
-          <h1>42</h1>
-        </Link> */}
-
                     <Link to="/admin/readReport" className="link shadow-lg">
                          <div className="card-inner">
                               <h3>Report</h3>
@@ -178,6 +151,27 @@ function Home() {
                                    }}
                               >
                                    {0}
+                              </span>
+                         </div>
+                    </Link>
+
+                    <Link to="/admin/read" className="link shadow-lg">
+                         <div className="card-inner">
+                              <h3>Gas Cylinders </h3>
+                              <BsFillArchiveFill className="card_icon" />
+                         </div>
+                         <div>
+                              <CircularProgress
+                                   sx={{ display: loadingView }}
+                                   color="primary"
+                                   variant="soft"
+                              />
+                              <span
+                                   style={{
+                                        display: loading ? "none" : "block",
+                                   }}
+                              >
+                                   {counts.gas_count}
                               </span>
                          </div>
                     </Link>

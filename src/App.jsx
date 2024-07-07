@@ -71,6 +71,7 @@ import { fetchLogin } from "./state/LoginAPI";
 import { fetchCheckLogin } from "./state/CheckLogin";
 import { getUserDataFromCookie } from "./services/Api";
 import DeliveryBoyDetails from "./components/edit/DeliveryBoyDetails";
+import Expences from "./components/edit/Expences";
 
 function App() {
      const dispatch = useDispatch();
@@ -261,6 +262,10 @@ function App() {
                                              <Route
                                                   path="/admin/UpdateAdmin"
                                                   Component={UpdateAdmin}
+                                             />
+                                             <Route
+                                                  path="/admin/expence"
+                                                  Component={Expences}
                                              />
                                         </Routes>
                                    </Box>

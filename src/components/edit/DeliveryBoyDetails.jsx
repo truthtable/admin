@@ -1,4 +1,4 @@
-import { Button, Input, Stack } from "@mui/joy";
+import { Box, Button, Input, LinearProgress, Stack } from "@mui/joy";
 import { BsSearch } from "react-icons/bs";
 import DataTable from "../table/DataTable";
 import TableHead from "../table/TableHead";
@@ -8,6 +8,7 @@ import { fetchGetData } from "../../state/GetData";
 import React, { useEffect, useState } from "react";
 import { GET_COURIER_BOY_DATA, UPDATE_COURIER_BOY, UPDATE_USER, } from "../../services/Api";
 import UpdateCustomerCell, { NUMBER, TEXT } from "./UpdateCustomerCell";
+import DeliveryBoyCard from "./DeliveryBoyCard";
 
 export default function DeliveryBoyDetails() {
      const dispatch = useDispatch();
@@ -16,16 +17,18 @@ export default function DeliveryBoyDetails() {
      const update = useSelector((state) => state.updateCustomer);
 
      const rows = [];
+     const deliveryBoyData = []
 
      if (data.data !== null) {
-          if (data.data.data.length > 0) {
+          if (data.data.data.length > 0 && data.url == GET_COURIER_BOY_DATA) {
                data.data.data.forEach((item) => {
                     rows.push(makeRow(item));
+                    deliveryBoyData.push(item);
                });
           }
      }
 
-     console.log(update);
+     //console.log(update);
 
      useEffect(() => {
           if (data.data == null || data.url != GET_COURIER_BOY_DATA) {
@@ -55,18 +58,45 @@ export default function DeliveryBoyDetails() {
                     <Input placeholder="Name" />
                     <Button startDecorator={<BsSearch />}>Search</Button>
                </Stack>
-               <DataTable
+               {/* <DataTable
                     thead={[
                          // <TableHead>Name</TableHead>,
                          // <TableHead>Name</TableHead>,
                          <TableHead>User ID</TableHead>,
                          <TableHead>Password</TableHead>,
-                         // <TableHead>Expense</TableHead>,
+                         <TableHead>Expense</TableHead>,
                          // <TableHead>Truck</TableHead>,
                     ]}
                     tbody={rows}
                     loading={data.isLoading}
-               />
+               /> */}
+               <div style={{ display: data.isLoading ? "block" : "none" }}>
+                    <LinearProgress color="primary" variant="soft" />
+               </div>
+               <Box
+                    sx={{
+                         display: 'flex',
+                         justifyContent: 'center',
+                         flexWrap: 'wrap',
+                         gap: 1,
+                         marginTop: 5
+
+                    }}
+               >
+                    {
+                         deliveryBoyData.map((item, index) => {
+                              return (
+                                   <DeliveryBoyCard
+                                        key={index}
+                                        title={item.username}
+                                        id={item.id}
+                                        expence={[]}
+                                   />
+                              )
+                         }
+                         )
+                    }
+               </Box>
           </div>
      );
 }
@@ -110,6 +140,17 @@ function makeRow(item) {
                type={TEXT}
                name='password'
           />,
+          <UpdateCustomerCell
+               updateUser={false}
+               key={item.id}
+               userId={item.userId}
+               custId={item.id}
+               text={"134"}
+               value={123}
+               table={UPDATE_COURIER_BOY}
+               type={NUMBER}
+               name='expense'
+          />,
           //item.password,
           // item.expense,
           // item.truck,
@@ -123,108 +164,3 @@ function combineData(data, user_data) {
      });
      return result;
 }
-//data
-/*
-{
-    "data": [
-        {
-            "id": 1,
-            "user_id": 112,
-            "username": "NITESH1",
-            "password": "NITESH12",
-            "created_at": "2024-03-26T07:14:23.000000Z",
-            "updated_at": "2024-03-26T07:14:23.000000Z"
-        },
-        {
-            "id": 2,
-            "user_id": 113,
-            "username": "PRABHAT",
-            "password": "PRABHAT12",
-            "created_at": "2024-03-26T07:15:15.000000Z",
-            "updated_at": "2024-03-26T07:15:15.000000Z"
-        },
-        {
-            "id": 3,
-            "user_id": 114,
-            "username": "SUNIL1",
-            "password": "SUNIL12",
-            "created_at": "2024-03-26T07:15:41.000000Z",
-            "updated_at": "2024-03-26T07:15:41.000000Z"
-        },
-        {
-            "id": 4,
-            "user_id": 115,
-            "username": "BHUPENDRA",
-            "password": "BHUPENDRA12",
-            "created_at": "2024-03-26T07:16:04.000000Z",
-            "updated_at": "2024-03-26T07:16:04.000000Z"
-        },
-        {
-            "id": 5,
-            "user_id": 116,
-            "username": "JITENDRA",
-            "password": "JITENDRA12",
-            "created_at": "2024-03-26T07:16:45.000000Z",
-            "updated_at": "2024-03-26T07:16:45.000000Z"
-        },
-        {
-            "id": 7,
-            "user_id": 74,
-            "username": "tester",
-            "password": "test",
-            "created_at": null,
-            "updated_at": "2024-06-23T08:04:10.000000Z"
-        }
-    ],
-    "user_data": [
-        {
-            "id": 74,
-            "name": "XEROX GALI",
-            "address": "GUNJAN",
-            "phone_no": null,
-            "created_at": "2024-03-26T06:11:40.000000Z",
-            "updated_at": "2024-06-23T08:10:24.000000Z"
-        },
-        {
-            "id": 112,
-            "name": "NITESH KUMAR SAKET",
-            "address": null,
-            "phone_no": "7874258169",
-            "created_at": "2024-03-26T06:38:14.000000Z",
-            "updated_at": "2024-03-26T06:38:14.000000Z"
-        },
-        {
-            "id": 113,
-            "name": "PRABHAT KUMAR SAKET",
-            "address": null,
-            "phone_no": "9713179841",
-            "created_at": "2024-03-26T06:38:38.000000Z",
-            "updated_at": "2024-03-26T06:38:38.000000Z"
-        },
-        {
-            "id": 114,
-            "name": "SUNIL KUMAR SAKET",
-            "address": null,
-            "phone_no": "7567063929",
-            "created_at": "2024-03-26T06:38:58.000000Z",
-            "updated_at": "2024-03-26T06:38:58.000000Z"
-        },
-        {
-            "id": 115,
-            "name": "BHUPENDRA KUMAR",
-            "address": null,
-            "phone_no": "7030588937",
-            "created_at": "2024-03-26T06:39:28.000000Z",
-            "updated_at": "2024-03-26T06:39:28.000000Z"
-        },
-        {
-            "id": 116,
-            "name": "JITENDRA PANDEY",
-            "address": null,
-            "phone_no": "7984240723",
-            "created_at": "2024-03-26T06:39:48.000000Z",
-            "updated_at": "2024-03-26T06:39:48.000000Z"
-        }
-    ]
-}
-*/

@@ -24,7 +24,7 @@ export const updateDelivery = createAsyncThunk(
                });
                const result = await response.json();
                isSuccessful = result.isSuccessful;
-               //console.log(result);
+               // console.log(result);
                error = false;
           } catch (e) {
                console.warn(e);

@@ -15,7 +15,7 @@ export const fetchDeliveryHistory = createAsyncThunk(
                     }),
                });
                data = await response.json();
-               //console.log(data);
+               console.log(data);
                error = false;
           } catch (e) {
                console.warn(e);

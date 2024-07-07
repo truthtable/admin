@@ -51,13 +51,18 @@ function Sidebar({ openSidebarToggle, OpenSidebar }) {
                               <FcPieChart className="icon" /> Dashboard
                          </li>
                     </Link>
-
-                    {/* NEW MENU */}
+                    <Link to="/admin/readWherehouse">
+                         <li className="sidebar-list-item">
+                              <FcHome className="icon" /> Warehouse
+                         </li>
+                    </Link>
                     <Link to="/admin/delivery_history">
                          <li className="sidebar-list-item">
                               <FcViewDetails className="icon" /> Deliveries
                          </li>
                     </Link>
+                    {/* NEW MENU */}
+
                     <Link to="/admin/ViewCustomer">
                          <li className="sidebar-list-item">
                               <FcContacts className="icon" /> Customers
@@ -68,11 +73,7 @@ function Sidebar({ openSidebarToggle, OpenSidebar }) {
                               <FcManager className="icon" /> Delivery Boys
                          </li>
                     </Link>
-                    <Link to="/admin/readWherehouse">
-                         <li className="sidebar-list-item">
-                              <FcHome className="icon" /> Warehouse
-                         </li>
-                    </Link>
+
                     <Link to="/admin/read">
                          <li className="sidebar-list-item">
                               <FcFullBattery className="icon" /> Gas Cylinders
