@@ -1,20 +1,24 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import "../crud-css/read.css";
-import gasDataService from "../../services/gas-services";
-import DataTable from "../../components/table/DataTable";
+import "../../crud/crud-css/read.css";
+import gasDataService from "../../services/gas-services.jsx";
+import DataTable from "../table/DataTable.jsx";
 import { Box, Button, Chip, Snackbar, Stack, Tab, TabList, TabPanel, Tabs, Input } from "@mui/joy";
 import { TbLetterX } from "react-icons/tb";
 
 import { useDispatch, useSelector } from "react-redux";
-import { fetchDeliveryHistory } from "../../state/DeliveryAPI";
-import { fetchGasData } from "../../state/GasList";
-import { TEXT_INPUT, NUMBER_INPUT, CUSTOMER, UpdateDeliveryCell as UpdateData, GAS, RECEVIED_GAS, GAS_QUANTITY, RECEVIED_GAS_QUANTITY, AMOUNT, CLEAR_MISTAKE } from "../../components/edit/UpdateDeliveryCell";
+import { fetchDeliveryHistory } from "../../state/DeliveryAPI.jsx";
+import { fetchGasData } from "../../state/GasList.jsx";
+import { TEXT_INPUT, NUMBER_INPUT, CUSTOMER, UpdateDeliveryCell as UpdateData, GAS, RECEVIED_GAS, GAS_QUANTITY, RECEVIED_GAS_QUANTITY, AMOUNT, CLEAR_MISTAKE } from "../edit/UpdateDeliveryCell.jsx";
 import { FaSearch } from "react-icons/fa";
 
-const delivery_history = () => {
+//key value pair of gas id and gas data
+let allGasDataMap = {}
+
+const deliveryHistory = () => {
      const dispatch = useDispatch();
      const deliveryData = useSelector((state) => state.delivery);
+     const allGasData = useSelector((state) => state.gas);
 
      const BOLD = "bold";
      const NORMAL = "normal";
@@ -109,12 +113,8 @@ const delivery_history = () => {
           makeHead("Delivery Boy"),
           makeHead("Customer"),
           makeHead("Address"),
-          makeHead("Gas"),
-          makeHead("kg"),
-          makeHead("Quantity"),
-          makeHead("Recived Gas"),
-          makeHead("Recived kg"),
-          makeHead("Recived Qty"),
+          makeHead("Delivery Gas"),
+          makeHead("Received Gas"),
           makeHead("Amount"),
           makeHead("balance"),
           makeHead("Correction"),
@@ -161,16 +161,30 @@ const delivery_history = () => {
      ) {
 
           if (deliveryData.data.data.length > 0) {
+
+              console.log( deliveryData.data.gas_data)
+
+
+
                deliveryData.data.data.map((value, index) =>
-                    tableData.push(makeRow(SPAN, value, index)),
+                    tableData.push(makeRow(SPAN, value, index,deliveryData.data.gas_data)),
                );
                const filteredData = deliveryData.data.data.filter((user) => {
                     return user.correction == 1;
                });
                filteredData.map((value, index) =>
-                    correctionTableData.push(makeRow(SPAN, value, index)),
+                    correctionTableData.push(makeRow(SPAN, value, index,deliveryData.data.gas_data)),
                );
           }
+     }
+     if(
+        !allGasData.isError &&
+        !allGasData.isLoading &&
+        allGasData.data !== null
+     ){
+         allGasData.data.data.forEach((value, index) => {
+            allGasDataMap[value.id] = value
+         })
      }
      if (deliveryData.isLoading) {
           setSnackbarLoading("Loading data");
@@ -253,20 +267,30 @@ const delivery_history = () => {
           );
      }
 };
-function makeRow(SPAN, value, index) {
-     const scr = makeRowSting(value)
+function makeRow(SPAN, value, index,gas_data) {
+    // console.log(value)
+    // return[]
+    const scr = makeRowSting(value)
+    const t = gas_data.filter((gas) => {
+            return gas.delivery_id == value.id;
+    })
+    const dGas = t.map((value, index) => {
+        let temp = ""
+        try {
+            let gas =allGasDataMap[value.gas_id]
+            temp = `Gas:${gas.company_name},${gas.kg}KG, Qty:${value.quantity}`
+        }catch (e) {
+            console.warn(e)
+        }
+        return temp
+    })
      return [
           SPAN(value.correction == 1, value.created_at, formatDateTime(value.created_at), true, "", value.id),
           SPAN(value.correction == 1, value.updated_at, formatDateTime(value.updated_at), true, "", value.id),
           SPAN(value.correction == 1, value.courier_boy_id.name, titleCase(value.courier_boy_id.name), true, "", value.id),
           SPAN(value.correction == 1, value.customer_id.name, titleCase(value.customer_id.name), false, scr, CUSTOMER, "Customer Name", value.id),
           SPAN(value.correction == 1, value.customer_id.address, value.customer_id.address, true, scr, TEXT_INPUT, "Address", value.id),
-          SPAN(value.correction == 1, value.gas_id.company_name, titleCase(value.gas_id.company_name), false, scr, GAS, "Gas", value.id,),
-          SPAN(value.correction == 1, value.gas_id.kg, value.gas_id.kg + " KG", false, scr, GAS, "Gas", value.id),
-          SPAN(value.correction == 1, value.quantity, value.quantity, false, scr, GAS_QUANTITY, "Quantity", value.id),
-          SPAN(value.correction == 1, value.received_cylinder.company_name, titleCase(value.received_cylinder.company_name), false, scr, RECEVIED_GAS, "Recevid Gas", value.id),
-          SPAN(value.correction == 1, value.received_cylinder.kg, value.received_cylinder.kg + " KG", false, scr, RECEVIED_GAS, "Recevid Gas", value.id),
-          SPAN(value.correction == 1, value.received_cylinder_quantity, value.received_cylinder_quantity, false, scr, RECEVIED_GAS_QUANTITY, "Recevid Quantity", value.id),
+         SPAN(value.correction == 1, 'dGas', JSON.stringify(dGas), true, scr, GAS, "Gas Name", value.id),
           SPAN(value.correction == 1, value.received_amount, `${(value.payment_method == 0) ? "Cash" : "UPI"} : ${value.received_amount} ₹`, false, scr, AMOUNT, "Received Amount", value.id),
           SPAN(value.correction == 1, value.balance, `${(value.balance)} ₹`, true, scr, "", "Balance", value.id),
           SPAN(value.correction == 1, value.correction, value.correction == 1 ? "Yes" : "No", false, scr, CLEAR_MISTAKE, "Correction", value.id),
@@ -278,12 +302,6 @@ function makeRowSting(value) {
           "/nCourier Boy : " + titleCase(value.courier_boy_id.name) +
           "/nCustomer Name : " + titleCase(value.customer_id.name) +
           "/nAddress : " + value.customer_id.address +
-          "/nGas : " + titleCase(value.gas_id.company_name) +
-          " - " + value.gas_id.kg + "Kg" +
-          " - Qty : " + value.quantity +
-          "/nReceived Gas : " + titleCase(value.received_cylinder.company_name) +
-          " - " + value.received_cylinder.kg + "Kg" +
-          " - Qty : " + value.received_cylinder_quantity +
           "/nAmount : " + value.received_amount + "₹"
      return data
 }
@@ -312,4 +330,4 @@ function formatDateTime(dateString) {
      return date.getDate() + "/" + (date.getMonth() + 1) + "/" + date.getFullYear() + " " + strTime;
 }
 
-export default delivery_history;
+export default deliveryHistory;

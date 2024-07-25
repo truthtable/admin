@@ -10,9 +10,6 @@ export const fetchDeliveryHistory = createAsyncThunk(
           try {
                const response = await fetch(GET_DELIVERY_HISTORY, {
                     method: "get",
-                    headers: new Headers({
-                         "ngrok-skip-browser-warning": "69420",
-                    }),
                });
                data = await response.json();
                console.log(data);

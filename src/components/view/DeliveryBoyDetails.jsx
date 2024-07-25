@@ -1,14 +1,14 @@
 import { Box, Button, Input, LinearProgress, Stack } from "@mui/joy";
 import { BsSearch } from "react-icons/bs";
-import DataTable from "../table/DataTable";
-import TableHead from "../table/TableHead";
+import DataTable from "../table/DataTable.jsx";
+import TableHead from "../table/TableHead.jsx";
 
 import { useDispatch, useSelector } from "react-redux";
-import { fetchGetData } from "../../state/GetData";
+import { fetchGetData } from "../../state/GetData.jsx";
 import React, { useEffect, useState } from "react";
-import { GET_COURIER_BOY_DATA, UPDATE_COURIER_BOY, UPDATE_USER, } from "../../services/Api";
-import UpdateCustomerCell, { NUMBER, TEXT } from "./UpdateCustomerCell";
-import DeliveryBoyCard from "./DeliveryBoyCard";
+import { GET_COURIER_BOY_DATA, UPDATE_COURIER_BOY, UPDATE_USER, } from "../../services/Api.jsx";
+import UpdateCustomerCell, { NUMBER, TEXT } from "../edit/UpdateCustomerCell.jsx";
+import DeliveryBoyCard from "./DeliveryBoyCard.jsx";
 
 export default function DeliveryBoyDetails() {
      const dispatch = useDispatch();

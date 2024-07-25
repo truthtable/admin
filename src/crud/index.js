@@ -17,11 +17,11 @@ import UpdateReport from "./report/UpdateReport";
 import PrintReport from "./report/PrintReport";
 
 import add_delivery_history from "./DeliveryHistory/add_delivery_history";
-import delivery_history from "./DeliveryHistory/delivery_history";
+import deliveryHistory from "../components/view/DeliveryHistory.jsx";
 import edit_delivery_history from "./DeliveryHistory/edit_delivery_history";
 
 import InsertCustomer from "./customer/insertcustomer";
-import ViewCustomer from "./customer/ViewCustomer";
+import ViewCustomer from "../components/view/ViewCustomer.jsx";
 import UpdateCustomer from "./customer/UpdateCustomer";
 
 import InsertAdmin from "./Admin/InsertAdmin";
@@ -47,7 +47,7 @@ export {
 
      //delivery history
      add_delivery_history,
-     delivery_history,
+     deliveryHistory,
      edit_delivery_history,
 
      //report

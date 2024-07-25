@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import deliveryBoyService from "../../services/adddeliverboy_service";
+import deliveryBoyService from "../../services/add_delivery_service.jsx";
 import "../crud-css/insert.css";
 import { useEffect } from "react";
 

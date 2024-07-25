@@ -1,7 +1,6 @@
 import { Button, Divider, Stack, Typography } from "@mui/joy";
-import DataTable from "../table/DataTable";
-import TableHead from "../table/TableHead";
-import { FcAddColumn } from "react-icons/fc";
+import DataTable from "../table/DataTable.jsx";
+import TableHead from "../table/TableHead.jsx";
 import { BsPlus } from "react-icons/bs";
 
 const Warehouse = () => {
@@ -74,15 +73,11 @@ const Warehouse = () => {
                          >
                               Full cylinders
                          </Button>
-                         <DataTable
-                              thead={[
-                                   <TableHead>Company Name</TableHead>,
-                                   <TableHead>Weight</TableHead>,
-                                   <TableHead>Total</TableHead>,
-                              ]}
-                              tbody={fullCylinders}
-                              loading={false}
-                         />
+                        <DataTable thead={[
+                            <TableHead>Company Name</TableHead>,
+                            <TableHead>Weight</TableHead>,
+                            <TableHead>Total</TableHead>,
+                        ]} tbody={fullCylinders} loading={false}/>
                          <Button
                               sx={{
                                    width: "100%",

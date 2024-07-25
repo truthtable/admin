@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { GAS_DATA, UPDATE_GAS } from "../../services/Api";
-import { fetchGetData } from "../../state/GetData";
-import DataTable from "../table/DataTable";
-import TableHead from "../table/TableHead";
-import UpdateCustomerCell, { TEXT } from "./UpdateCustomerCell";
+import { GAS_DATA, UPDATE_GAS } from "../../services/Api.jsx";
+import { fetchGetData } from "../../state/GetData.jsx";
+import DataTable from "../table/DataTable.jsx";
+import TableHead from "../table/TableHead.jsx";
+import UpdateCustomerCell, { TEXT } from "../edit/UpdateCustomerCell.jsx";
 import { Box, Button, Card, CardContent, Chip, Divider, Stack, Typography, Modal, ModalClose, ModalDialog } from "@mui/joy";
 import PropTypes from 'prop-types';
 import { RiAddFill } from "react-icons/ri";

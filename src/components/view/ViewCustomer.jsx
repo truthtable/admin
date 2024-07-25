@@ -1,19 +1,19 @@
-//delivery_history.jsx
+//DeliveryHistory.jsx
 import React, { useEffect, useState } from "react";
-import "../crud-css/read.css";
+import "../../crud/crud-css/read.css";
 import {
      BsSearch,
 } from "react-icons/bs";
-import gasDataService from "../../services/gas-services";
-import DataTable from "../../components/table/DataTable";
+import gasDataService from "../../services/gas-services.jsx";
+import DataTable from "../table/DataTable.jsx";
 import { Box, Button, Input, Stack, Typography } from "@mui/joy";
-import TableHead from "../../components/table/TableHead";
+import TableHead from "../table/TableHead.jsx";
 
 import { useDispatch, useSelector } from "react-redux";
-import { fetchCustomerData } from "../../state/Customers";
-import UpdateCustomerCell, { NUMBER, TEXT } from "../../components/edit/UpdateCustomerCell";
-import { notNull } from "../../helpers.jsx/Validation";
-import { UPDATE_CUSTOMER, UPDATE_USER } from "../../services/Api";
+import { fetchCustomerData } from "../../state/Customers.jsx";
+import UpdateCustomerCell, { NUMBER, TEXT } from "../edit/UpdateCustomerCell.jsx";
+import { notNull } from "../../helpers.jsx/Validation.jsx";
+import { UPDATE_CUSTOMER, UPDATE_USER } from "../../services/Api.jsx";
 
 import { TbHomePlus } from "react-icons/tb";
 
