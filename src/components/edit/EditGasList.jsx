@@ -28,8 +28,7 @@ export default function EditGasList({gasList, correction,allgasList}) {
                     <ListItemContent
                         sx={{
                             width: "100%",
-                        }}
-                    >
+                        }}>
                        {
                             makeText(gas)
                         }
