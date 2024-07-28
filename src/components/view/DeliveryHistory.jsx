@@ -29,6 +29,7 @@ import {
     TEXT_INPUT,
     UpdateDeliveryCell as UpdateData
 } from "../edit/UpdateDeliveryCell.jsx";
+import EditGasList from "../edit/EditGasList.jsx";
 
 //key value pair of gas id and gas data
 let allGasDataMap = {}
@@ -189,8 +190,6 @@ const deliveryHistory = () => {
 
         if (deliveryData.data.data.length > 0) {
 
-            console.log(deliveryData.data.gas_data)
-
             deliveryData.data.data.map((value, index) =>
                 tableData.push(makeRow(SPAN, value, index, deliveryData.data.gas_data)),
             );
@@ -299,24 +298,41 @@ function makeRow(SPAN, value, index, gas_data) {
         return value.is_empty === 1
     })
     const dGas = deliveryGas.map((value, index) => {
-        let temp = ""
         try {
-            let gas = allGasDataMap[value.gas_id]
-            temp = `Gas:${gas.company_name},${gas.kg}KG, Qty:${value.quantity}`
+            const gas = allGasDataMap[value.gas_id]
+            return {
+                company_name : gas.company_name,
+                delivery_id : value.delivery_id,
+                gas_id : value.gas_id,
+                id : value.id,
+                is_empty: false,
+                quantity : value.quantity,
+                kg : gas.kg,
+                price : value.price
+            }
+
         } catch (e) {
             console.warn(e)
         }
-        return temp
+        return null
     })
     const rGas = receivedGas.map((value, index) => {
-        let temp = ""
         try {
-            let gas = allGasDataMap[value.gas_id]
-            temp = `Gas:${gas.company_name},${gas.kg}KG, Qty:${value.quantity}`
+            const gas = allGasDataMap[value.gas_id]
+            return {
+                company_name : gas.company_name,
+                delivery_id : value.delivery_id,
+                gas_id : value.gas_id,
+                id : value.id,
+                is_empty: false,
+                quantity : value.quantity,
+                kg : gas.kg,
+                price : 0
+            }
         } catch (e) {
             console.warn(e)
         }
-        return temp
+        return null
     })
     return [
         SPAN(value.correction == 1, value.created_at, formatDateTime(value.created_at), true, "", value.id),
@@ -324,10 +340,10 @@ function makeRow(SPAN, value, index, gas_data) {
         SPAN(value.correction == 1, value.courier_boy_id.name, titleCase(value.courier_boy_id.name), true, "", value.id),
         SPAN(value.correction == 1, value.customer_id.name, titleCase(value.customer_id.name), false, scr, CUSTOMER, "Customer Name", value.id),
         SPAN(value.correction == 1, value.customer_id.address, value.customer_id.address, true, scr, TEXT_INPUT, "Address", value.id),
-        makeGasListUI(dGas),
-        makeGasListUI(rGas),
-        SPAN(value.correction == 1, value.received_amount, `${(value.payment_method == 0) ? "Cash" : "UPI"} : ${value.received_amount} ₹`, false, scr, AMOUNT, "Received Amount", value.id),
-        SPAN(value.correction == 1, value.balance, `${(value.balance)} ₹`, true, scr, "", "Balance", value.id),
+        <EditGasList gasList ={dGas} correction={value.correction == 1} allgasList={allGasDataMap}/>,
+        <EditGasList gasList ={rGas} correction={value.correction == 1} allgasList={allGasDataMap}/>,
+        SPAN(value.correction == 1, value.received_amount, `${(value.payment_method == 0) ? "Cash" : "UPI"} : ${value.received_amount}₹`, false, scr, AMOUNT, "Received Amount", value.id),
+        SPAN(value.correction == 1, value.balance, `${(value.balance)}₹`, true, scr, "", "Balance", value.id),
         SPAN(value.correction == 1, value.correction, value.correction == 1 ? "Yes" : "No", false, scr, CLEAR_MISTAKE, "Correction", value.id),
     ];
 }
@@ -366,24 +382,6 @@ function formatDateTime(dateString) {
     minutes = minutes < 10 ? "0" + minutes : minutes;
     var strTime = hours + ":" + minutes + " " + ampm;
     return date.getDate() + "/" + (date.getMonth() + 1) + "/" + date.getFullYear() + " " + strTime;
-}
-
-function makeGasListUI(gaslist) {
-    return <List>
-        {gaslist.map((value, index) => {
-            return <ListItem key={index}>
-
-                    <ListItemContent>
-                        <Typography variant="body1" sx={{
-                            color: "black",
-                            fontWeight: "bold",
-                            fontSize: "0.875rem",
-                        }}>{value}</Typography>
-                    </ListItemContent>
-
-            </ListItem>
-        })}
-    </List>
 }
 
 export default deliveryHistory;
