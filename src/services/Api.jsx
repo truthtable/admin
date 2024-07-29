@@ -7,7 +7,10 @@ export const GET_WEATHOUSE_DATA = URL + "api/warehouse_index";
 export const GET_COUNTS = URL + "api/count";
 export const GET_DELIVERY_HISTORY = URL + "api/delivery_history?start=0&end=500";
 export const GET_COURIER_BOY_DATA = URL + "api/courier_boy_info";
+
 export const GAS_DATA = URL + "api/gas_cylinder_data";
+export const DELETE_GAS_DELIVERY = URL + "api/deleteGasDeliverys/";
+export const INSERT_GAS_DELIVERY = URL + "api/insertGasDeliverys";
 
 export const SEARCH_CUSTOMER = URL + "api/search";
 
