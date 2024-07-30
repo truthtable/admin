@@ -5,7 +5,12 @@ export default function DataTable(props) {
      const { thead, tbody, loading } = props;
 
      return (
-          <div>
+          <div
+          style={{
+              width: "100%",
+              flexGrow: 1,
+          }}
+          >
                <div style={{ display: loading ? "block" : "none" }}>
                     <LinearProgress color="primary" variant="soft" />
                </div>

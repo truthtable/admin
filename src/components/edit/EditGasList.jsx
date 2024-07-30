@@ -173,7 +173,7 @@ export default function EditGasList({gasList, correction, allgasList, isReceved,
                         my: 1
                     }}/>
                     {gasListState.map((gas, index) => {
-                        console.log(gas,index);
+                       // console.log(gas,index);
                         return <ListItem key={index}
                         >
                             <ListItemContent
@@ -229,7 +229,6 @@ export default function EditGasList({gasList, correction, allgasList, isReceved,
                                     />
                                 </Button>
                             </ListItemContent>
-
                         </ListItem>
                     })}
                     <form

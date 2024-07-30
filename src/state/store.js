@@ -1,4 +1,4 @@
-import { configureStore } from "@reduxjs/toolkit";
+import {configureStore} from "@reduxjs/toolkit";
 import deliveryReducer from "./DeliveryAPI";
 import loginReducer from "./LoginAPI";
 import countReducer from "./Count";
@@ -11,31 +11,42 @@ import customerReducer from "./Customers";
 import updateCustomerReducer from "./CustomerUpdate";
 import getDataReducer from "./GetData";
 import gasDeliverysReducer from "./UpdateGasDelivery";
+import purchaseOrderReducer from "../redux/reducers/purchaseOrderReducer.js";
+import purchaseOrderItemReducer from "../redux/reducers/purchaseOrderItemReducer.js";
+import warehouseReducer from "../redux/reducers/warehouseReducer.js";
 
-export const store = configureStore({
-     reducer: {
-          login: loginReducer,
+export const store = configureStore(
+    {
+        reducer: {
+            login: loginReducer,
 
-          checkLogin: checkLoginReducer,
+            checkLogin: checkLoginReducer,
 
-          delivery: deliveryReducer,
+            delivery: deliveryReducer,
 
-          count: countReducer,
+            count: countReducer,
 
-          gas: gasReducer,
+            gas: gasReducer,
 
-          search_customer: customerSearhReducer,
+            search_customer: customerSearhReducer,
 
-          customers: customerReducer,
+            customers: customerReducer,
 
-          updateDeliveryData: UpdateDeliveryReducer,
+            updateDeliveryData: UpdateDeliveryReducer,
 
-          updateGas: UpdateGasReducer,
+            updateGas: UpdateGasReducer,
 
-          updateCustomer: updateCustomerReducer,
+            updateCustomer: updateCustomerReducer,
 
-          getData: getDataReducer,
+            getData: getDataReducer,
 
-          gasDeliverys: gasDeliverysReducer,
-     },
-});
+            gasDeliverys: gasDeliverysReducer,
+
+            purchaseOrders: purchaseOrderReducer,
+
+            purchaseOrderItems: purchaseOrderItemReducer,
+
+            warehouses: warehouseReducer,
+        },
+    }
+);
