@@ -45,6 +45,27 @@ function Home() {
             </div>
             <div className="main-cards">
 
+
+                <Link to="/admin/purchase" className="link shadow-lg">
+                    <div className="card-inner">
+                        <h3>Purchase</h3>
+                        <BsHouseCheck className="card_icon"/>
+                    </div>
+                    <div>
+                        <CircularProgress
+                            sx={{display: loadingView}}
+                            color="primary"
+                            variant="soft"
+                        />
+                        <span
+                            style={{
+                                display: loading ? "none" : "block",
+                            }}
+                        >
+                              </span>
+                    </div>
+                </Link>
+
                 <Link to="/admin/readWherehouse" className="link shadow-lg">
                     <div className="card-inner">
                         <h3>Wherehouse</h3>

@@ -2,20 +2,7 @@ import {useEffect} from "react";
 import "../../crud/crud-css/read.css";
 import gasDataService from "../../services/gas-services.jsx";
 import DataTable from "../table/DataTable.jsx";
-import {
-    Box,
-    Button,
-    Chip,
-    List,
-    ListItem,
-    ListItemButton,
-    ListItemContent,
-    Snackbar,
-    Tab,
-    TabList,
-    TabPanel,
-    Tabs, Typography
-} from "@mui/joy";
+import {Box, Button, Chip, Snackbar, Tab, TabList, TabPanel, Tabs} from "@mui/joy";
 import {TbLetterX} from "react-icons/tb";
 
 import {useDispatch, useSelector} from "react-redux";
@@ -25,7 +12,6 @@ import {
     AMOUNT,
     CLEAR_MISTAKE,
     CUSTOMER,
-    GAS,
     TEXT_INPUT,
     UpdateDeliveryCell as UpdateData
 } from "../edit/UpdateDeliveryCell.jsx";
@@ -39,6 +25,13 @@ const deliveryHistory = () => {
     const deliveryData = useSelector((state) => state.delivery);
     const allGasData = useSelector((state) => state.gas);
 
+    const currentUrl = window.location.href;
+    const hashIndex = currentUrl.indexOf('#');
+    const hashPart = currentUrl.substring(hashIndex + 1);
+    const url = new URL(hashPart, window.location.origin);
+    const searchParams = new URLSearchParams(url.search);
+
+    const urlCustomerId = searchParams.get('customerId');
 
     useEffect(() => {
         gasDataService.listenDataChange(() => {
@@ -190,8 +183,16 @@ const deliveryHistory = () => {
 
         if (deliveryData.data.data.length > 0) {
 
-            deliveryData.data.data.map((value, index) =>
-                tableData.push(makeRow(SPAN, value, index, deliveryData.data.gas_data)),
+            deliveryData.data.data.map((value, index) => {
+
+                    if (urlCustomerId != null) {
+                        if (value.customer_id.id == urlCustomerId) {
+                            return tableData.push(makeRow(SPAN, value, index, deliveryData.data.gas_data))
+                        }
+                    } else {
+                        return tableData.push(makeRow(SPAN, value, index, deliveryData.data.gas_data))
+                    }
+                }
             );
             const filteredData = deliveryData.data.data.filter((user) => {
                 return user.correction == 1;
@@ -301,14 +302,14 @@ function makeRow(SPAN, value, index, gas_data) {
         try {
             const gas = allGasDataMap[value.gas_id]
             return {
-                company_name : gas.company_name,
-                delivery_id : value.delivery_id,
-                gas_id : value.gas_id,
-                id : value.id,
+                company_name: gas.company_name,
+                delivery_id: value.delivery_id,
+                gas_id: value.gas_id,
+                id: value.id,
                 is_empty: false,
-                quantity : value.quantity,
-                kg : gas.kg,
-                price : value.price
+                quantity: value.quantity,
+                kg: gas.kg,
+                price: value.price
             }
 
         } catch (e) {
@@ -320,14 +321,14 @@ function makeRow(SPAN, value, index, gas_data) {
         try {
             const gas = allGasDataMap[value.gas_id]
             return {
-                company_name : gas.company_name,
-                delivery_id : value.delivery_id,
-                gas_id : value.gas_id,
-                id : value.id,
+                company_name: gas.company_name,
+                delivery_id: value.delivery_id,
+                gas_id: value.gas_id,
+                id: value.id,
                 is_empty: false,
-                quantity : value.quantity,
-                kg : gas.kg,
-                price : 0
+                quantity: value.quantity,
+                kg: gas.kg,
+                price: 0
             }
         } catch (e) {
             console.warn(e)
@@ -340,8 +341,10 @@ function makeRow(SPAN, value, index, gas_data) {
         SPAN(value.correction == 1, value.courier_boy_id.name, titleCase(value.courier_boy_id.name), true, "", value.id),
         SPAN(value.correction == 1, value.customer_id.name, titleCase(value.customer_id.name), false, scr, CUSTOMER, "Customer Name", value.id),
         SPAN(value.correction == 1, value.customer_id.address, value.customer_id.address, true, scr, TEXT_INPUT, "Address", value.id),
-        <EditGasList gasList ={dGas} correction={value.correction == 1} allgasList={allGasDataMap} isReceved={false} delivery_id={value.id}/>,
-        <EditGasList gasList ={rGas} correction={value.correction == 1} allgasList={allGasDataMap} isReceved={true} delivery_id={value.id}/>,
+        <EditGasList gasList={dGas} correction={value.correction == 1} allgasList={allGasDataMap} isReceved={false}
+                     delivery_id={value.id}/>,
+        <EditGasList gasList={rGas} correction={value.correction == 1} allgasList={allGasDataMap} isReceved={true}
+                     delivery_id={value.id}/>,
         SPAN(value.correction == 1, value.received_amount, `${(value.payment_method == 0) ? "Cash" : "UPI"} : ${value.received_amount}₹`, false, scr, AMOUNT, "Received Amount", value.id),
         SPAN(value.correction == 1, value.balance, `${(value.balance)}₹`, true, scr, "", "Balance", value.id),
         SPAN(value.correction == 1, value.correction, value.correction == 1 ? "Yes" : "No", false, scr, CLEAR_MISTAKE, "Correction", value.id),
