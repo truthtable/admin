@@ -11,6 +11,7 @@ export const fetchLogin = createAsyncThunk(
           try {
                if (!param.isLoadFromCookie) {
                     const { username, password } = param;
+                    console.log(username, password);
                     const response = await fetch(LOGIN, {
                          method: "post",
                          headers: {
