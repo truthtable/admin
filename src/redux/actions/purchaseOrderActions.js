@@ -39,6 +39,7 @@ export const updateOrder = (id, orderData) => async (dispatch) => {
                `https://adminsr.life/public/api/purchase-orders/${id}`,
                orderData,
           );
+          //console.log(response.data);
           dispatch({ type: UPDATE_ORDER_SUCCESS, payload: response.data });
      } catch (error) {
           dispatch({ type: FETCH_ORDERS_FAILURE, error });

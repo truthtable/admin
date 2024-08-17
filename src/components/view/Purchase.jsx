@@ -1,4 +1,5 @@
 import {
+     AccordionGroup,
      Box,
      Button,
      Card,
@@ -25,11 +26,11 @@ import { createOrder, deleteOrder, fetchOrders, updateOrder } from "../../redux/
 import DataTable from "../table/DataTable.jsx";
 import { FaCheck, FaCompressArrowsAlt, FaFilter, FaRegPlusSquare } from "react-icons/fa";
 import { AiFillDelete } from "react-icons/ai";
-import { createItem, deleteItem, updateItem } from "../../redux/actions/purchaseOrderItemActions.js";
+import { createItem, deleteItem, updateItem, iniState } from "../../redux/actions/purchaseOrderItemActions.js";
 import { fetchGasData } from "../../state/GasList.jsx";
-import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
-
-
+import { IoIosArrowDown, IoIosArrowUp, IoMdAdd } from "react-icons/io";
+import { ImCross, ImCheckmark } from "react-icons/im";
+import { Collapse } from "@mui/material";
 let gasList = [];
 export default function Purchase() {
 
@@ -38,7 +39,7 @@ export default function Purchase() {
 
      ]);
      const handleItemChange = (index, field, value) => {
-          if (field === 'gas_id') {
+          if (field === 'id') {
                setOrderItems(orderItems.map((item, i) => {
                     if (i === index) {
                          return { ...item, [field]: value }
@@ -121,6 +122,21 @@ export default function Purchase() {
      const dispatch = useDispatch();
      const { orders, loading, error } = useSelector(state => state.purchaseOrders);
 
+     //console.log(orders);
+
+     if (error) {
+          console.warn(error);
+     }
+
+     const { itemLoading, items, itemError, itemUpdateSuccess } = useSelector(state => state.purchaseOrderItems);
+
+     //console.log(itemLoading, items, itemError, itemUpdateSuccess);
+
+     if (itemError) {
+          console.warn(itemError);
+     }
+
+
      let grandTotalBallance = 0
 
 
@@ -130,6 +146,14 @@ export default function Purchase() {
           dispatch(fetchGasData());
           dispatch(fetchOrders());
      }, [dispatch]);
+
+     useEffect(() => {
+          if (itemUpdateSuccess) {
+               dispatch(iniState());
+               dispatch(fetchGasData());
+               dispatch(fetchOrders());
+          }
+     });
 
      const orderRows = []
 
@@ -191,12 +215,12 @@ export default function Purchase() {
                               <Cell id={order.id} data={order.date} tableName="purchase_orders" column="date" />
                               <Cell id={order.id} data={order.scheme} tableName="purchase_orders" column="scheme" />
                               <Cell id={order.id} data={order.scheme_type} tableName="purchase_orders" column="scheme_type" />
-                              <Cell id={order.id} data={`${gas.company_name} : ${gas.kg} KG`} tableName="purchase_order_items" column="gas_id" />
-                              <Cell id={order.id} data={item.qty} tableName="purchase_order_items" column="quantity" />
+                              <Cell id={item.id} data={gas} tableName="purchase_order_items" column="gas_id" />
+                              <Cell id={item.id} data={item.qty} tableName="purchase_order_items" column="qty" />
                               <Cell id={order.id} data={item.qty * gas.kg + " KG"} tableName="" column="" />
-                              <Cell id={order.id} data={item.rate} tableName="purchase_order_items" column="rate" />
+                              <Cell id={item.id} data={item.rate} tableName="purchase_order_items" column="rate" />
                               <Cell id={order.id} data={"₹" + (item.qty * item.rate).toFixed(2)} tableName="" column="" />
-                              <Cell id={order.id} data={item.return_cyl_qty} tableName="purchase_order_items" column="return_cylinder" />
+                              <Cell id={item.id} data={item.return_cyl_qty} tableName="purchase_order_items" column="return_cyl_qty" />
                               <Cell id={order.id} data={item.return_cyl_qty * gas.kg + " KG"} tableName="" column="" />
                          </tr >
                     )
@@ -205,7 +229,7 @@ export default function Purchase() {
                ballance = totalAmt - totalPayAmt;
                grandTotalBallance += ballance
                orderRows.push(<tr key={`order-row-total-${order.id}-${index}`}>
-                    <td colSpan={11}>
+                    <td style={{ borderWidth: 0, padding: 0, margin: 0, height: 24, }} colSpan={11}>
                          <React.Fragment>
                               <TotalRow>
                                    <div
@@ -261,6 +285,7 @@ export default function Purchase() {
                     sx={{
                          backgroundColor: "#263043",
                          padding: 1,
+                         display: (itemLoading || loading) ? "none" : "flex",
                     }}
                     gap={1}
                >
@@ -275,6 +300,7 @@ export default function Purchase() {
                                    px: 2
                               }
                          }
+                         size="sm"
                     >
                          <span
                               style={{
@@ -289,20 +315,76 @@ export default function Purchase() {
                               backgroundColor: "transparent",
                          }}
                     />
-                    <Button
-                         variant="solid"
-                         sx={{
-                              backgroundColor: "#8C3061",
-                              display: loading ? "none" : "flex",
-                         }}
-                         startDecorator={<FaFilter />}
-                         onClick={() => { }}
+                    <Stack
+                         direction="row"
+                         gap={1}
                     >
-                         Filter
-                    </Button>
+                         <Input
+                              placeholder="Start Date"
+                              type="date"
+                              name="date"
+                              required
+                              size="sm"
+                              onKeyDown={(e) => e.preventDefault()}
+                              onFocus={(e) => e.target.showPicker()}
+                              onClick={(e) => e.target.showPicker()}
+                              startDecorator={
+                                   <Box
+                                        sx={{
+                                             display: "flex",
+                                             alignItems: "center",
+                                             justifyContent: "center",
+                                        }}
+                                   >
+                                        <span style={{ color: "white", fontWeight: "bold" }}>Start Date:</span>
+                                   </Box>
+                              }
+                              sx={{
+                                   width: '100%',
+                                   flexGrow: 1,
+                                   backgroundColor: "#263043",
+                                   color: "white",
+                                   innerSpinnerColor: "white",
+                                   colorScheme: "dark",
 
+                              }}
+
+                         />
+                         <Input
+                              placeholder="Start Date"
+                              type="date"
+                              name="date"
+                              required
+                              size="sm"
+                              onKeyDown={(e) => e.preventDefault()}
+                              onFocus={(e) => e.target.showPicker()}
+                              onClick={(e) => e.target.showPicker()}
+                              startDecorator={
+                                   <Box
+                                        sx={{
+                                             display: "flex",
+                                             alignItems: "center",
+                                             justifyContent: "center",
+                                        }}
+                                   >
+                                        <span style={{ color: "white", fontWeight: "bold" }}>End Date:</span>
+                                   </Box>
+                              }
+                              sx={{
+                                   width: '100%',
+                                   flexGrow: 1,
+                                   backgroundColor: "#263043",
+                                   color: "white",
+                                   innerSpinnerColor: "white",
+                                   colorScheme: "dark",
+
+                              }}
+
+                         />
+                    </Stack>
                     <Button
                          variant="solid"
+                         size="sm"
                          sx={{
                               backgroundColor: "#12467b",
                               display: loading ? "none" : "flex",
@@ -321,7 +403,7 @@ export default function Purchase() {
                          backgroundColor: "#263043",
                          color: "#efefef",
                          borderRadius: "0px",
-                         display: (loading) ? "block" : "none",
+                         display: (itemLoading || loading) ? "block" : "none",
 
                     }}
                />
@@ -439,6 +521,9 @@ export default function Purchase() {
                                                        name="date"
                                                        required
                                                        size="sm"
+                                                       onKeyDown={(e) => e.preventDefault()}
+                                                       onFocus={(e) => e.target.showPicker()}
+                                                       onClick={(e) => e.target.showPicker()}
                                                        sx={{
                                                             width: "100%",
                                                             flexGrow: 1,
@@ -955,71 +1040,209 @@ export const Cell = ({ id, data, tableName, column }) => {
      const [editMode, setEditMode] = useState(false);
      const [editValue, setEditValue] = useState(data);
      const dispatch = useDispatch();
-     return <td>{editMode ? <Stack
-          direction="row"
-
-     >
-          <Input
+     const DataDisplay = () => {
+          return <Box
                sx={{
                     color: "black",
-                    backgroundColor: "#c1ebd4",
-                    flexGrow: 1,
+                    borderRadius: 0,
+                    backgroundColor: "transparent",
+                    whiteSpace: "nowrap",
+                    transition: "background-color 0.3s",
+                    fontWeight: "bold",
+                    "&:hover": {
+                         backgroundColor: "#c1ebd4",
+                    },
                }}
-               name={column}
-               type="text"
-               value={editValue}
-               onChange={(e) => setEditValue(e.target.value)}
-               endDecorator={
-                    <Stack direction="row"
-                         sx={{
-                              padding: 1,
-                         }}
-                         gap={2}>
-                         <FaCompressArrowsAlt
-                              onClick={() => {
-                                   setEditMode(false)
-                              }}
-                         />
-                         <FaCheck
-                              onClick={() => {
-                                   setEditMode(false)
-                                   if (tableName === "purchase_orders") {
-                                        dispatch(updateOrder(id, { [column]: editValue }))
-                                   }
-                                   if (tableName === "purchase_order_items") {
-                                        dispatch(updateItem(id, { [column]: editValue }))
-                                   }
-                              }}
-                         />
-                    </Stack>
-               }
+               onClick={() => {
+                    if (tableName != "")
+                         setEditMode(true)
+               }}
+          >
+               {data}
+          </Box>
+     }
+     const gas = data
+     let gasId = null
+     if (column === "gas_id") {
+          //console.log(gas)
+          gasId = gas.id
+          data = `${data.company_name} : ${data.kg} KG`
 
-          />
-     </Stack> : <Box
-          sx={{
-               color: "black",
-               borderRadius: 0,
-               backgroundColor: "transparent",
-               whiteSpace: "nowrap",
-               transition: "background-color 0.3s",
-               fontWeight: "bold",
-               "&:hover": {
-                    backgroundColor: "#c1ebd4",
-               },
-          }}
-          onClick={() => {
-               if (tableName != "")
-                    setEditMode(true)
-          }}
-     >
-          {data}
-     </Box>}
-     </td>
+     }
+     if (!editMode) {
+          return <td>
+               <DataDisplay />
+          </td>
+     }
+
+     if (column === "gas_id") {
+          return <td
+               style={{ padding: 0, minWidth: "200px" }}
+          >
+               <Stack alignContent="center"
+                    justifyContent="center"
+                    alignItems="center" direction="row" sx={{ width: "100%" }}>
+                    <Select
+                         defaultValue={gas.id}
+                         size="sm"
+                         sx={{ flexGrow: 1 }}
+                         onChange={(event, newValue) => {
+                              gasId = newValue
+
+                         }}
+                    >
+                         {
+                              gasList.map(gas => {
+                                   if (gas.company_name === "GO GASS")
+                                        return (<Option key={gas.id} value={gas.id}>{gas.company_name} : {gas.kg} KG</Option>)
+                              })
+                         }
+                    </Select>
+                    <Box
+                         sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              p: 1,
+                              m: 0,
+                              transition: "all 0.3s",
+                              cursor: "pointer",
+                              color: "#b34349",
+                              borderRadius: "md",
+                              "&:hover": {
+                                   backgroundColor: "#b34349",
+                                   color: "white",
+                              },
+
+                         }}
+                         onClick={() => {
+                              setEditMode(false)
+
+                         }}
+                    >
+                         <ImCross
+
+                         />
+                    </Box>
+                    <Box
+                         sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              p: 1,
+                              m: 0,
+                              transition: "all 0.3s",
+                              cursor: "pointer",
+                              color: "#0a6847",
+                              borderRadius: "md",
+                              "&:hover": {
+                                   backgroundColor: "#0a6847",
+                                   color: "white",
+                              },
+                         }}
+                         onClick={() => {
+                              setEditMode(false)
+                              dispatch(updateItem(id, { [column]: gasId }))
+                         }}
+                    >
+                         <ImCheckmark
+
+                         />
+                    </Box>
+               </Stack>
+          </td >
+     }
+     return <td >{editMode ? (
+          <Stack direction="row" sx={{ width: "100%" }}>
+               <Input
+                    sx={{
+                         color: "black",
+                         backgroundColor: "#c1ebd4",
+                         flexGrow: 1,
+                         width: "100%",
+                    }}
+                    name={column}
+                    size="sm"
+                    type="text"
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    endDecorator={
+                         <Stack direction="row"
+                              sx={{
+                                   padding: 0,
+                              }}
+                         >
+
+
+                              <Box
+                                   sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        p: 1,
+                                        m: 0,
+                                        transition: "all 0.3s",
+                                        cursor: "pointer",
+                                        color: "#b34349",
+                                        borderRadius: "md",
+                                        "&:hover": {
+                                             backgroundColor: "#b34349",
+                                             color: "white",
+                                        },
+                                   }}
+                                   onClick={() => {
+                                        setEditMode(false)
+                                   }}
+                              >
+                                   <ImCross
+
+                                   />
+                              </Box>
+                              <Box
+                                   sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        p: 1,
+                                        m: 0,
+                                        transition: "all 0.3s",
+                                        cursor: "pointer",
+                                        color: "#0a6847",
+                                        borderRadius: "md",
+                                        "&:hover": {
+                                             backgroundColor: "#0a6847",
+                                             color: "white",
+                                        },
+                                   }}
+                                   onClick={() => {
+                                        setEditMode(false)
+                                        //console.log(id, tableName, column, editValue)
+                                        if (tableName === "purchase_orders") {
+                                             dispatch(updateOrder(id, { [column]: editValue }))
+                                        }
+                                        if (tableName === "purchase_order_items") {
+                                             dispatch(updateItem(id, { [column]: editValue }))
+                                        }
+                                   }}
+                              >
+                                   <ImCheckmark
+
+
+                                   />
+                              </Box>
+                         </Stack>
+                    }
+
+               />
+          </Stack>
+     ) : <DataDisplay />}
+     </td >
 }
 
 const TotalRow = ({ children }) => {
      const [show, setShow] = useState(false);
      return (
+
           <Stack>
                <Divider orientation="vertical" />
                <Box
@@ -1038,30 +1261,64 @@ const TotalRow = ({ children }) => {
                     height: "1px",
                     width: "100%",
                     opacity: 0.4,
-                    mb: 1,
                     display: (show) ? "block" : "none",
                     backgroundColor: "black",
                }} />
-               <Box
+               <Stack
+                    direction="row"
+                    gap={1}
                     sx={{
                          fontWeight: "bold",
-                         display: "flex",
-                         alignItems: "center",
-                         justifyContent: "flex-end",
-                         padding: 1,
-                         transition: "all 0.3s",
-                         cursor: "pointer",
-                         color: "#185ea5",
-                         borderRadius: "md",
-                         "&:hover": {
-                              backgroundColor: "#12467b7a",
-                              color: "white",
-                         },
                     }}
-                    onClick={() => setShow(!show)}
-               >{show ? "Hide Total" : "Show Total"}
-                    {show ? <IoIosArrowUp /> : <IoIosArrowDown />}
-               </Box>
+               >
+                    <Box
+                         sx={{
+                              fontWeight: "bold",
+                              display: !show ? "flex" : "none",
+                              alignItems: "center",
+                              justifyContent: "flex-end",
+                              px: 1,
+                              m: 0,
+                              transition: "all 0.3s",
+                              cursor: "pointer",
+                              color: "#185ea5",
+                              borderRadius: "md",
+                              "&:hover": {
+                                   backgroundColor: "#12467b7a",
+                                   color: "white",
+                              },
+                         }}
+                         onClick={() => { }}
+                    > <IoMdAdd />&nbsp;Add Gas
+                    </Box>
+                    <Divider sx={{
+                         flexGrow: 1,
+
+                         backgroundColor: "transparent",
+                    }} orientation="vertical" />
+                    <Box
+                         sx={{
+                              fontWeight: "bold",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "flex-end",
+                              px: 1,
+                              margin: show ? 1 : 0,
+                              transition: "all 0.3s",
+                              cursor: "pointer",
+                              outline: show ? "1px solid #C80036" : "1px solid transparent",
+                              color: show ? "#C80036" : "#185ea5",
+                              borderRadius: "md",
+                              "&:hover": {
+                                   backgroundColor: show ? "#F8EDED" : "#12467b7a",
+                                   color: show ? "#C80036" : "white",
+                              },
+                         }}
+                         onClick={() => setShow(!show)}
+                    >{show ? "Hide Total" : "Show Total"}&nbsp;{show ? <IoIosArrowUp /> : <IoIosArrowDown />}
+                    </Box>
+               </Stack>
+
           </Stack>
      )
 }

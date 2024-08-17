@@ -1,103 +1,102 @@
 #sidebar {
-  grid-area: sidebar;
-  height: 100%;
-  min-height: 100%;
-  max-height: 100%;
-  width: 251px;
-  min-width: 251px;
-  max-width: 251px;
-  background-color: #263043;
-  overflow-y: auto;
-  transition: all 0.5s;
-  -webkit-transition: all 0.5s;
-  /* display: none; */
+     grid-area: sidebar;
+     height: 100%;
+     min-height: 100%;
+     max-height: 100%;
+     width: 251px;
+     min-width: 251px;
+     max-width: 251px;
+     background-color: #263043;
+     overflow-y: auto;
+     transition: all 0.5s;
+     -webkit-transition: all 0.5s;
+     /* display: none; */
 }
 
 .sidebar-title {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 30px 0px 30px;
-  margin-bottom: 30px;
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+     padding: 15px 30px 0px 30px;
+     margin-bottom: 30px;
 }
 
-.sidebar-title>span {
-  display: none;
+.sidebar-title > span {
+     display: none;
 }
 
 .sidebar-brand {
-  margin-top: 15px;
-  font-size: 14px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
+     margin-top: 15px;
+     font-size: 14px;
+     font-weight: 700;
+     display: flex;
+     align-items: center;
 }
 
 .sidebar-list {
-  padding: 0;
-  list-style-type: none;
+     padding: 0;
+     list-style-type: none;
 }
 
 .sidebar-list-item {
-  padding: 20px;
-  font-size: 18px;
-  display: flex;
-  align-items: center;
+     padding: 20px;
+     font-size: 18px;
+     display: flex;
+     align-items: center;
+     color: aliceblue;
 }
 
 .sidebar-list-item .icon {
-  margin-right: 10px;
+     margin-right: 10px;
 }
 
 .sidebar-list-item:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-  cursor: pointer;
+     background-color: rgba(255, 255, 255, 0.2);
+     cursor: pointer;
 }
 
-.sidebar-list-item>a {
-  text-decoration: none;
-  color: #9e9ea4;
-  display: flex;
-  align-items: center;
+.sidebar-list-item > a {
+     text-decoration: none;
+     color: #9e9ea4;
+     display: flex;
+     align-items: center;
 }
 
 .sidebar-responsive {
-  display: inline !important;
-  position: absolute;
-  /*
+     display: inline !important;
+     position: absolute;
+     /*
       we want the z-index of the sidebar higher so that
       the charts are not showing over the sidebar 
       on small screens
     */
-  z-index: 12 !important;
+     z-index: 12 !important;
 }
 
-
 @media screen and (max-width: 992px) {
-  #sidebar {
-    display: none;
-    position: fixed;
-    width: 100%;
-    /* Adjust the width for larger screens */
-    max-width: 50%;
-    /* Set a maximum width for larger screens */
-    height: 100vh;
-  }
+     #sidebar {
+          display: none;
+          position: fixed;
+          width: 100%;
+          /* Adjust the width for larger screens */
+          max-width: 50%;
+          /* Set a maximum width for larger screens */
+          height: 100vh;
+     }
 
-  .grid-container {
-    grid-template-columns: 1fr;
-    grid-template-rows: 0.2fr 3fr;
-    grid-template-areas:
-      'header'
-      'main';
-  }
+     .grid-container {
+          grid-template-columns: 1fr;
+          grid-template-rows: 0.2fr 3fr;
+          grid-template-areas:
+               "header"
+               "main";
+     }
 
+     .menu-icon {
+          display: inline;
+     }
 
-  .menu-icon {
-    display: inline;
-  }
-
-  .sidebar-title>span {
-    display: inline;
-  }
+     .sidebar-title > span {
+          display: inline;
+     }
 }
