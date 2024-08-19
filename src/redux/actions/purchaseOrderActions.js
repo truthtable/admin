@@ -6,6 +6,11 @@ export const FETCH_ORDERS_FAILURE = "FETCH_ORDERS_FAILURE";
 export const CREATE_ORDER_SUCCESS = "CREATE_ORDER_SUCCESS";
 export const UPDATE_ORDER_SUCCESS = "UPDATE_ORDER_SUCCESS";
 export const DELETE_ORDER_SUCCESS = "DELETE_ORDER_SUCCESS";
+export const ORDER_INIT = "ORDER_INIT";
+
+export const orderIniState = () => async (dispatch) => {
+     dispatch({ type: ORDER_INIT });
+};
 
 export const fetchOrders = () => async (dispatch) => {
      dispatch({ type: FETCH_ORDERS_REQUEST });

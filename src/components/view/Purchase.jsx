@@ -9,35 +9,33 @@ import {
      Divider,
      Grid,
      Input,
-     LinearProgress, Option,
+     LinearProgress, List, ListItem, ListItemButton, ListItemContent, ListItemDecorator, Option,
      Select,
      Stack,
      Table,
      Typography
 } from "@mui/joy";
-import { CgAdd, CgBorderRight, CgFilters, CgTrash } from "react-icons/cg";
+import { CgAdd, CgBorderRight, CgFilters, CgHome, CgTrash } from "react-icons/cg";
 import Modal from "@mui/joy/Modal";
 import Sheet from "@mui/joy/Sheet";
 import ModalClose from "@mui/joy/ModalClose";
 import React, { useEffect, useState } from "react";
-
+import { MdModeEditOutline } from "react-icons/md";
 import { useDispatch, useSelector } from 'react-redux';
-import { createOrder, deleteOrder, fetchOrders, updateOrder } from "../../redux/actions/purchaseOrderActions.js";
+import { createOrder, deleteOrder, fetchOrders, updateOrder, orderIniState } from "../../redux/actions/purchaseOrderActions.js";
 import DataTable from "../table/DataTable.jsx";
-import { FaCheck, FaCompressArrowsAlt, FaFilter, FaRegPlusSquare } from "react-icons/fa";
+import { FaCheck, FaCompressArrowsAlt, FaEdit, FaFilter, FaRegPlusSquare } from "react-icons/fa";
 import { AiFillDelete } from "react-icons/ai";
 import { createItem, deleteItem, updateItem, iniState } from "../../redux/actions/purchaseOrderItemActions.js";
 import { fetchGasData } from "../../state/GasList.jsx";
-import { IoIosArrowDown, IoIosArrowUp, IoMdAdd } from "react-icons/io";
+import { IoIosArrowDown, IoIosArrowUp, IoMdAdd, IoMdMedical } from "react-icons/io";
 import { ImCross, ImCheckmark } from "react-icons/im";
 import { Collapse } from "@mui/material";
 let gasList = [];
 export default function Purchase() {
 
      const [addPurchaseModel, setAddPurchaseModel] = useState(false);
-     const [orderItems, setOrderItems] = useState([
-
-     ]);
+     const [orderItems, setOrderItems] = useState([]);
      const handleItemChange = (index, field, value) => {
           if (field === 'id') {
                setOrderItems(orderItems.map((item, i) => {
@@ -120,7 +118,7 @@ export default function Purchase() {
      const allGases = useSelector(state => state.gas);
 
      const dispatch = useDispatch();
-     const { orders, loading, error } = useSelector(state => state.purchaseOrders);
+     const { updateOrderSuccsess, orders, loading, error } = useSelector(state => state.purchaseOrders);
 
      //console.log(orders);
 
@@ -138,6 +136,7 @@ export default function Purchase() {
 
 
      let grandTotalBallance = 0
+     let grandTotalPayAmt = 0
 
 
      //console.log(orders);
@@ -148,8 +147,9 @@ export default function Purchase() {
      }, [dispatch]);
 
      useEffect(() => {
-          if (itemUpdateSuccess) {
+          if (itemUpdateSuccess || updateOrderSuccsess) {
                dispatch(iniState());
+               dispatch(orderIniState());
                dispatch(fetchGasData());
                dispatch(fetchOrders());
           }
@@ -190,7 +190,7 @@ export default function Purchase() {
                let totalQty = 0;
                let totalKg = 0;
                let totalAmt = 0;
-               let totalPayAmt = order.pay_amt;
+               let totalPayAmt = Number(order.pay_amt);
                let ballance = 0;
                let totalReturnQty = 0;
                let totalReturnKg = 0;
@@ -228,16 +228,67 @@ export default function Purchase() {
                // console.log(gasListMap);
                ballance = totalAmt - totalPayAmt;
                grandTotalBallance += ballance
+               grandTotalPayAmt += totalPayAmt
                orderRows.push(<tr key={`order-row-total-${order.id}-${index}`}>
                     <td style={{ borderWidth: 0, padding: 0, margin: 0, height: 24, }} colSpan={11}>
                          <React.Fragment>
-                              <TotalRow>
+                              <TotalRow data={
+                                   {
+
+                                        kg: totalKg,
+                                        qty: totalQty,
+                                        amt: totalAmt,
+                                        pay_amt: totalPayAmt,
+                                        remaning_amt: ballance,
+                                        rKg: totalReturnKg,
+                                        rQty: totalReturnQty,
+                                   }
+                              }>
                                    <div
                                         style={{
                                              width: "100%",
                                              flexGrow: 1,
                                         }}
                                    />
+                                   <List size="md">
+                                        {
+                                             [
+                                                  { label: "Total Kg", value: totalKg },
+                                                  { label: "Total Qty", value: totalQty },
+                                                  { label: "Total Return Kg", value: totalReturnKg },
+                                                  { label: "Total Return Qty", value: totalReturnQty },
+                                                  { label: "Total Amt", value: totalAmt },
+                                                  { label: "Pending Amt", value: ballance },
+                                                  {
+                                                       label: "Pay Amt", value: <Cell
+                                                            column="pay_amt"
+                                                            id={order.id}
+                                                            data={order.pay_amt}
+                                                            tableName="purchase_orders"
+                                                       />
+                                                  },
+                                             ].map((data, index) => (
+                                                  <ListItem key={index}>
+
+                                                       <ListItemContent
+                                                            sx={{
+                                                                 textAlign: "end",
+
+                                                            }}
+                                                       >{data.label}</ListItemContent>
+                                                       <ListItemDecorator>:</ListItemDecorator>
+                                                       <ListItemDecorator
+                                                            sx={{
+                                                                 textAlign: "left",
+
+                                                            }}
+                                                       >{data.value}</ListItemDecorator>
+                                                       <ListItemDecorator />
+
+                                                  </ListItem>
+                                             ))
+                                        }
+                                   </List>
                                    <Table
                                         borderAxis="none"
                                         color="neutral"
@@ -245,16 +296,32 @@ export default function Purchase() {
                                         sx={{
                                              tableLayout: "auto",
                                              fontWeight: "bold",
-                                             textAlign: 'right'
+                                             textAlign: 'right',
+                                             display: "none",
                                         }}
                                         variant="soft"
                                    >
                                         <tbody>
                                              <TotalData text="Total Qty :-" value={totalQty} />
                                              <TotalData text="Total KG :-" value={totalKg + " KG"} />
-                                             <TotalData text="Total Amount :-" value={"₹" + totalAmt} bgColor={"#A1DD70"} />
-                                             <TotalData text="Pay Amt :-" value={"₹" + totalPayAmt} bgColor={"#FFA27F"} />
-                                             <TotalData text="Ballance :-" value={"₹" + ballance} />
+                                             <TotalData text="Total Amount :-" value={"₹" + totalAmt} bgColor={"#C8A1E0"} />
+                                             <tr
+                                                  style={{
+                                                       borderWidth: 0,
+                                                       padding: 0,
+                                                       margin: 0,
+                                                       height: 24,
+                                                       backgroundColor: "#D5ED9F"
+                                                  }}
+                                             >
+                                                  <td style={{
+                                                       borderWidth: 0, padding: 0, margin: 0, height: 24,
+                                                       backgroundColor: "#7ABA78"
+                                                  }} >Pay Amt :-</td>
+
+                                                  <Cell data={totalPayAmt} />
+                                             </tr>
+                                             <TotalData text="Payment Pending :-" value={"₹" + ballance} bgColor={"#F4A261"} />
                                              <TotalData text="Total Return Qty :-" value={totalReturnQty + " KG"} />
                                              <TotalData text="Total Return KG :-" value={totalReturnKg + " KG"} />
                                         </tbody>
@@ -262,7 +329,7 @@ export default function Purchase() {
                               </TotalRow>
                          </React.Fragment>
                     </td>
-               </tr>)
+               </tr >)
           })
      }
      const thStyle = {
@@ -295,6 +362,26 @@ export default function Purchase() {
 
                                    alignItems: "center",
                                    justifyContent: "center",
+                                   backgroundColor: "#a33e23",
+                                   display: loading ? "none" : "flex",
+                                   px: 2
+                              }
+                         }
+                         size="sm"
+                    >
+                         <span
+                              style={{
+                                   color: "white",
+                                   fontWeight: "bold",
+                              }}
+                         >{`Pending Payment : ₹${grandTotalBallance}`}</span>
+                    </Chip>
+                    <Chip
+                         sx={
+                              {
+
+                                   alignItems: "center",
+                                   justifyContent: "center",
                                    backgroundColor: "#0a6847",
                                    display: loading ? "none" : "flex",
                                    px: 2
@@ -307,7 +394,7 @@ export default function Purchase() {
                                    color: "white",
                                    fontWeight: "bold",
                               }}
-                         >{`Total Ballance : ₹${grandTotalBallance}`}</span>
+                         >{`Payment Done : ₹${grandTotalPayAmt}`}</span>
                     </Chip>
                     <Divider
                          sx={{
@@ -1049,16 +1136,31 @@ export const Cell = ({ id, data, tableName, column }) => {
                     whiteSpace: "nowrap",
                     transition: "background-color 0.3s",
                     fontWeight: "bold",
+                    flexGrow: 1,
+                    width: "100%",
+                    height: "100%",
                     "&:hover": {
                          backgroundColor: "#c1ebd4",
                     },
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderLeftWidth: "0.1px",
+                    borderColor: (column !== "pay_amt") ? "#9cafbe" : "transparent",
                }}
                onClick={() => {
                     if (tableName != "")
                          setEditMode(true)
                }}
           >
-               {data}
+               <span
+                    style={{
+                         display: "flex",
+                         fontWeight: "bold",
+                    }}
+               >
+                    {data}
+               </span>
           </Box>
      }
      const gas = data
@@ -1069,15 +1171,115 @@ export const Cell = ({ id, data, tableName, column }) => {
           data = `${data.company_name} : ${data.kg} KG`
 
      }
+     if (column === "pay_amt") {
+          return (!editMode) ? (<Box>
+               <Stack direction="row" alignContent="center" justifyContent="center" alignItems={"center"} sx={{ width: "100%" }}>
+                    <DataDisplay />
+                    <Stack sx={
+                         {
+                              color: "black",
+                              padding: 1,
+                              borderRadius: "md",
+                              "&:hover": {
+                                   backgroundColor: "#a33e23",
+                                   color: "white",
+                              },
+                         }
+                    } direction="row"
+                         onClick={() => {
+                              setEditMode(true)
+                         }}
+                    >
+                         <MdModeEditOutline style={{ fontSize: "25px" }} />
+                    </Stack>
+               </Stack>
+
+          </Box>) : <Input
+               sx={{
+                    color: "black",
+                    flexGrow: 1,
+
+               }}
+
+               type="number"
+               value={editValue}
+               onChange={(e) => { setEditValue(e.target.value) }}
+               endDecorator={
+                    <Stack direction="row"
+                         sx={{
+                              padding: 0,
+                         }}
+                    >
+                         <Box
+                              sx={{
+                                   display: "flex",
+                                   alignItems: "center",
+                                   justifyContent: "center",
+                                   p: 1,
+                                   m: 0,
+                                   transition: "all 0.3s",
+                                   cursor: "pointer",
+                                   color: "#b34349",
+                                   borderRadius: "md",
+                                   "&:hover": {
+                                        backgroundColor: "#b34349",
+                                        color: "white",
+                                   },
+                              }}
+                              onClick={() => {
+                                   setEditMode(false)
+                              }}
+                         >
+                              <ImCross
+
+                              />
+                         </Box>
+                         <Box
+                              sx={{
+                                   display: "flex",
+                                   alignItems: "center",
+                                   justifyContent: "center",
+                                   p: 1,
+                                   m: 0,
+                                   transition: "all 0.3s",
+                                   cursor: "pointer",
+                                   color: "#0a6847",
+                                   borderRadius: "md",
+                                   "&:hover": {
+                                        backgroundColor: "#0a6847",
+                                        color: "white",
+                                   },
+                              }}
+                              onClick={() => {
+                                   setEditMode(false)
+                                   //console.log(id, tableName, column, editValue)
+                                   if (tableName === "purchase_orders") {
+                                        dispatch(updateOrder(id, { [column]: editValue }))
+                                   }
+                                   if (tableName === "purchase_order_items") {
+                                        dispatch(updateItem(id, { [column]: editValue }))
+                                   }
+                              }}
+                         >
+                              <ImCheckmark />
+                         </Box>
+                    </Stack>
+               }
+          />
+     }
      if (!editMode) {
-          return <td>
+          return <td style={{
+               borderWidth: 0, padding: 0, margin: 0,
+
+          }}>
                <DataDisplay />
+
           </td>
      }
 
      if (column === "gas_id") {
           return <td
-               style={{ padding: 0, minWidth: "200px" }}
+               style={{ padding: 0, borderWidth: 0, minWidth: "200px" }}
           >
                <Stack alignContent="center"
                     justifyContent="center"
@@ -1152,28 +1354,27 @@ export const Cell = ({ id, data, tableName, column }) => {
                </Stack>
           </td >
      }
-     return <td >{editMode ? (
+
+     return <td style={{ borderWidth: 0, padding: 0, margin: 0 }}>{editMode ? (
           <Stack direction="row" sx={{ width: "100%" }}>
                <Input
                     sx={{
                          color: "black",
-                         backgroundColor: "#c1ebd4",
+                         // backgroundColor: "#c1ebd4",
                          flexGrow: 1,
-                         width: "100%",
+
                     }}
                     name={column}
                     size="sm"
                     type="text"
                     value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
+                    onChange={(e) => { setEditValue(e.target.value) }}
                     endDecorator={
                          <Stack direction="row"
                               sx={{
                                    padding: 0,
                               }}
                          >
-
-
                               <Box
                                    sx={{
                                         display: "flex",
@@ -1225,45 +1426,44 @@ export const Cell = ({ id, data, tableName, column }) => {
                                         }
                                    }}
                               >
-                                   <ImCheckmark
-
-
-                                   />
+                                   <ImCheckmark />
                               </Box>
                          </Stack>
                     }
-
                />
           </Stack>
      ) : <DataDisplay />}
      </td >
 }
-
-const TotalRow = ({ children }) => {
+const TotalRow = ({ children, data }) => {
      const [show, setShow] = useState(false);
+     const {
+          kg, qty, amt, pay_amt, remaning_amt, rKg, rQty
+     } = data;
+     const duration = 0.5;
      return (
+          <Sheet
+               sx={{
+                    height: "auto",
+                    transition: `all ${duration}s`,
+                    backgroundColor: (show) ? "#D1E9F6" : "transparent",
+                    borderTop: "1px solid #323b4d54",
+                    borderBottom: "1px solid #323b4d54",
 
-          <Stack>
+               }}
+          >
                <Divider orientation="vertical" />
                <Box
                     sx={{
-                         transition: "all 0.3s",
-                         height: (show) ? "auto" : 0,
+                         transition: `all ${duration}s`,
+                         maxHeight: (show) ? "500px" : "0px",
                          opacity: (show) ? 1 : 0,
-                         zIndex: (show) ? 100 : -1,
                          transform: (show) ? "scaleY(1)" : "scaleY(0)",
-                         display: "flex",
+
                     }}
                >
                     {children}
                </Box>
-               <Divider orientation="vertical" sx={{
-                    height: "1px",
-                    width: "100%",
-                    opacity: 0.4,
-                    display: (show) ? "block" : "none",
-                    backgroundColor: "black",
-               }} />
                <Stack
                     direction="row"
                     gap={1}
@@ -1271,31 +1471,34 @@ const TotalRow = ({ children }) => {
                          fontWeight: "bold",
                     }}
                >
-                    <Box
-                         sx={{
-                              fontWeight: "bold",
-                              display: !show ? "flex" : "none",
-                              alignItems: "center",
-                              justifyContent: "flex-end",
-                              px: 1,
-                              m: 0,
-                              transition: "all 0.3s",
-                              cursor: "pointer",
-                              color: "#185ea5",
-                              borderRadius: "md",
-                              "&:hover": {
-                                   backgroundColor: "#12467b7a",
-                                   color: "white",
-                              },
-                         }}
-                         onClick={() => { }}
-                    > <IoMdAdd />&nbsp;Add Gas
-                    </Box>
+                    <AddGas />
                     <Divider sx={{
                          flexGrow: 1,
 
                          backgroundColor: "transparent",
                     }} orientation="vertical" />
+                    <Box
+                         sx={{
+                              fontWeight: "bold",
+                              display: show ? "none" : "flex",
+                              alignItems: "center",
+                              justifyContent: "flex-end",
+                              px: 1,
+                              margin: show ? 1 : 0,
+                              transition: "all 0.3s",
+                              cursor: "pointer",
+                              borderRadius: "md",
+                              color: "#185ea5",
+                         }}
+
+                    >
+                         <span style={{ fontWeight: "bold" }}>Total Qty : ₹{qty}</span>
+                         <Divider sx={{ width: "2px", mx: 1 }} orientation="vertical" />
+                         <span style={{ fontWeight: "bold" }}>Total Kg : ₹{kg}</span>
+                         <Divider sx={{ width: "2px", mx: 1 }} orientation="vertical" />
+                         <span style={{ fontWeight: "bold" }}>Total Amount : ₹{amt}</span>
+                    </Box>
+
                     <Box
                          sx={{
                               fontWeight: "bold",
@@ -1315,19 +1518,30 @@ const TotalRow = ({ children }) => {
                               },
                          }}
                          onClick={() => setShow(!show)}
-                    >{show ? "Hide Total" : "Show Total"}&nbsp;{show ? <IoIosArrowUp /> : <IoIosArrowDown />}
+                    >{show ? <IoIosArrowUp /> : <IoIosArrowDown />}
                     </Box>
+                    <Divider sx={{
+                         width: "2px",
+                         opacity: 0,
+                    }} orientation="vertical" />
                </Stack>
 
-          </Stack>
+          </Sheet>
      )
 }
 
-const TotalData = ({ text, value, bgColor }) => {
+const TotalData = ({ text, value, bgColor, input = false }) => {
      const tdStyle = {
           borderWidth: "0px",
+
           backgroundColor: (bgColor) ? bgColor : "transparent",
 
+     }
+     if (input) {
+          return <tr>
+               {/* <td style={tdStyle}><p>{text}</p></td> */}
+               {value}
+          </tr>
      }
      return (
           <tr>
@@ -1341,4 +1555,67 @@ const TotalData = ({ text, value, bgColor }) => {
                ><p>{value}</p></td>
           </tr>
      )
+}
+
+const AddGas = () => {
+     const [open, setOpen] = React.useState(false);
+     return (
+          <React.Fragment>
+               <Box
+                    sx={{
+                         fontWeight: "bold",
+                         display: "flex",
+                         alignItems: "center",
+                         justifyContent: "flex-end",
+                         px: 1,
+                         m: 0,
+                         transition: "all 0.3s",
+                         cursor: "pointer",
+                         color: "#185ea5",
+                         borderRadius: "md",
+                         "&:hover": {
+                              backgroundColor: "#12467b7a",
+                              color: "white",
+                         },
+                    }}
+                    onClick={() => {
+                         setOpen(true)
+                    }}
+               > <IoMdAdd />&nbsp;Add Gas
+               </Box>
+               <Modal
+                    aria-labelledby="modal-title"
+                    aria-describedby="modal-desc"
+                    open={open}
+                    onClose={() => setOpen(false)}
+                    sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+               >
+                    <Sheet
+                         variant="outlined"
+                         sx={{
+                              maxWidth: 500,
+                              borderRadius: 'md',
+                              p: 3,
+                              boxShadow: 'lg',
+                         }}
+                    >
+                         <ModalClose variant="plain" sx={{ m: 1 }} />
+                         <Typography
+                              component="h2"
+                              id="modal-title"
+                              level="h4"
+                              textColor="inherit"
+                              fontWeight="lg"
+                              mb={1}
+                         >
+                              This is the modal title
+                         </Typography>
+                         <Typography id="modal-desc" textColor="text.tertiary">
+                              Make sure to use <code>aria-labelledby</code> on the modal dialog with an
+                              optional <code>aria-describedby</code> attribute.
+                         </Typography>
+                    </Sheet>
+               </Modal>
+          </React.Fragment>
+     );
 }

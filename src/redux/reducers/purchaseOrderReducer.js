@@ -5,16 +5,20 @@ import {
      CREATE_ORDER_SUCCESS,
      UPDATE_ORDER_SUCCESS,
      DELETE_ORDER_SUCCESS,
+     ORDER_INIT,
 } from "../actions/purchaseOrderActions";
 
 const initialState = {
      loading: false,
      orders: [],
      error: null,
+     updateOrderSuccsess: false,
 };
 
 const purchaseOrderReducer = (state = initialState, action) => {
      switch (action.type) {
+          case ORDER_INIT:
+               return initialState;
           case FETCH_ORDERS_REQUEST:
                return { ...state, loading: true };
           case FETCH_ORDERS_SUCCESS:
@@ -30,8 +34,9 @@ const purchaseOrderReducer = (state = initialState, action) => {
           case UPDATE_ORDER_SUCCESS:
                return {
                     ...state,
-                    orders: [...state.orders, action.payload],
+                    //orders: [...state.orders, action.payload],
                     loading: false,
+                    updateOrderSuccsess: true,
                };
           case DELETE_ORDER_SUCCESS:
                return {

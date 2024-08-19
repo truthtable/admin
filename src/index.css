@@ -2,10 +2,15 @@
      font-family: "Abril Fatface", cursive;
      font-family: "Caprasimo", cursive;
      font-family: "Montserrat", sans-serif;
-     transition: all 0.1s ease-in-out;
+     transition: color 0.1s ease-in-out;
      -webkit-transition: color 0.1s ease-in-out;
      -moz-transition: color 0.1s ease-in-out;
      -o-transition: color 0.1s ease-in-out;
+
+     transition: background-color 0.1s ease-in-out;
+     -webkit-transition: background-color 0.1s ease-in-out;
+     -moz-transition: background-color 0.1s ease-in-out;
+     -o-transition: background-color 0.1s ease-in-out;
 }
 body {
      background-color: #263043;
