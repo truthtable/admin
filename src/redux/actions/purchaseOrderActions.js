@@ -18,7 +18,6 @@ export const fetchOrders = (options) => async (dispatch) => {
      try {
           const response = await axios.get(
                "https://adminsr.life/public/api/purchase-orders",
-               { options },
           );
           dispatch({ type: FETCH_ORDERS_SUCCESS, payload: response.data });
      } catch (error) {

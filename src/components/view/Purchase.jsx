@@ -156,6 +156,13 @@ export default function Purchase() {
 
           //console.log(startDate, endDate);
 
+          const params = {
+               startDate: startDate,
+               endDate: endDate,
+          }
+
+          console.log(params);
+
           dispatch(fetchGasData());
           dispatch(fetchOrders({ startDate, endDate }));
      }, [dispatch, startDate, endDate]);
