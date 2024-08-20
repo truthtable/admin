@@ -15,12 +15,12 @@ import {
      Table,
      Typography
 } from "@mui/joy";
-import { CgAdd, CgBorderRight, CgFilters, CgHome, CgTrash } from "react-icons/cg";
+import { CgAdd, CgBorderRight, CgEditContrast, CgFilters, CgHome, CgTrash } from "react-icons/cg";
 import Modal from "@mui/joy/Modal";
 import Sheet from "@mui/joy/Sheet";
 import ModalClose from "@mui/joy/ModalClose";
 import React, { useEffect, useState } from "react";
-import { MdModeEditOutline } from "react-icons/md";
+import { MdDone, MdModeEditOutline } from "react-icons/md";
 import { useDispatch, useSelector } from 'react-redux';
 import { createOrder, deleteOrder, fetchOrders, updateOrder, orderIniState } from "../../redux/actions/purchaseOrderActions.js";
 import DataTable from "../table/DataTable.jsx";
@@ -31,7 +31,9 @@ import { fetchGasData } from "../../state/GasList.jsx";
 import { IoIosArrowDown, IoIosArrowUp, IoMdAdd, IoMdMedical } from "react-icons/io";
 import { ImCross, ImCheckmark } from "react-icons/im";
 import { Collapse } from "@mui/material";
+import { FaArrowTurnDown } from "react-icons/fa6";
 let gasList = [];
+let gasListMap = new Map();
 export default function Purchase() {
 
      const [addPurchaseModel, setAddPurchaseModel] = useState(false);
@@ -107,7 +109,7 @@ export default function Purchase() {
      let totalReturnQty = 0
      let totalReturnKg = 0
 
-     let gasListMap = new Map();
+
 
 
      const removeItem = (index) => {
@@ -141,10 +143,22 @@ export default function Purchase() {
 
      //console.log(orders);
 
+     const currentDate = new Date().toISOString().split('T')[0];
+     const oneMonthAgo = new Date(new Date().setMonth(new Date().getMonth() - 1))
+          .toISOString()
+          .split('T')[0];
+     const [startDate, setStartDate] = useState(oneMonthAgo);
+     const [endDate, setEndDate] = useState(currentDate);
+
+
+
      useEffect(() => {
+
+          //console.log(startDate, endDate);
+
           dispatch(fetchGasData());
-          dispatch(fetchOrders());
-     }, [dispatch]);
+          dispatch(fetchOrders({ startDate, endDate }));
+     }, [dispatch, startDate, endDate]);
 
      useEffect(() => {
           if (itemUpdateSuccess || updateOrderSuccsess) {
@@ -195,6 +209,37 @@ export default function Purchase() {
                let totalReturnQty = 0;
                let totalReturnKg = 0;
 
+               if (order.items.length === 0) {
+                    orderRows.push(
+                         <tr key={`order-row-empty-${order.id}`}>
+                              <td style={{ borderWidth: 0, padding: 6, margin: 0, backgroundColor: "#FFB0B0" }} colSpan={11}>
+                                   <Stack
+
+                                        direction="row"
+                                        gap={1}
+                                   >
+                                        <span style={{ fontWeight: "bold" }}>{`Order No. ${order.order_no}`}</span>
+                                        <span style={{ fontWeight: "bold" }}>|{` ${order.date}`}</span>
+                                        <span style={{ fontWeight: "bold" }}>|{` Scheme ${order.scheme}`}</span>
+                                        <span style={{ fontWeight: "bold" }}>|{` Scheme Type ${order.scheme_type}`}</span>
+
+                                   </Stack>
+                                   <Stack
+                                        direction="row"
+                                        gap={1}
+                                   >
+                                        <FaArrowTurnDown style={{
+                                             fontSize: "20px",
+                                             transform: "scaleX(-1)",
+                                        }} />
+                                        <span style={{ fontWeight: "bold" }}>No Gas Added Please Add Gas from the edit option</span>
+                                   </Stack>
+
+                              </td>
+                         </tr>
+                    );
+               }
+
                order.items.forEach((item, index) => {
 
                     //const gas = gasList.find(gas => gas.id === item.gas_id);
@@ -217,11 +262,11 @@ export default function Purchase() {
                               <Cell id={order.id} data={order.scheme_type} tableName="purchase_orders" column="scheme_type" />
                               <Cell id={item.id} data={gas} tableName="purchase_order_items" column="gas_id" />
                               <Cell id={item.id} data={item.qty} tableName="purchase_order_items" column="qty" />
-                              <Cell id={order.id} data={item.qty * gas.kg + " KG"} tableName="" column="" />
+                              <Cell id={order.id} data={item.qty * gas.kg + " KG"} editable={false} tableName="" column="" />
                               <Cell id={item.id} data={item.rate} tableName="purchase_order_items" column="rate" />
-                              <Cell id={order.id} data={"₹" + (item.qty * item.rate).toFixed(2)} tableName="" column="" />
+                              <Cell id={order.id} data={"₹" + (item.qty * item.rate).toFixed(2)} editable={false} tableName="" column="" />
                               <Cell id={item.id} data={item.return_cyl_qty} tableName="purchase_order_items" column="return_cyl_qty" />
-                              <Cell id={order.id} data={item.return_cyl_qty * gas.kg + " KG"} tableName="" column="" />
+                              <Cell id={order.id} data={item.return_cyl_qty * gas.kg + " KG"} editable={false} tableName="" column="" />
                          </tr >
                     )
                })
@@ -232,18 +277,19 @@ export default function Purchase() {
                orderRows.push(<tr key={`order-row-total-${order.id}-${index}`}>
                     <td style={{ borderWidth: 0, padding: 0, margin: 0, height: 24, }} colSpan={11}>
                          <React.Fragment>
-                              <TotalRow data={
-                                   {
-
-                                        kg: totalKg,
-                                        qty: totalQty,
-                                        amt: totalAmt,
-                                        pay_amt: totalPayAmt,
-                                        remaning_amt: ballance,
-                                        rKg: totalReturnKg,
-                                        rQty: totalReturnQty,
-                                   }
-                              }>
+                              <TotalRow
+                                   order={order}
+                                   data={
+                                        {
+                                             kg: totalKg,
+                                             qty: totalQty,
+                                             amt: totalAmt,
+                                             pay_amt: totalPayAmt,
+                                             remaning_amt: ballance,
+                                             rKg: totalReturnKg,
+                                             rQty: totalReturnQty,
+                                        }
+                                   }>
                                    <div
                                         style={{
                                              width: "100%",
@@ -406,6 +452,15 @@ export default function Purchase() {
                          direction="row"
                          gap={1}
                     >
+                         <Box
+                              sx={{
+                                   display: "flex",
+                                   alignItems: "center",
+                                   justifyContent: "center",
+                              }}
+                         >
+                              <span style={{ color: "white", fontWeight: "bold" }}>From:</span>
+                         </Box>
                          <Input
                               placeholder="Start Date"
                               type="date"
@@ -415,17 +470,7 @@ export default function Purchase() {
                               onKeyDown={(e) => e.preventDefault()}
                               onFocus={(e) => e.target.showPicker()}
                               onClick={(e) => e.target.showPicker()}
-                              startDecorator={
-                                   <Box
-                                        sx={{
-                                             display: "flex",
-                                             alignItems: "center",
-                                             justifyContent: "center",
-                                        }}
-                                   >
-                                        <span style={{ color: "white", fontWeight: "bold" }}>Start Date:</span>
-                                   </Box>
-                              }
+
                               sx={{
                                    width: '100%',
                                    flexGrow: 1,
@@ -437,6 +482,15 @@ export default function Purchase() {
                               }}
 
                          />
+                         <Box
+                              sx={{
+                                   display: "flex",
+                                   alignItems: "center",
+                                   justifyContent: "center",
+                              }}
+                         >
+                              <span style={{ color: "white", fontWeight: "bold" }}>To:</span>
+                         </Box>
                          <Input
                               placeholder="Start Date"
                               type="date"
@@ -446,17 +500,7 @@ export default function Purchase() {
                               onKeyDown={(e) => e.preventDefault()}
                               onFocus={(e) => e.target.showPicker()}
                               onClick={(e) => e.target.showPicker()}
-                              startDecorator={
-                                   <Box
-                                        sx={{
-                                             display: "flex",
-                                             alignItems: "center",
-                                             justifyContent: "center",
-                                        }}
-                                   >
-                                        <span style={{ color: "white", fontWeight: "bold" }}>End Date:</span>
-                                   </Box>
-                              }
+
                               sx={{
                                    width: '100%',
                                    flexGrow: 1,
@@ -1123,7 +1167,7 @@ export default function Purchase() {
           </Sheet >)
 }
 
-export const Cell = ({ id, data, tableName, column }) => {
+export const Cell = ({ id, data, tableName, column, editable = true }) => {
      const [editMode, setEditMode] = useState(false);
      const [editValue, setEditValue] = useState(data);
      const dispatch = useDispatch();
@@ -1140,7 +1184,7 @@ export const Cell = ({ id, data, tableName, column }) => {
                     width: "100%",
                     height: "100%",
                     "&:hover": {
-                         backgroundColor: "#c1ebd4",
+                         backgroundColor: (editable) ? "#c1ebd4" : "transparent",
                     },
                     display: "flex",
                     alignItems: "center",
@@ -1355,6 +1399,23 @@ export const Cell = ({ id, data, tableName, column }) => {
           </td >
      }
 
+     let type = "text"
+
+     switch (column) {
+          case "qty":
+               type = "number"
+               break;
+          case "rate":
+               type = "number"
+               break;
+          case "return_cyl_qty":
+               type = "number"
+               break;
+          case "date":
+               type = "date"
+               break;
+     }
+
      return <td style={{ borderWidth: 0, padding: 0, margin: 0 }}>{editMode ? (
           <Stack direction="row" sx={{ width: "100%" }}>
                <Input
@@ -1362,11 +1423,10 @@ export const Cell = ({ id, data, tableName, column }) => {
                          color: "black",
                          // backgroundColor: "#c1ebd4",
                          flexGrow: 1,
-
                     }}
                     name={column}
                     size="sm"
-                    type="text"
+                    type={type}
                     value={editValue}
                     onChange={(e) => { setEditValue(e.target.value) }}
                     endDecorator={
@@ -1435,7 +1495,7 @@ export const Cell = ({ id, data, tableName, column }) => {
      ) : <DataDisplay />}
      </td >
 }
-const TotalRow = ({ children, data }) => {
+const TotalRow = ({ children, data, order }) => {
      const [show, setShow] = useState(false);
      const {
           kg, qty, amt, pay_amt, remaning_amt, rKg, rQty
@@ -1471,7 +1531,7 @@ const TotalRow = ({ children, data }) => {
                          fontWeight: "bold",
                     }}
                >
-                    <AddGas />
+                    <AddGas order={order} />
                     <Divider sx={{
                          flexGrow: 1,
 
@@ -1557,8 +1617,22 @@ const TotalData = ({ text, value, bgColor, input = false }) => {
      )
 }
 
-const AddGas = () => {
+const AddGas = ({ order }) => {
      const [open, setOpen] = React.useState(false);
+     //console.log(order)
+     const dispatch = useDispatch();
+
+     const [gas_id, setGasId] = useState(0);
+     const [qty, setQty] = useState(0);
+     const [rate, setRate] = useState(0);
+     const [return_cyl_qty, setReturnCylQty] = useState(0);
+     let totalKg = 0
+     try {
+          totalKg = gasListMap.get(gas_id).kg * qty
+     } catch (e) {
+          totalKg = 0
+     }
+     let totalAmt = qty * rate
      return (
           <React.Fragment>
                <Box
@@ -1581,19 +1655,24 @@ const AddGas = () => {
                     onClick={() => {
                          setOpen(true)
                     }}
-               > <IoMdAdd />&nbsp;Add Gas
+               > <MdModeEditOutline />&nbsp;Edit
                </Box>
                <Modal
-                    aria-labelledby="modal-title"
+                    aria-labelledby="modal-title-12"
                     aria-describedby="modal-desc"
                     open={open}
+                    sx={{
+                         borderWidth: "0px",
+
+                         backgroundColor: "transparent",
+
+                    }}
                     onClose={() => setOpen(false)}
                     sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
                >
+
                     <Sheet
-                         variant="outlined"
                          sx={{
-                              maxWidth: 500,
                               borderRadius: 'md',
                               p: 3,
                               boxShadow: 'lg',
@@ -1608,14 +1687,148 @@ const AddGas = () => {
                               fontWeight="lg"
                               mb={1}
                          >
-                              This is the modal title
+                              {`Order No. ${order.order_no}`}
                          </Typography>
-                         <Typography id="modal-desc" textColor="text.tertiary">
-                              Make sure to use <code>aria-labelledby</code> on the modal dialog with an
-                              optional <code>aria-describedby</code> attribute.
-                         </Typography>
+                         <form
+                              onSubmit={(event) => {
+                                   event.preventDefault();
+                                   const formData = new FormData(event.currentTarget);
+                                   const formJson = Object.fromEntries(formData.entries());
+                                   formJson.order_id = order.id
+                                   //console.log(formJson);
+                                   dispatch(createItem(formJson));
+                                   setOpen(false)
+                              }}
+                         >
+                              <Table
+                                   sx={{
+                                        tableLayout: "auto",
+                                        fontWeight: "bold",
+
+                                   }}
+                              >
+                                   <thead>
+                                        <tr>
+                                             <th>Gas&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+
+                                             <th >Qty.</th>
+                                             <th >Rate</th>
+                                             <th >Total Kg</th>
+                                             <th >Total Amt</th>
+                                             <th >Return Qty</th>
+                                             <th >Option</th>
+                                        </tr>
+                                   </thead>
+                                   <tbody>
+                                        {
+                                             order.items.map((item, index) => {
+                                                  //console.log(item)
+                                                  return (
+                                                       <tr key={index}>
+                                                            <td >{gasListMap.get(item.gas_id).company_name}</td>
+                                                            <td >{item.qty}</td>
+                                                            <td >{item.rate}</td>
+                                                            <td >{item.return_cyl_qty * gasListMap.get(item.gas_id).kg}</td>
+                                                            <td >{item.qty * item.rate}</td>
+                                                            <td >{item.return_cyl_qty}</td>
+                                                            <td >
+                                                                 <Button
+                                                                      variant="outlined"
+                                                                      color="danger"
+                                                                      sx={{ width: "100%" }}
+                                                                      onClick={() => {
+                                                                           dispatch(deleteItem(item.id))
+                                                                      }}
+                                                                 >
+                                                                      <CgTrash />
+                                                                 </Button>
+                                                            </td>
+                                                       </tr>
+                                                  )
+                                             })
+                                        }
+                                   </tbody>
+                                   <tfoot>
+
+                                        <tr>
+                                             <td>
+
+                                                  <Select
+                                                       placeholder="select Gas"
+                                                       name="gas_id"
+                                                       required
+                                                       onChange={
+                                                            (event, newValue) => {
+                                                                 setGasId(newValue)
+                                                            }
+                                                       }
+                                                  >
+                                                       {gasList.map(gas => {
+                                                            if (
+                                                                 gas.company_name === "GO GASS"
+
+                                                            ) return (<Option
+                                                                 key={gas.id}
+                                                                 value={gas.id}
+                                                                 label={`${gas.company_name} : ${gas.kg} KG`}
+                                                            >
+                                                                 {`${gas.company_name} : ${gas.kg} KG`}
+                                                            </Option>)
+                                                       })}
+                                                  </Select>
+
+                                             </td>
+                                             <td>
+                                                  <Input
+                                                       placeholder="Qty"
+                                                       type="number"
+                                                       name="qty"
+                                                       required
+                                                       onChange={(e) => setQty(e.target.value)}
+                                                  />
+                                             </td>
+                                             <td>
+                                                  <Input
+                                                       placeholder="Rate"
+                                                       type="number"
+                                                       name="rate"
+                                                       required
+                                                       onChange={(e) => setRate(e.target.value)}
+                                                  />
+                                             </td>
+                                             <td>
+                                                  {totalKg}
+                                             </td>
+                                             <td>
+                                                  {totalAmt}
+                                             </td>
+                                             <td>
+                                                  <Input
+                                                       placeholder="Return Qty"
+                                                       type="number"
+                                                       name="return_cyl_qty"
+                                                       required
+                                                       onChange={(e) => setReturnCylQty(e.target.value)}
+                                                  />
+                                             </td>
+                                             <td>
+                                                  <Button
+                                                       type="submit"
+                                                       color="success"
+                                                       sx={{ width: "100%" }}
+
+                                                  >
+                                                       <MdDone />
+                                                  </Button>
+                                             </td>
+                                        </tr>
+
+                                   </tfoot>
+                              </Table>
+                         </form>
                     </Sheet>
+
                </Modal>
-          </React.Fragment>
+          </React.Fragment >
      );
 }

@@ -25,6 +25,7 @@ export const fetchItems = () => async (dispatch) => {
 };
 
 export const createItem = (itemData) => async (dispatch) => {
+     dispatch({ type: FETCH_ITEMS_REQUEST });
      try {
           const response = await axios.post(
                "https://adminsr.life/public/api/purchase-order-items",

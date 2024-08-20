@@ -30,7 +30,12 @@ const purchaseOrderItemReducer = (state = initialState, action) => {
                     itemError: action.itemError,
                };
           case CREATE_ITEM_SUCCESS:
-               return { ...state, items: [...state.items, action.payload] };
+               return {
+                    ...state,
+                    itemLoading: false,
+                    itemError: null,
+                    itemUpdateSuccess: true,
+               };
           case UPDATE_ITEM_SUCCESS:
                return {
                     ...state,
@@ -42,10 +47,9 @@ const purchaseOrderItemReducer = (state = initialState, action) => {
           case DELETE_ITEM_SUCCESS:
                return {
                     ...state,
-                    items: state.items.filter(
-                         (item) => item.id !== action.payload,
-                    ),
                     itemLoading: false,
+                    itemError: null,
+                    itemUpdateSuccess: true,
                };
           default:
                return state;
