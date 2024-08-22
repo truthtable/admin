@@ -14,11 +14,13 @@ export const orderIniState = () => async (dispatch) => {
 
 export const fetchOrders = (options) => async (dispatch) => {
      dispatch({ type: FETCH_ORDERS_REQUEST });
-     console.log(options);
+     //console.log(options);
      try {
           const response = await axios.get(
                "https://adminsr.life/public/api/purchase-orders",
+               { params: options },
           );
+          //console.log(response.data);
           dispatch({ type: FETCH_ORDERS_SUCCESS, payload: response.data });
      } catch (error) {
           dispatch({ type: FETCH_ORDERS_FAILURE, error });
