@@ -47,18 +47,19 @@ export default function AddPurchaseUI({ gaslistData }) {
      })
 
      const totalScheme = totalKg * scheme_rate
-     const totalAfterScheme = totalAmt - totalScheme
 
-     const totalTcs = tcs * totalAfterScheme
-     const totalFor = for_charges * totalAfterScheme
+     const totalTcs = tcs * totalAmt
+     const totalFor = for_charges * totalKg
 
-     ballance = totalAfterScheme - paid_val
+     const billing = totalAmt + totalTcs + totalFor - totalScheme
+
+     ballance = billing - paid_val
 
      if (paid_val === undefined) {
-          ballance = totalAfterScheme
+          ballance = billing
      }
 
-     //console.log({ totalQty, totalKg, totalReturnQty, totalReturnKg, totalAmt, totalScheme, totalAfterScheme, totalTcs, totalFor })
+     //console.log({ totalQty, totalKg, totalReturnQty, totalReturnKg, totalAmt, totalScheme, billing, totalTcs, totalFor })
 
      const removeItem = (index) => {
           const updatedItems = orderItems.filter((_, i) => i !== index);
@@ -271,6 +272,16 @@ export default function AddPurchaseUI({ gaslistData }) {
                                                        setSchemeRate(Number(e.target.value))
                                                   }}
                                                   placeholder="Scheme Rate" size="sm" type="number" name="scheme_rate" required
+                                                  endDecorator={
+                                                       <Chip
+                                                            variant="outlined"
+                                                            style={{
+                                                                 fontWeight: "bold",
+                                                                 backgroundColor: "#47474721",
+                                                            }}>
+                                                            ₹{totalScheme}
+                                                       </Chip>
+                                                  }
                                              />
                                         </Stack>
                                         <Card >
@@ -620,6 +631,16 @@ export default function AddPurchaseUI({ gaslistData }) {
                                                   required
                                                   value={tcs}
                                                   onChange={(e) => setTcs(e.target.value)}
+                                                  endDecorator={
+                                                       <Chip
+                                                            variant="outlined"
+                                                            style={{
+                                                                 fontWeight: "bold",
+                                                                 backgroundColor: "#47474721",
+                                                            }}>
+                                                            ₹{totalTcs}
+                                                       </Chip>
+                                                  }
                                              />
                                              <Divider orientation="vertical" />
                                              <Box
@@ -645,6 +666,16 @@ export default function AddPurchaseUI({ gaslistData }) {
                                                   required
                                                   value={for_charges}
                                                   onChange={(e) => setFor_charges(e.target.value)}
+                                                  endDecorator={
+                                                       <Chip
+                                                            variant="outlined"
+                                                            style={{
+                                                                 fontWeight: "bold",
+                                                                 backgroundColor: "#47474721",
+                                                            }}>
+                                                            ₹{totalFor}
+                                                       </Chip>
+                                                  }
                                              />
                                              <Divider orientation="vertical" />
                                              <Box
@@ -670,12 +701,6 @@ export default function AddPurchaseUI({ gaslistData }) {
                                                   required
                                                   value={paid_val}
                                                   onChange={(e) => {
-                                                       //let n = e.target.value
-                                                       // if (n === "") {
-                                                       //      setPaid_val(0)
-                                                       //      return
-                                                       // }
-                                                       // n = Number(n)
                                                        setPaid_val(e.target.value)
                                                   }}
                                              />
@@ -702,7 +727,7 @@ export default function AddPurchaseUI({ gaslistData }) {
                                                             <td style={{ borderWidth: 0 }}>
                                                                  <Stack
                                                                       direction="row"
-                                                                      gap={0.1}
+                                                                      gap={1}
                                                                       alignItems={"center"}
                                                                  >
                                                                       <span
@@ -710,11 +735,11 @@ export default function AddPurchaseUI({ gaslistData }) {
                                                                                 color: "green",
                                                                                 fontWeight: "bold",
                                                                            }}
-                                                                      >{`₹${totalAmt - (totalKg * scheme_rate)}`}</span>
+                                                                      >{`₹${billing}`}</span>
                                                                       <span style={{
                                                                            color: "grey",
                                                                            fontSize: "12px",
-                                                                      }}>(-{totalKg * scheme_rate}) of Scheme</span>
+                                                                      }}>({totalAmt} - {totalScheme} of Scheme)</span>
                                                                  </Stack>
                                                             </td>
                                                        </tr>
