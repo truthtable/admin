@@ -34,6 +34,7 @@ export const createOrder = (orderData) => async (dispatch) => {
                "https://adminsr.life/public/api/purchase-orders",
                orderData,
           );
+          //console.log(response);
           dispatch({ type: CREATE_ORDER_SUCCESS, payload: response.data });
      } catch (error) {
           dispatch({ type: FETCH_ORDERS_FAILURE, error });

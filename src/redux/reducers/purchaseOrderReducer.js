@@ -28,7 +28,7 @@ const purchaseOrderReducer = (state = initialState, action) => {
           case CREATE_ORDER_SUCCESS:
                return {
                     ...state,
-                    orders: [...state.orders, action.payload],
+                    orders: [action.payload, ...state.orders],
                     loading: false,
                };
           case UPDATE_ORDER_SUCCESS:

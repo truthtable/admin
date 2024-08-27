@@ -1,109 +1,68 @@
-import { Box, Button, Card, CardContent, Chip, Container, Divider, Input, LinearProgress, List, ListItem, ListItemContent, ListItemDecorator, Option, Select, Stack, Table, Typography } from "@mui/joy";
-import { CgAdd, CgTrash } from "react-icons/cg";
+/* eslint-disable react/prop-types */
+import {
+     AccordionGroup,
+     Box,
+     Button,
+     Card,
+     CardContent,
+     Chip,
+     Container,
+     Divider,
+     Grid,
+     Input,
+     LinearProgress, List, ListItem, ListItemButton, ListItemContent, ListItemDecorator, Option,
+     Select,
+     Stack,
+     Table,
+     Typography
+} from "@mui/joy";
+import { CgAdd, CgBorderRight, CgEditContrast, CgFilters, CgHome, CgTrash } from "react-icons/cg";
 import Modal from "@mui/joy/Modal";
 import Sheet from "@mui/joy/Sheet";
 import ModalClose from "@mui/joy/ModalClose";
 import React, { useEffect, useState } from "react";
-import { MdDone, MdModeEditOutline } from "react-icons/md";
+import { MdDelete, MdDone, MdModeEditOutline } from "react-icons/md";
 import { useDispatch, useSelector } from 'react-redux';
-import { createOrder, fetchOrders, updateOrder, orderIniState } from "../../redux/actions/purchaseOrderActions.js";
-import { FaRegPlusSquare } from "react-icons/fa";
+import { createOrder, deleteOrder, fetchOrders, updateOrder, orderIniState } from "../../redux/actions/purchaseOrderActions.js";
+import DataTable from "../table/DataTable.jsx";
+import { FaCheck, FaCompressArrowsAlt, FaEdit, FaFilter, FaRegPlusSquare } from "react-icons/fa";
+import { AiFillDelete } from "react-icons/ai";
 import { createItem, deleteItem, updateItem, iniState } from "../../redux/actions/purchaseOrderItemActions.js";
 import { fetchGasData } from "../../state/GasList.jsx";
-import { IoIosArrowDown, IoIosArrowUp, } from "react-icons/io";
+import { IoIosArrowDown, IoIosArrowUp, IoMdAdd, IoMdMedical } from "react-icons/io";
 import { ImCross, ImCheckmark } from "react-icons/im";
+import { Collapse } from "@mui/material";
 import { FaArrowTurnDown } from "react-icons/fa6";
+import AddPurchaseUI from "./AddPurchaseUI.jsx";
 let gasList = [];
 let gasListMap = new Map();
 export default function Purchase() {
-     const [addPurchaseModel, setAddPurchaseModel] = useState(false);
-     const [orderItems, setOrderItems] = useState([]);
-     const handleItemChange = (index, field, value) => {
-          if (field === 'id') {
-               setOrderItems(orderItems.map((item, i) => {
-                    if (i === index) {
-                         return { ...item, [field]: value }
-                    }
-                    return item
-               }))
-               return
-          }
-          try {
-               const updatedItems = orderItems.map((item, i) => {
-
-                    const s = value.split('');
-                    let n = '';
-
-                    let dotCont = 0;
-                    s.forEach(c => {
-                         if (
-                              c === '.'
-                              || c === ','
-                              || field === 'qty'
-                              || field === 'return_cyl_qty'
-                              || field === 'gas_id'
-                         ) {
-                              dotCont++;
-                         }
-                         if (c.match(/[0-9]/)) {
-                              n += c;
-                         }
-                         if (c === '.' && dotCont <= 1) {
-                              n += c;
-                         }
-                    });
-                    if (n.startsWith('.')) {
-                         n = '0' + n;
-                    }
-                    n = n.replace(/^0+(\d)/, '$1');
-                    if (n.length === 0) {
-                         n = 0;
-                    }
-                    return i === index ? { ...item, [field]: n } : item
-               }
-               );
-               setOrderItems(updatedItems);
-          } catch (e) { console.warn(e); }
-     };
-     const addEmptyItem = () => {
-          try {
-               const goGasId = gasList.find(gas => (gas.company_name === "GO GASS") && (orderItems.find(item => item.gas_id === gas.id) == null)).id;
-               const updatedItems = [...orderItems, { gas_id: goGasId, qty: 0, rate: 0, return_cyl_qty: 0 }];
-               setOrderItems(updatedItems);
-          } catch (e) { return; }
-     };
-
-     const [paid_val, setPaid_val] = useState(0);
-     const [tcs, setTcs] = useState(0.01);
-
-     let totalAmt = 0
-     let totalQty = 0
-     let totalKg = 0
-     let ballance = 0
-     let totalReturnQty = 0
-     let totalReturnKg = 0
-
-     const removeItem = (index) => {
-          const updatedItems = orderItems.filter((_, i) => i !== index);
-          setOrderItems(updatedItems);
-     };
 
      const allGases = useSelector(state => state.gas);
 
      const dispatch = useDispatch();
      const { updateOrderSuccsess, orders, loading, error } = useSelector(state => state.purchaseOrders);
 
+     //console.log(orders);
+
      if (error) { console.warn(error); }
 
      const { itemLoading, items, itemError, itemUpdateSuccess } = useSelector(state => state.purchaseOrderItems);
 
+     //console.log(itemLoading, items, itemError, itemUpdateSuccess);
+
      if (itemError) { console.warn(itemError); }
+
 
      let grandTotalBallance = 0
      let grandTotalPayAmt = 0
 
+     //console.log(orders);
+
      const currentDate = new Date().toISOString().split('T')[0];
-     const oneMonthAgo = new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0];
+     const oneMonthAgo = new Date(new Date().setMonth(new Date().getMonth() - 1))
+          .toISOString()
+          .split('T')[0];
      const [startDate, setStartDate] = useState(oneMonthAgo);
      const [endDate, setEndDate] = useState(currentDate);
 
@@ -111,7 +70,6 @@ export default function Purchase() {
           dispatch(fetchGasData());
           dispatch(fetchOrders({ startDate, endDate }));
      }, [dispatch, startDate, endDate]);
-
      useEffect(() => {
           if (itemUpdateSuccess || updateOrderSuccsess) {
                dispatch(iniState());
@@ -120,38 +78,14 @@ export default function Purchase() {
                dispatch(fetchOrders({ startDate, endDate }));
           }
      });
-
      const orderRows = []
-
-     const noOutlineHead = { borderWidth: 0, width: 1, };
-     const noOutline = { borderWidth: 0, };
-
      if (allGases.data != null) {
           allGases.data.data.forEach(gas => {
                gasListMap.set(gas.id, gas)
           })
           gasList = allGases.data.data
      }
-
      if (allGases.data != null && orders != null && orders.length > 0) {
-          try {
-
-               totalAmt = orderItems.reduce((acc, item) => parseFloat(acc) + parseFloat(item.qty) * parseFloat(item.rate), 0);
-               totalAmt = (totalAmt * tcs) + totalAmt;
-               ballance = totalAmt - paid_val;
-               totalQty = orderItems.reduce((acc, item) => parseFloat(acc) + parseFloat(item.qty), 0);
-               totalKg = orderItems.reduce((acc, item) => {
-                    return acc + parseFloat(item.qty) * parseFloat(gasListMap.get(item.gas_id).kg)
-               }, 0);
-               totalReturnQty = orderItems.reduce((acc, item) => parseFloat(acc) + parseFloat(item.return_cyl_qty), 0);
-               totalReturnKg = orderItems.reduce((acc, item) => {
-                    return acc + parseFloat(item.return_cyl_qty) * parseFloat(gasListMap.get(item.gas_id).kg)
-               }, 0);
-
-          } catch (e) {
-               console.warn(e);
-          }
-
           orders.forEach((order, index) => {
                let totalQty = 0;
                let totalKg = 0;
@@ -160,7 +94,7 @@ export default function Purchase() {
                let ballance = 0;
                let totalReturnQty = 0;
                let totalReturnKg = 0;
-
+               let grandTotal = 0;
                if (order.items.length === 0) {
                     orderRows.push(
                          <tr key={`order-row-empty-${order.id}`}>
@@ -184,20 +118,19 @@ export default function Purchase() {
                                         }} />
                                         <span style={{ fontWeight: "bold" }}>No Gas Added Please Add Gas from the edit option</span>
                                    </Stack>
+
                               </td>
                          </tr>
                     );
                }
-
                order.items.forEach((item, index) => {
                     const gas = gasListMap.get(item.gas_id);
-
                     totalQty += item.qty;
                     totalKg += gas.kg * item.qty;
-                    totalAmt += item.qty * item.rate;
+                    totalAmt += totalKg * item.rate;
                     totalReturnQty += item.return_cyl_qty;
                     totalReturnKg += gas.kg * item.return_cyl_qty;
-
+                    grandTotal += totalAmt;
                     orderRows.push(
                          <tr key={`order-row-${order.id}-${index}`}>
                               <Cell id={order.id} data={order.order_no} tableName="purchase_orders" column="order_no" />
@@ -208,12 +141,13 @@ export default function Purchase() {
                               <Cell id={item.id} data={item.qty} tableName="purchase_order_items" column="qty" />
                               <Cell id={order.id} data={item.qty * gas.kg + " KG"} editable={false} tableName="" column="" />
                               <Cell id={item.id} data={item.rate} tableName="purchase_order_items" column="rate" />
-                              <Cell id={order.id} data={"₹" + (item.qty * item.rate).toFixed(2)} editable={false} tableName="" column="" />
+                              <Cell id={order.id} data={"₹" + (totalAmt).toFixed(2)} editable={false} tableName="" column="" />
                               <Cell id={item.id} data={item.return_cyl_qty} tableName="purchase_order_items" column="return_cyl_qty" />
                               <Cell id={order.id} data={item.return_cyl_qty * gas.kg + " KG"} editable={false} tableName="" column="" />
                          </tr >
                     )
                })
+               // console.log(gasListMap);
                ballance = totalAmt - totalPayAmt;
                grandTotalBallance += ballance
                grandTotalPayAmt += totalPayAmt
@@ -222,16 +156,23 @@ export default function Purchase() {
                          <React.Fragment>
                               <TotalRow
                                    order={order}
-                                   data={{
-                                        kg: totalKg,
-                                        qty: totalQty,
-                                        amt: totalAmt,
-                                        pay_amt: totalPayAmt,
-                                        remaning_amt: ballance,
-                                        rKg: totalReturnKg,
-                                        rQty: totalReturnQty,
-                                   }}>
-                                   <div style={{ width: "100%", flexGrow: 1, }} />
+                                   data={
+                                        {
+                                             kg: totalKg,
+                                             qty: totalQty,
+                                             amt: grandTotal,
+                                             pay_amt: totalPayAmt,
+                                             remaning_amt: ballance,
+                                             rKg: totalReturnKg,
+                                             rQty: totalReturnQty,
+                                        }
+                                   }>
+                                   <div
+                                        style={{
+                                             width: "100%",
+                                             flexGrow: 1,
+                                        }}
+                                   />
                                    <List size="md">
                                         {
                                              [
@@ -239,7 +180,7 @@ export default function Purchase() {
                                                   { label: "Total Qty", value: totalQty },
                                                   { label: "Total Return Kg", value: totalReturnKg },
                                                   { label: "Total Return Qty", value: totalReturnQty },
-                                                  { label: "Total Amt", value: totalAmt },
+                                                  { label: "Total Amt", value: grandTotal },
                                                   {
                                                        label: "Pay Amt", value: <Cell
                                                             column="pay_amt"
@@ -251,7 +192,6 @@ export default function Purchase() {
                                                   { label: "Pending Amt", value: ballance },
                                              ].map((data, index) => (
                                                   <ListItem key={index}>
-
                                                        <ListItemContent
                                                             sx={{
                                                                  textAlign: "end",
@@ -266,7 +206,6 @@ export default function Purchase() {
                                                             }}
                                                        >{data.value}</ListItemDecorator>
                                                        <ListItemDecorator />
-
                                                   </ListItem>
                                              ))
                                         }
@@ -322,585 +261,6 @@ export default function Purchase() {
           backgroundColor: "#263043",
           "&:hover": {
           },
-     }
-     const AddPurchaseUl = () => {
-          return (<>
-               <Button
-                    variant="solid"
-                    size="sm"
-                    sx={{
-                         backgroundColor: "#12467b",
-                         display: loading ? "none" : "flex",
-                    }}
-                    startDecorator={<CgAdd />}
-                    onClick={() => setAddPurchaseModel(true)}
-               >
-                    Add Purchase
-               </Button>
-               {
-                    gasListMap.size > 0 ?
-                         <Modal
-                              aria-labelledby="modal-title"
-                              aria-describedby="modal-desc"
-                              open={addPurchaseModel}
-                              onClose={() => setAddPurchaseModel(false)}
-                              sx={{
-                                   display: "flex",
-                                   justifyContent: "center",
-                                   alignItems: "center",
-                              }}
-                         >
-                              <Container maxWidth="lg">
-                                   <Sheet
-                                        variant="outlined"
-                                        sx={{
-                                             borderRadius: "md",
-                                             p: 3,
-                                             boxShadow: "lg",
-                                             maxHeight: "100vh",
-                                             overflow: "auto"
-                                        }}>
-                                        <ModalClose variant="plain" sx={{ m: 1 }} />
-                                        <Typography
-                                             component="h2"
-                                             id="modal-title"
-                                             level="h4"
-                                             textColor="inherit"
-                                             fontWeight="lg"
-                                        >
-                                             Add Purchase
-                                        </Typography>
-                                        <LinearProgress
-                                             sx={{
-                                                  my: 1,
-                                                  width: "100%",
-                                                  display: (false) ? "block" : "none",
-                                             }} />
-                                        <Divider sx={{
-                                             my: 1
-                                        }} />
-                                        <form
-                                             onSubmit={(event) => {
-                                                  event.preventDefault();
-                                                  const formData = new FormData(event.currentTarget);
-                                                  const formJson = Object.fromEntries(formData.entries());
-                                                  formJson.purchase_order_items = orderItems;
-                                                  //console.log(formJson);
-                                                  dispatch(createOrder(formJson));
-                                                  setAddPurchaseModel(false);
-                                             }}
-                                        >
-                                             <Stack
-                                                  direction="column"
-                                                  gap={1}
-                                                  sx={{
-                                                       width: "100%",
-                                                       borderRadius: "md",
-                                                       padding: 1,
-                                                       marginTop: 1,
-                                                       backgroundColor: "transparent",
-                                                       color: "black",
-                                                  }}>
-                                                  <Stack
-                                                       direction="row"
-                                                       gap={1}
-                                                  >
-                                                       <Input
-                                                            placeholder="Date"
-                                                            type="date"
-                                                            name="date"
-                                                            required
-                                                            size="sm"
-                                                            onKeyDown={(e) => e.preventDefault()}
-                                                            onFocus={(e) => e.target.showPicker()}
-                                                            onClick={(e) => e.target.showPicker()}
-                                                            sx={{
-                                                                 width: "100%",
-                                                                 flexGrow: 1,
-                                                            }}
-                                                       />
-                                                       <Input
-                                                            placeholder="Order No."
-                                                            type="text"
-                                                            name="order_no"
-                                                            size="sm"
-                                                            required
-                                                            sx={{
-                                                                 width: "100%",
-                                                                 flexGrow: 1,
-                                                            }}
-                                                       />
-                                                       <Input sx={{
-                                                            width: "100%",
-                                                            flexGrow: 1,
-                                                       }} placeholder="Scheme" size="sm" type="text" name="scheme" required />
-                                                       <Input sx={{
-                                                            width: "100%",
-                                                            flexGrow: 1,
-                                                       }} placeholder="Scheme Type" size="sm" type="text" name="scheme_type" required />
-                                                  </Stack>
-                                                  <Card >
-                                                       <CardContent
-                                                            sx={{ display: "flex", }}
-                                                       >
-
-                                                            <Table
-                                                                 sx={{
-
-                                                                      width: "100%",
-                                                                      flexGrow: 1,
-                                                                      tableLayout: "fixed",
-                                                                      fontWeight: "bold",
-                                                                 }}
-                                                                 size="sm"
-                                                            >
-                                                                 <thead>
-                                                                      <tr>
-                                                                           <th style={noOutlineHead}>
-                                                                                <Box
-                                                                                     sx={{
-                                                                                          display: "flex",
-                                                                                          alignItems: "center",
-                                                                                          justifyContent: "center",
-                                                                                     }}
-                                                                                >
-                                                                                     <span
-                                                                                          style={{
-                                                                                               fontWeight: "bold",
-                                                                                          }}
-                                                                                     > Cyl.</span>
-                                                                                </Box>
-                                                                           </th>
-                                                                           <th style={noOutlineHead}>
-                                                                                <Box
-                                                                                     sx={{
-                                                                                          display: "flex",
-                                                                                          alignItems: "center",
-                                                                                          justifyContent: "center",
-                                                                                     }}
-                                                                                >
-                                                                                     <span
-                                                                                          style={{
-                                                                                               fontWeight: "bold",
-                                                                                          }}
-                                                                                     > </span>
-                                                                                </Box>
-
-                                                                           </th>
-                                                                           <th style={noOutlineHead}>
-                                                                                <Box
-                                                                                     sx={{
-                                                                                          display: "flex",
-                                                                                          alignItems: "center",
-                                                                                          justifyContent: "center",
-                                                                                     }}
-                                                                                >
-                                                                                     <span
-                                                                                          style={{
-                                                                                               fontWeight: "bold",
-                                                                                          }}
-                                                                                     > Qty.</span>
-                                                                                </Box>
-                                                                           </th>
-                                                                           <th style={noOutlineHead}>
-                                                                                <Box
-                                                                                     sx={{
-                                                                                          display: "flex",
-                                                                                          alignItems: "center",
-                                                                                          justifyContent: "center",
-                                                                                     }}
-                                                                                >
-                                                                                     <span
-                                                                                          style={{
-                                                                                               fontWeight: "bold",
-                                                                                          }}
-                                                                                     >Total Kg</span>
-                                                                                </Box>
-                                                                           </th>
-                                                                           <th style={noOutlineHead}>
-                                                                                <Box
-                                                                                     sx={{
-                                                                                          display: "flex",
-                                                                                          alignItems: "center",
-                                                                                          justifyContent: "center",
-                                                                                     }}
-                                                                                >
-                                                                                     <span
-                                                                                          style={{
-                                                                                               fontWeight: "bold",
-                                                                                          }}
-                                                                                     >Rate</span>
-                                                                                </Box>
-                                                                           </th>
-                                                                           <th style={noOutlineHead}>
-                                                                                <Box
-                                                                                     sx={{
-                                                                                          display: "flex",
-                                                                                          alignItems: "center",
-                                                                                          justifyContent: "center",
-                                                                                     }}
-                                                                                >
-                                                                                     <span
-                                                                                          style={{
-                                                                                               fontWeight: "bold",
-                                                                                          }}
-                                                                                     >Total Amt</span>
-                                                                                </Box></th>
-
-                                                                           <th style={noOutlineHead}>
-                                                                                <Box
-                                                                                     sx={{
-                                                                                          display: "flex",
-                                                                                          alignItems: "center",
-                                                                                          justifyContent: "center",
-                                                                                     }}
-                                                                                >
-                                                                                     <span
-                                                                                          style={{
-                                                                                               fontWeight: "bold",
-                                                                                          }}
-                                                                                     >Return Cyl. Qty.</span>
-                                                                                </Box>
-                                                                           </th>
-                                                                           <th style={noOutlineHead}>Total</th>
-
-                                                                      </tr>
-                                                                      <tr>
-                                                                           <th colSpan={8}
-                                                                                style={
-                                                                                     {
-                                                                                          borderWidth: 0, width: 1,
-                                                                                          height: 1,
-                                                                                     }
-                                                                                }
-                                                                           >
-                                                                                <Divider orientation="horizontal" />
-                                                                           </th>
-                                                                      </tr>
-                                                                 </thead>
-                                                                 <tbody>
-                                                                      {
-                                                                           orderItems.map((item, index) => {
-                                                                                return (
-                                                                                     <tr key={`order-item-${item.id}-${index}`}>
-                                                                                          <td style={
-                                                                                               {
-                                                                                                    borderWidth: 0,
-                                                                                               }
-                                                                                          }
-                                                                                               colSpan={2}>
-                                                                                               <Select
-                                                                                                    color="neutral"
-                                                                                                    placeholder="select Gas"
-                                                                                                    size="sm"
-                                                                                                    variant="outlined"
-                                                                                                    name="gas_id"
-                                                                                                    defaultValue={item.gas_id}
-                                                                                                    onChange={(event, newValue) => {
-                                                                                                         //console.log(orderItems.find(item => item.gas_id === newValue) == null)
-                                                                                                         if (orderItems.find(item => item.gas_id === newValue) != null) {
-                                                                                                              alert("Gas already added")
-                                                                                                              return
-                                                                                                         }
-                                                                                                         handleItemChange(index, 'gas_id', newValue)
-                                                                                                    }}
-                                                                                                    required
-                                                                                                    sx={{
-                                                                                                         flexGrow: 1,
-                                                                                                         width: "100%",
-                                                                                                    }}
-                                                                                               >
-                                                                                                    {gasList.map(gas => {
-                                                                                                         if (
-                                                                                                              gas.company_name === "GO GASS"
-
-                                                                                                         ) return (<Option
-                                                                                                              key={gas.id}
-                                                                                                              value={gas.id}
-                                                                                                              label={`${gas.company_name} : ${gas.kg} KG`}
-                                                                                                              sx={{
-                                                                                                                   backgroundColor: "transparent",
-                                                                                                                   color: "black",
-
-                                                                                                              }}
-                                                                                                              onClick={() => {
-                                                                                                                   // handleItemChange(index, 'gas_id', gas.id)
-                                                                                                              }}
-
-                                                                                                         >
-                                                                                                              {`${gas.company_name} : ${gas.kg} KG`}
-                                                                                                         </Option>)
-                                                                                                    })}
-                                                                                               </Select>
-
-                                                                                          </td>
-                                                                                          <td colSpan={2} style={noOutline}>
-                                                                                               <Input
-                                                                                                    placeholder="Quantity"
-                                                                                                    type="text"
-                                                                                                    name="qty"
-                                                                                                    size="sm"
-                                                                                                    sx={{
-                                                                                                         flexGrow: 1,
-                                                                                                         width: "100%",
-                                                                                                    }}
-                                                                                                    required
-                                                                                                    value={item.qty}
-                                                                                                    onChange={(e) => handleItemChange(index, 'qty', e.target.value)}
-                                                                                                    endDecorator={
-                                                                                                         <Chip
-                                                                                                              style={{
-
-                                                                                                                   fontWeight: "bold",
-                                                                                                                   backgroundColor: "#474747",
-                                                                                                                   color: "white",
-                                                                                                              }}
-                                                                                                         >
-                                                                                                              {`Total : ${(item.qty) * (gasListMap.get(item.gas_id).kg)} KG`}
-                                                                                                         </Chip>
-                                                                                                    }
-                                                                                               />
-                                                                                          </td>
-
-                                                                                          <td colSpan={2} style={noOutline}>
-                                                                                               <Input
-                                                                                                    placeholder="Rate"
-                                                                                                    type="text"
-                                                                                                    name="rate"
-                                                                                                    size="sm"
-                                                                                                    sx={{
-                                                                                                         flexGrow: 1,
-                                                                                                         width: "100%",
-                                                                                                    }}
-                                                                                                    required
-                                                                                                    endDecorator={
-                                                                                                         <Chip
-                                                                                                              style={{
-
-                                                                                                                   fontWeight: "bold",
-                                                                                                                   backgroundColor: "#0A6847",
-                                                                                                                   color: "white",
-                                                                                                              }}
-                                                                                                         >
-                                                                                                              {`Total : ₹${((item.qty) * (1)) * (item.rate)}`}
-                                                                                                         </Chip>
-                                                                                                    }
-                                                                                                    value={item.rate}
-                                                                                                    onChange={(e) => handleItemChange(index, 'rate', e.target.value)}
-
-                                                                                               />
-                                                                                          </td>
-                                                                                          <td colSpan={2} style={noOutline}>
-                                                                                               <Stack
-                                                                                                    direction="row"
-                                                                                                    gap={1}
-                                                                                               >
-                                                                                                    <Input
-                                                                                                         placeholder="Return Qty"
-                                                                                                         type="text"
-                                                                                                         name="return_cyl_qty"
-                                                                                                         size="sm"
-                                                                                                         sx={{
-                                                                                                              flexGrow: 1,
-                                                                                                         }}
-                                                                                                         required
-                                                                                                         value={item.return_cyl_qty}
-                                                                                                         onChange={(e) => handleItemChange(index, 'return_cyl_qty', e.target.value)}
-                                                                                                         endDecorator={
-                                                                                                              <Chip
-                                                                                                                   style={{
-
-                                                                                                                        fontWeight: "bold",
-                                                                                                                        backgroundColor: "#474747",
-                                                                                                                        color: "white",
-                                                                                                                   }}
-                                                                                                              >
-                                                                                                                   {`Total : ${(item.return_cyl_qty) * (gasListMap.get(item.gas_id).kg)} KG`}
-                                                                                                              </Chip>
-                                                                                                         }
-                                                                                                    />
-                                                                                                    <Button
-                                                                                                         variant="outlined"
-                                                                                                         color="danger"
-
-                                                                                                         onClick={() => removeItem(index)}
-                                                                                                    >
-                                                                                                         <CgTrash />
-                                                                                                    </Button>
-                                                                                               </Stack>
-                                                                                          </td>
-                                                                                     </tr>
-
-                                                                                )
-                                                                           })}
-                                                                      <tr>
-                                                                           <td style={noOutline} colSpan={8}>
-                                                                                <Button
-                                                                                     startDecorator={
-                                                                                          <FaRegPlusSquare />
-                                                                                     }
-                                                                                     variant="outlined"
-                                                                                     sx={{
-                                                                                          marginTop: 1,
-                                                                                          width: "100%",
-                                                                                     }}
-                                                                                     onClick={() => addEmptyItem()}
-                                                                                >
-                                                                                     Add
-                                                                                </Button>
-                                                                           </td>
-                                                                      </tr>
-                                                                 </tbody>
-                                                            </Table>
-                                                       </CardContent>
-                                                  </Card>
-                                                  <Stack
-                                                       direction="row"
-                                                       gap={1}
-                                                       alignContent="center"
-                                                  >
-                                                       <Box
-                                                            sx={
-                                                                 {
-                                                                      display: "flex",
-                                                                      alignItems: "center",
-                                                                      justifyContent: "center",
-                                                                 }
-                                                            }
-                                                       >
-                                                            <span
-                                                                 style={{
-
-                                                                      fontWeight: "bold",
-                                                                 }}
-                                                            >TCS :</span>
-                                                       </Box>
-                                                       <Input
-                                                            placeholder="TCS"
-                                                            type="number"
-                                                            name="pay_amt"
-                                                            required
-                                                            value={tcs}
-                                                            onChange={(e) => setTcs(e.target.value)}
-                                                       />
-                                                       <Divider orientation="vertical" />
-                                                       <Box
-                                                            sx={
-                                                                 {
-                                                                      display: "flex",
-                                                                      alignItems: "center",
-                                                                      justifyContent: "center",
-                                                                 }
-                                                            }
-                                                       >
-                                                            <span
-                                                                 style={{
-                                                                      color: "green",
-                                                                      fontWeight: "bold",
-                                                                 }}
-                                                            >Total : ₹{totalAmt}</span>
-                                                       </Box>
-                                                       <Divider orientation="vertical" />
-                                                       <Box
-                                                            sx={
-                                                                 {
-                                                                      display: "flex",
-                                                                      alignItems: "center",
-                                                                      justifyContent: "center",
-                                                                 }
-                                                            }
-                                                       >
-                                                            <span
-                                                                 style={{
-
-                                                                      fontWeight: "bold",
-                                                                 }}
-                                                            >Paid :</span>
-                                                       </Box>
-                                                       <Input
-                                                            placeholder="Amt Pay"
-                                                            type="number"
-                                                            name="pay_amt"
-                                                            required
-                                                            value={paid_val}
-                                                            onChange={(e) => setPaid_val(e.target.value)}
-                                                       />
-                                                  </Stack>
-
-                                                  <Divider sx={{
-                                                       my: 1
-                                                  }} />
-                                                  <Stack
-                                                       direction="row"
-                                                  >
-                                                       <Table
-                                                            sx={{
-                                                                 tableLayout: "auto",
-                                                                 fontWeight: "bold",
-                                                            }}
-                                                            size="sd"
-                                                            borderAxis="none"
-                                                       >
-                                                            <tbody>
-                                                                 <tr>
-                                                                      <th style={{ width: 1, borderWidth: 0 }} >Ballance</th>
-                                                                      <td style={{ borderWidth: 0, width: 1, }}>&nbsp;:&nbsp;</td>
-                                                                      <td style={{ borderWidth: 0 }}>₹{ballance}</td>
-                                                                 </tr>
-                                                                 <tr>
-                                                                      <th style={{ width: 1, borderWidth: 0 }} >Total Qty</th>
-                                                                      <td style={{ borderWidth: 0, width: 1, }}>&nbsp;:&nbsp;</td>
-                                                                      <td style={{ borderWidth: 0 }}>{totalQty}</td>
-                                                                 </tr>
-                                                                 <tr>
-                                                                      <th style={{ width: 1, borderWidth: 0 }} >Total Kg</th>
-                                                                      <td style={{ borderWidth: 0, width: 1, }}>&nbsp;:&nbsp;</td>
-                                                                      <td style={{ borderWidth: 0 }}>{totalKg}</td>
-                                                                 </tr>
-                                                                 <tr>
-                                                                      <th style={{ width: 1, borderWidth: 0 }} >Total Return Qty</th>
-                                                                      <td style={{ borderWidth: 0, width: 1, }}>&nbsp;:&nbsp;</td>
-                                                                      <td style={{ borderWidth: 0 }}>{totalReturnQty}</td>
-                                                                 </tr>
-                                                                 <tr>
-                                                                      <th style={{ width: 1, borderWidth: 0 }} >Total Return Kg</th>
-                                                                      <td style={{ borderWidth: 0, width: 1, }}>&nbsp;:&nbsp;</td>
-                                                                      <td style={{ borderWidth: 0 }}>{totalReturnKg}</td>
-                                                                 </tr>
-                                                            </tbody>
-                                                       </Table>
-                                                       <Box
-                                                            sx={{
-                                                                 display: "flex",
-                                                                 alignItems: "center",
-                                                            }}
-                                                       >
-                                                            <Button
-                                                                 variant="outlined"
-                                                                 onClick={() => setAddPurchaseModel(false)}
-                                                            >
-                                                                 Cancel
-                                                            </Button>
-                                                            <span
-                                                                 style={{ width: "10px" }}
-                                                            />
-                                                            <Button
-                                                                 startDecorator={
-                                                                      <CgAdd />
-                                                                 }
-                                                                 type="submit"
-                                                            >
-                                                                 Save
-                                                            </Button>
-                                                       </Box>
-                                                  </Stack>
-                                             </Stack>
-                                        </form>
-                                   </Sheet>
-                              </Container>
-                         </Modal> : <></>
-               }
-          </>)
      }
      return (
           <Sheet
@@ -963,10 +323,7 @@ export default function Purchase() {
                               backgroundColor: "transparent",
                          }}
                     />
-                    <Stack
-                         direction="row"
-                         gap={1}
-                    >
+                    <Stack direction="row" gap={1} >
                          <Box
                               sx={{
                                    display: "flex",
@@ -996,7 +353,6 @@ export default function Purchase() {
                                    colorScheme: "dark",
 
                               }}
-
                          />
                          <Box
                               sx={{
@@ -1027,10 +383,9 @@ export default function Purchase() {
                                    colorScheme: "dark",
 
                               }}
-
                          />
                     </Stack>
-                    <AddPurchaseUl />
+                    <AddPurchaseUI gaslistData={gasList} />
                </Stack>
                <LinearProgress
                     sx={{
@@ -1073,14 +428,11 @@ export default function Purchase() {
                          </tr>
                     </thead>
                     <tbody>
-                         {
-                              orderRows
-                         }
+                         {orderRows}
                     </tbody>
                </Table>
           </Sheet >)
 }
-
 export const Cell = ({ id, data, tableName, column, editable = true }) => {
      const [editMode, setEditMode] = useState(false);
      const [editValue, setEditValue] = useState(data);
@@ -1151,14 +503,12 @@ export const Cell = ({ id, data, tableName, column, editable = true }) => {
                          <MdModeEditOutline style={{ fontSize: "25px" }} />
                     </Stack>
                </Stack>
-
           </Box>) : <Input
                sx={{
                     color: "black",
                     flexGrow: 1,
 
                }}
-
                type="number"
                value={editValue}
                onChange={(e) => { setEditValue(e.target.value) }}
@@ -1188,9 +538,7 @@ export const Cell = ({ id, data, tableName, column, editable = true }) => {
                                    setEditMode(false)
                               }}
                          >
-                              <ImCross
-
-                              />
+                              <ImCross />
                          </Box>
                          <Box
                               sx={{
@@ -1228,10 +576,8 @@ export const Cell = ({ id, data, tableName, column, editable = true }) => {
      if (!editMode) {
           return <td style={{
                borderWidth: 0, padding: 0, margin: 0,
-
           }}>
                <DataDisplay />
-
           </td>
      }
 
@@ -1280,9 +626,7 @@ export const Cell = ({ id, data, tableName, column, editable = true }) => {
 
                          }}
                     >
-                         <ImCross
-
-                         />
+                         <ImCross />
                     </Box>
                     <Box
                          sx={{
@@ -1305,16 +649,13 @@ export const Cell = ({ id, data, tableName, column, editable = true }) => {
                               dispatch(updateItem(id, { [column]: gasId }))
                          }}
                     >
-                         <ImCheckmark
-
-                         />
+                         <ImCheckmark />
                     </Box>
                </Stack>
           </td >
      }
 
      let type = "text"
-
      switch (column) {
           case "qty":
                type = "number"
@@ -1329,7 +670,6 @@ export const Cell = ({ id, data, tableName, column, editable = true }) => {
                type = "date"
                break;
      }
-
      return <td style={{ borderWidth: 0, padding: 0, margin: 0 }}>{editMode ? (
           <Stack direction="row" sx={{ width: "100%" }}>
                <Input
@@ -1341,7 +681,7 @@ export const Cell = ({ id, data, tableName, column, editable = true }) => {
                     name={column}
                     size="sm"
                     type={type}
-                    value={editValue}
+                    value={(editMode) ? editValue : ""}
                     onChange={(e) => { setEditValue(e.target.value) }}
                     endDecorator={
                          <Stack direction="row"
@@ -1369,9 +709,7 @@ export const Cell = ({ id, data, tableName, column, editable = true }) => {
                                         setEditMode(false)
                                    }}
                               >
-                                   <ImCross
-
-                                   />
+                                   <ImCross />
                               </Box>
                               <Box
                                    sx={{
@@ -1442,13 +780,15 @@ const TotalRow = ({ children, data, order }) => {
                     direction="row"
                     gap={1}
                     sx={{
-                         fontWeight: "bold",
+                         //fontWeight: "bold",
+                         opacity: 0.90,
+                         py: 1,
+                         fontSize: "14px",
                     }}
                >
                     <AddGas order={order} />
                     <Divider sx={{
                          flexGrow: 1,
-
                          backgroundColor: "transparent",
                     }} orientation="vertical" />
                     <Box
@@ -1464,9 +804,8 @@ const TotalRow = ({ children, data, order }) => {
                               borderRadius: "md",
                               color: "#185ea5",
                          }}
-
                     >
-                         <span style={{ fontWeight: "bold" }}>Total Qty : <span style={{ color: "#263043" }}>₹{qty}</span></span>
+                         <span style={{ fontWeight: "bold" }}>Total Qty : <span style={{ color: "#263043" }}>{qty}</span></span>
                          <Divider sx={{ width: "2px", mx: 1 }} orientation="vertical" />
                          <span style={{ fontWeight: "bold" }}>Total Kg : <span style={{ color: "#263043" }}>{kg}</span></span>
                          <Divider sx={{ width: "2px", mx: 1 }} orientation="vertical" />
@@ -1475,9 +814,7 @@ const TotalRow = ({ children, data, order }) => {
                          <span style={{ fontWeight: "bold" }}>Paid Amount : <span style={{ color: "#263043" }}>₹{pay_amt}</span></span>
                          <Divider sx={{ width: "2px", mx: 1 }} orientation="vertical" />
                          <span style={{ fontWeight: "bold" }}>Remainng Amount : <span style={{ color: "#263043" }}>₹{remaning_amt}</span></span>
-
                     </Box>
-
                     <Box
                          sx={{
                               fontWeight: "bold",
@@ -1582,14 +919,14 @@ const AddGas = ({ order }) => {
                     open={open}
                     sx={{
                          borderWidth: "0px",
-
                          backgroundColor: "transparent",
+                         display: "flex",
+                         justifyContent: "center",
+                         alignItems: "center",
 
                     }}
                     onClose={() => setOpen(false)}
-                    sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
                >
-
                     <Sheet
                          sx={{
                               borderRadius: 'md',
@@ -1598,16 +935,40 @@ const AddGas = ({ order }) => {
                          }}
                     >
                          <ModalClose variant="plain" sx={{ m: 1 }} />
-                         <Typography
-                              component="h2"
-                              id="modal-title"
-                              level="h4"
-                              textColor="inherit"
-                              fontWeight="lg"
+                         <Stack
+                              direction="row"
+                              gap={1}
+                              alignContent={"center"}
                               mb={1}
                          >
-                              {`Order No. ${order.order_no}`}
-                         </Typography>
+                              <Typography
+                                   component="h2"
+                                   id="modal-title"
+                                   level="h4"
+                                   textColor="inherit"
+                                   fontWeight="lg"
+                                   mx={1}
+                              >
+                                   {`Order No. ${order.order_no}`}
+                              </Typography>
+
+                              <Button
+                                   variant="soft"
+                                   startDecorator={
+                                        <MdDelete />
+                                   }
+                                   color="danger"
+                                   onClick={() => {
+                                        const deleteThisOrder = prompt("Type Order No. to delete", "");
+                                        if (deleteThisOrder === order.order_no) {
+                                             dispatch(deleteOrder(order.id))
+                                        }
+                                        setOpen(false)
+                                   }}
+                              >
+                                   Delete
+                              </Button>
+                         </Stack>
                          <form
                               onSubmit={(event) => {
                                    event.preventDefault();
@@ -1629,7 +990,6 @@ const AddGas = ({ order }) => {
                                    <thead>
                                         <tr>
                                              <th>Gas&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
-
                                              <th >Qty.</th>
                                              <th >Rate</th>
                                              <th >Total Kg</th>
@@ -1668,10 +1028,8 @@ const AddGas = ({ order }) => {
                                         }
                                    </tbody>
                                    <tfoot>
-
                                         <tr>
                                              <td>
-
                                                   <Select
                                                        placeholder="select Gas"
                                                        name="gas_id"
@@ -1695,7 +1053,6 @@ const AddGas = ({ order }) => {
                                                             </Option>)
                                                        })}
                                                   </Select>
-
                                              </td>
                                              <td>
                                                   <Input
@@ -1735,7 +1092,6 @@ const AddGas = ({ order }) => {
                                                        type="submit"
                                                        color="success"
                                                        sx={{ width: "100%" }}
-
                                                   >
                                                        <MdDone />
                                                   </Button>
