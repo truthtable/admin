@@ -15,6 +15,8 @@ import purchaseOrderReducer from "../redux/reducers/purchaseOrderReducer.js";
 import purchaseOrderItemReducer from "../redux/reducers/purchaseOrderItemReducer.js";
 import warehouseReducer from "../redux/reducers/warehouseReducer.js";
 import plantsReducer from "../redux/reducers/plantsReducer.js";
+import { deliveryHistory } from "../crud/index.js";
+import deliverysReducer from "../redux/reducers/deliverysReducer.js";
 
 export const store = configureStore({
      reducer: {
@@ -23,6 +25,7 @@ export const store = configureStore({
           checkLogin: checkLoginReducer,
 
           delivery: deliveryReducer,
+          deliverys: deliverysReducer,
 
           count: countReducer,
 

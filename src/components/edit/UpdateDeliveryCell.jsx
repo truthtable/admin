@@ -111,7 +111,7 @@ export const UpdateDeliveryCell = (props) => {
                          "&:hover": {
                               backgroundColor: hoverColor,
                          },
-                        height: "100%",
+                         height: "100%",
                     }}
                >
                     <Button
@@ -130,6 +130,8 @@ export const UpdateDeliveryCell = (props) => {
                               color: "black",
                               backgroundColor: "transparent",
                               whiteSpace: "nowrap",
+                              p: 0,
+                              m: 0,
                               //hover
                          }}
                     >
