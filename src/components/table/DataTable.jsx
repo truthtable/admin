@@ -6,10 +6,10 @@ export default function DataTable(props) {
 
      return (
           <div
-          style={{
-              width: "100%",
-              flexGrow: 1,
-          }}
+               style={{
+                    width: "100%",
+                    flexGrow: 1,
+               }}
           >
                <div style={{ display: loading ? "block" : "none" }}>
                     <LinearProgress color="primary" variant="soft" />

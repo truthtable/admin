@@ -3,9 +3,9 @@
      height: 100%;
      min-height: 100%;
      max-height: 100%;
-     width: 251px;
+     /* width: 251px;
      min-width: 251px;
-     max-width: 251px;
+     max-width: 251px; */
      background-color: #263043;
      overflow-y: auto;
      transition: all 0.5s;
@@ -43,11 +43,12 @@
      font-size: 18px;
      display: flex;
      align-items: center;
+     /* justify-content: center; */
      color: aliceblue;
 }
 
 .sidebar-list-item .icon {
-     margin-right: 10px;
+     font-size: xx-large;
 }
 
 .sidebar-list-item:hover {

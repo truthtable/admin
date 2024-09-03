@@ -14,6 +14,7 @@ import gasDeliverysReducer from "./UpdateGasDelivery";
 import purchaseOrderReducer from "../redux/reducers/purchaseOrderReducer.js";
 import purchaseOrderItemReducer from "../redux/reducers/purchaseOrderItemReducer.js";
 import warehouseReducer from "../redux/reducers/warehouseReducer.js";
+import plantsReducer from "../redux/reducers/plantsReducer.js";
 
 export const store = configureStore({
      reducer: {
@@ -44,6 +45,8 @@ export const store = configureStore({
           purchaseOrders: purchaseOrderReducer,
 
           purchaseOrderItems: purchaseOrderItemReducer,
+
+          plants: plantsReducer,
 
           warehouses: warehouseReducer,
      },

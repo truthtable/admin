@@ -1,12 +1,12 @@
 /* eslint-disable react/prop-types */
-import { Box, Button, Card, CardContent, Chip, Container, Divider, Input, LinearProgress, Modal, ModalClose, Option, Select, Sheet, Stack, Table, Typography } from "@mui/joy";
+import { Box, Button, Card, CardContent, Chip, Container, Divider, Input, LinearProgress, Modal, ModalClose, Option, Select, Sheet, Stack, Table, Tooltip, Typography } from "@mui/joy";
 import { useState } from "react";
 import { CgAdd, CgTrash } from "react-icons/cg";
 import { useDispatch } from "react-redux";
 import { createOrder } from "../../redux/actions/purchaseOrderActions";
 import { FaRegPlusSquare } from "react-icons/fa";
 
-export default function AddPurchaseUI({ gaslistData }) {
+export default function AddPurchaseUI({ gaslistData, plants }) {
 
      const dispatch = useDispatch();
 
@@ -18,7 +18,7 @@ export default function AddPurchaseUI({ gaslistData }) {
      const [addPurchaseModel, setAddPurchaseModel] = useState(false);
      const [orderItems, setOrderItems] = useState([]);
 
-     if ((gaslistData != null) && (gaslistData.length === 0)) {
+     if ((gaslistData != null) && (gaslistData.length === 0) || (plants === undefined || plants === null || plants.length === 0)) {
           return <></>
      }
 
@@ -46,7 +46,7 @@ export default function AddPurchaseUI({ gaslistData }) {
           totalReturnKg += Number(item.return_cyl_qty) * Number(gasListMap.get(item.gas_id).kg)
      })
 
-     const totalScheme = totalKg * scheme_rate
+     const totalScheme = (totalKg * scheme_rate)
 
      const totalTcs = tcs * totalAmt
      const totalFor = for_charges * totalKg
@@ -150,7 +150,7 @@ export default function AddPurchaseUI({ gaslistData }) {
                     }}
                >
                     <Container
-                         maxWidth="lg"
+                         maxWidth="xl"
                     >
                          <Sheet
                               variant="outlined"
@@ -255,6 +255,22 @@ export default function AddPurchaseUI({ gaslistData }) {
                                                        flexGrow: 1,
                                                   }}
                                              />
+                                             <Select
+                                                  placeholder="Plant"
+                                                  required
+                                                  name="plant_id"
+                                                  size="sm"
+                                                  sx={{
+                                                       width: "100%",
+                                                       flexGrow: 1,
+                                                  }}
+                                             >
+                                                  {
+                                                       plants.map(plant => {
+                                                            return (<Option key={plant.id} value={plant.id}>{plant.name}</Option>)
+                                                       })
+                                                  }
+                                             </Select>
                                              <Input sx={{
                                                   width: "100%",
                                                   flexGrow: 1,
@@ -263,14 +279,35 @@ export default function AddPurchaseUI({ gaslistData }) {
                                                   width: "100%",
                                                   flexGrow: 1,
                                              }}
-                                                  value={(scheme_rate === 0) ? "" : scheme_rate}
+                                                  value={
+                                                       scheme_rate
+                                                  }
                                                   onChange={(e) => {
-                                                       if (e.target.value === "") {
-                                                            setSchemeRate(0)
-                                                            return
+                                                       const value = e.target.value;
+                                                       const s = value.split('');
+                                                       let n = '';
+                                                       let dotCont = 0;
+                                                       s.forEach(c => {
+                                                            if (c === '.' || c === ',') {
+                                                                 dotCont++;
+                                                            }
+                                                            if (c.match(/[0-9]/)) {
+                                                                 n += c;
+                                                            }
+                                                            if (c === '.' && dotCont <= 1) {
+                                                                 n += c;
+                                                            }
+                                                       });
+                                                       if (n.startsWith('.')) {
+                                                            n = '0' + n;
                                                        }
-                                                       setSchemeRate(Number(e.target.value))
+                                                       n = n.replace(/^0+(\d)/, '$1');
+                                                       if (n.length === 0) {
+                                                            n = 0;
+                                                       }
+                                                       setSchemeRate(n);
                                                   }}
+
                                                   placeholder="Scheme Rate" size="sm" type="number" name="scheme_rate" required
                                                   endDecorator={
                                                        <Chip
@@ -279,7 +316,7 @@ export default function AddPurchaseUI({ gaslistData }) {
                                                                  fontWeight: "bold",
                                                                  backgroundColor: "#47474721",
                                                             }}>
-                                                            ₹{totalScheme}
+                                                            ₹{totalScheme.toFixed(2)}
                                                        </Chip>
                                                   }
                                              />
@@ -502,7 +539,7 @@ export default function AddPurchaseUI({ gaslistData }) {
                                                                                                          color: "white",
                                                                                                     }}
                                                                                                >
-                                                                                                    {`Total : ${(item.qty) * (gasListMap.get(item.gas_id).kg)} KG`}
+                                                                                                    {`Total : ${parseInt((item.qty) * (gasListMap.get(item.gas_id).kg))} KG`}
                                                                                                </Chip>
                                                                                           }
                                                                                      />
@@ -528,7 +565,7 @@ export default function AddPurchaseUI({ gaslistData }) {
                                                                                                          color: "white",
                                                                                                     }}
                                                                                                >
-                                                                                                    {`Total : ₹${(gasListMap.get(item.gas_id).kg) * item.qty * (item.rate)
+                                                                                                    {`Total : ₹${((gasListMap.get(item.gas_id).kg) * item.qty * (item.rate)).toFixed(2)
                                                                                                          }`}
                                                                                                </Chip>
                                                                                           }
@@ -564,7 +601,7 @@ export default function AddPurchaseUI({ gaslistData }) {
                                                                                                               color: "white",
                                                                                                          }}
                                                                                                     >
-                                                                                                         {`Total : ${(item.return_cyl_qty) * (gasListMap.get(item.gas_id).kg)} KG`}
+                                                                                                         {`Total : ${parseInt((item.return_cyl_qty) * (gasListMap.get(item.gas_id).kg) + "")} KG`}
                                                                                                     </Chip>
                                                                                                }
                                                                                           />
@@ -622,7 +659,7 @@ export default function AddPurchaseUI({ gaslistData }) {
 
                                                             fontWeight: "bold",
                                                        }}
-                                                  >TCS :</span>
+                                                  >TCS&nbsp;:</span>
                                              </Box>
                                              <Input
                                                   placeholder="TCS"
@@ -638,7 +675,7 @@ export default function AddPurchaseUI({ gaslistData }) {
                                                                  fontWeight: "bold",
                                                                  backgroundColor: "#47474721",
                                                             }}>
-                                                            ₹{totalTcs}
+                                                            ₹{totalTcs.toFixed(2)}
                                                        </Chip>
                                                   }
                                              />
@@ -657,7 +694,7 @@ export default function AddPurchaseUI({ gaslistData }) {
 
                                                             fontWeight: "bold",
                                                        }}
-                                                  >FOR :</span>
+                                                  >FOR&nbsp;:</span>
                                              </Box>
                                              <Input
                                                   placeholder="FOR"
@@ -673,7 +710,7 @@ export default function AddPurchaseUI({ gaslistData }) {
                                                                  fontWeight: "bold",
                                                                  backgroundColor: "#47474721",
                                                             }}>
-                                                            ₹{totalFor}
+                                                            ₹{totalFor.toFixed(2)}
                                                        </Chip>
                                                   }
                                              />
@@ -692,7 +729,7 @@ export default function AddPurchaseUI({ gaslistData }) {
 
                                                             fontWeight: "bold",
                                                        }}
-                                                  >Paid :</span>
+                                                  >Paid&nbsp;:</span>
                                              </Box>
                                              <Input
                                                   placeholder="Amt Pay"
@@ -722,7 +759,7 @@ export default function AddPurchaseUI({ gaslistData }) {
                                              >
                                                   <tbody>
                                                        <tr>
-                                                            <th style={{ width: 1, borderWidth: 0 }} >Total</th>
+                                                            <th style={{ width: 1, borderWidth: 0 }} >Billing Amt</th>
                                                             <td style={{ borderWidth: 0, width: 1, }}>&nbsp;:&nbsp;</td>
                                                             <td style={{ borderWidth: 0 }}>
                                                                  <Stack
@@ -730,23 +767,48 @@ export default function AddPurchaseUI({ gaslistData }) {
                                                                       gap={1}
                                                                       alignItems={"center"}
                                                                  >
-                                                                      <span
-                                                                           style={{
-                                                                                color: "green",
-                                                                                fontWeight: "bold",
-                                                                           }}
-                                                                      >{`₹${billing}`}</span>
-                                                                      <span style={{
+                                                                      <Tooltip
+                                                                           placement="right"
+                                                                           size="lg"
+                                                                           color="success"
+                                                                           arrow
+                                                                           variant="outlined"
+                                                                           title={`${totalAmt} + ${totalTcs} + ${totalFor} - ${totalScheme}`}
+                                                                      >
+                                                                           <span
+                                                                                style={{
+                                                                                     color: "green",
+                                                                                     fontWeight: "bold",
+                                                                                }}
+                                                                           >{`₹${billing.toFixed(2)}`}</span>
+                                                                      </Tooltip>
+                                                                      {/* <span style={{
                                                                            color: "grey",
                                                                            fontSize: "12px",
-                                                                      }}>({totalAmt} - {totalScheme} of Scheme)</span>
+                                                                      }}>({totalAmt.toFixed(2)} - {totalScheme.toFixed(2)} of Scheme)</span> */}
                                                                  </Stack>
                                                             </td>
                                                        </tr>
                                                        <tr>
                                                             <th style={{ width: 1, borderWidth: 0 }} >Ballance</th>
                                                             <td style={{ borderWidth: 0, width: 1, }}>&nbsp;:&nbsp;</td>
-                                                            <td style={{ borderWidth: 0 }}>₹{ballance}</td>
+                                                            <td style={{ borderWidth: 0 }}>
+                                                                 <Tooltip
+                                                                      placement="right"
+                                                                      size="lg"
+                                                                      arrow
+                                                                      variant="outlined"
+                                                                      title={`${billing.toFixed(2)} - ${paid_val}`}
+                                                                 >
+                                                                      <span
+                                                                           style={{
+                                                                                fontWeight: "bold",
+                                                                           }}
+                                                                      >
+                                                                           ₹{ballance.toFixed(2)}
+                                                                      </span>
+                                                                 </Tooltip>
+                                                            </td>
                                                        </tr>
                                                        <tr>
                                                             <th style={{ width: 1, borderWidth: 0 }} >Total Qty</th>

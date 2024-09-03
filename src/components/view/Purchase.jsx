@@ -1,21 +1,5 @@
 /* eslint-disable react/prop-types */
-import {
-     AccordionGroup,
-     Box,
-     Button,
-     Card,
-     CardContent,
-     Chip,
-     Container,
-     Divider,
-     Grid,
-     Input,
-     LinearProgress, List, ListItem, ListItemButton, ListItemContent, ListItemDecorator, Option,
-     Select,
-     Stack,
-     Table,
-     Typography
-} from "@mui/joy";
+import { AccordionGroup, Box, Button, Card, CardContent, Chip, CircularProgress, Container, Divider, Grid, Input, LinearProgress, List, ListItem, ListItemButton, ListItemContent, ListItemDecorator, Option, Select, Stack, Table, Typography } from "@mui/joy";
 import { CgAdd, CgBorderRight, CgEditContrast, CgFilters, CgHome, CgTrash } from "react-icons/cg";
 import Modal from "@mui/joy/Modal";
 import Sheet from "@mui/joy/Sheet";
@@ -34,13 +18,14 @@ import { ImCross, ImCheckmark } from "react-icons/im";
 import { Collapse } from "@mui/material";
 import { FaArrowTurnDown } from "react-icons/fa6";
 import AddPurchaseUI from "./AddPurchaseUI.jsx";
+import { getPlants } from "../../redux/actions/plantsActions.js";
 let gasList = [];
 let gasListMap = new Map();
 export default function Purchase() {
+     const dispatch = useDispatch();
 
      const allGases = useSelector(state => state.gas);
-
-     const dispatch = useDispatch();
+     const { plants, plantsLoading, plantsError, plantsUpdateSuccess } = useSelector(state => state.plants);
      const { updateOrderSuccsess, orders, loading, error } = useSelector(state => state.purchaseOrders);
 
      //console.log(orders);
@@ -67,15 +52,25 @@ export default function Purchase() {
      const [endDate, setEndDate] = useState(currentDate);
 
      useEffect(() => {
-          dispatch(fetchGasData());
           dispatch(fetchOrders({ startDate, endDate }));
+          if (plants.length === 0) {
+               dispatch(getPlants());
+          }
+          if (allGases.data === null) {
+               dispatch(fetchGasData());
+          }
      }, [dispatch, startDate, endDate]);
      useEffect(() => {
           if (itemUpdateSuccess || updateOrderSuccsess) {
                dispatch(iniState());
                dispatch(orderIniState());
-               dispatch(fetchGasData());
                dispatch(fetchOrders({ startDate, endDate }));
+               if (plants.length === 0) {
+                    dispatch(getPlants());
+               }
+               if (allGases.data === null) {
+                    dispatch(fetchGasData());
+               }
           }
      });
      const orderRows = []
@@ -85,28 +80,41 @@ export default function Purchase() {
           })
           gasList = allGases.data.data
      }
+     console.log({ orders });
      if (allGases.data != null && orders != null && orders.length > 0) {
           orders.forEach((order, index) => {
-               let totalQty = 0;
-               let totalKg = 0;
-               let totalAmt = 0;
-               let totalPayAmt = Number(order.pay_amt);
-               let ballance = 0;
-               let totalReturnQty = 0;
-               let totalReturnKg = 0;
-               let grandTotal = 0;
+
+               const orderNumber = order.order_no;
+               const orderDate = order.date;
+               const orderSchemeType = order.scheme_type;
+               const orderTtotalPayAmt = Number(order.pay_amt);
+               const orderTCS = Number(order.tcs);
+               const orderFOR = Number(order.for_charges);
+               const orderSchemeRate = Number(order.scheme);
+               const orderPlant = plants.filter(plant => plant.id === order.plant_id)[0]
+
+               let orderTotalQty = 0;
+               let orderTotalKg = 0;
+               let orderTotalAmt = 0;
+               let orderTotalTCS = 0;
+               let orderTotalFOR = 0;
+               let orderTotalScheme = 0;
+               let orderTotalRemainingAmt = 0;
+               let orderTotalReturnQty = 0;
+               let orderTotalReturnKg = 0;
+
                if (order.items.length === 0) {
                     orderRows.push(
                          <tr key={`order-row-empty-${order.id}`}>
-                              <td style={{ borderWidth: 0, padding: 6, margin: 0, backgroundColor: "#FFB0B0" }} colSpan={11}>
+                              <td style={{ borderWidth: 0, padding: 6, margin: 0, backgroundColor: "#FFB0B0" }} colSpan={12}>
                                    <Stack
                                         direction="row"
                                         gap={1}
                                    >
-                                        <span style={{ fontWeight: "bold" }}>{`Order No. ${order.order_no}`}</span>
-                                        <span style={{ fontWeight: "bold" }}>|{` ${order.date}`}</span>
-                                        <span style={{ fontWeight: "bold" }}>|{` Scheme ${order.scheme}`}</span>
-                                        <span style={{ fontWeight: "bold" }}>|{` Scheme Type ${order.scheme_type}`}</span>
+                                        <span style={{ fontWeight: "bold" }}>{`Order No. ${orderNumber}`}</span>
+                                        <span style={{ fontWeight: "bold" }}>|{` ${orderDate}`}</span>
+                                        <span style={{ fontWeight: "bold" }}>|{` Scheme ${orderSchemeType}`}</span>
+                                        <span style={{ fontWeight: "bold" }}>|{` Scheme Rate ${orderSchemeRate}`}</span>
                                    </Stack>
                                    <Stack
                                         direction="row"
@@ -124,47 +132,107 @@ export default function Purchase() {
                     );
                }
                order.items.forEach((item, index) => {
+
                     const gas = gasListMap.get(item.gas_id);
-                    totalQty += item.qty;
-                    totalKg += gas.kg * item.qty;
-                    totalAmt += totalKg * item.rate;
-                    totalReturnQty += item.return_cyl_qty;
-                    totalReturnKg += gas.kg * item.return_cyl_qty;
-                    grandTotal += totalAmt;
+
+                    const kg = gas.kg
+                    const qty = item.qty
+                    const returnQty = item.return_cyl_qty
+                    const rate = item.rate
+
+                    const totalKg = kg * qty
+                    const totalReturnKg = kg * returnQty
+                    const totalAmt = totalKg * rate
+
+                    orderTotalQty += qty
+                    orderTotalKg += totalKg
+                    orderTotalReturnKg += totalReturnKg
+                    orderTotalAmt += totalAmt
+
                     orderRows.push(
                          <tr key={`order-row-${order.id}-${index}`}>
-                              <Cell id={order.id} data={order.order_no} tableName="purchase_orders" column="order_no" />
-                              <Cell id={order.id} data={order.date} tableName="purchase_orders" column="date" />
-                              <Cell id={order.id} data={order.scheme} tableName="purchase_orders" column="scheme" />
-                              <Cell id={order.id} data={order.scheme_type} tableName="purchase_orders" column="scheme_type" />
+                              <Cell id={order.id} data={orderNumber} tableName="purchase_orders" column="order_no" />
+                              <Cell id={order.id} data={orderDate} tableName="purchase_orders" column="date" />
+                              {/* <Cell id={order.id} data={orderPlant.name} tableName="" column="" /> */}
+                              <td
+                                   style={{
+                                        borderWidth: 0, padding: 0, margin: 0,
+                                   }}
+                              >
+                                   <form
+                                        onSubmit={(event) => {
+                                             event.preventDefault();
+                                             const formData = new FormData(event.currentTarget);
+                                             const formJson = Object.fromEntries(formData.entries());
+                                             console.log(formJson);
+                                             //dispatch(updateOrder(order.id, { [column]: editValue }))
+                                        }}
+                                   >
+
+                                        <Select
+                                             placeholder="Plant"
+                                             name="plant_id"
+                                             size="sm"
+                                             defaultValue={orderPlant.id}
+                                             sx={{
+                                                  backgroundColor: "transparent",
+                                                  borderColor: "transparent",
+                                             }}
+                                             onChange={(event, newValue) => {
+                                                  //console.log(newValue)
+                                                  const change = confirm(`Change Plant from ${orderPlant.name} to ${plants.filter(plant => plant.id === newValue)[0].name} ?`)
+                                                  if (change) {
+                                                       dispatch(updateOrder(order.id, { plant_id: newValue }))
+                                                  }
+                                             }}
+                                        >
+                                             {
+                                                  plants.map(plant => {
+                                                       return (<Option key={plant.id} value={plant.id}>{plant.name}</Option>)
+                                                  })
+                                             }
+                                        </Select>
+
+                                   </form>
+                              </td>
+                              <Cell id={order.id} data={orderSchemeType} tableName="purchase_orders" column="scheme_type" />
+                              <Cell id={order.id} data={orderSchemeRate} tableName="purchase_orders" column="scheme" />
                               <Cell id={item.id} data={gas} tableName="purchase_order_items" column="gas_id" />
-                              <Cell id={item.id} data={item.qty} tableName="purchase_order_items" column="qty" />
-                              <Cell id={order.id} data={item.qty * gas.kg + " KG"} editable={false} tableName="" column="" />
-                              <Cell id={item.id} data={item.rate} tableName="purchase_order_items" column="rate" />
-                              <Cell id={order.id} data={"₹" + (totalAmt).toFixed(2)} editable={false} tableName="" column="" />
-                              <Cell id={item.id} data={item.return_cyl_qty} tableName="purchase_order_items" column="return_cyl_qty" />
-                              <Cell id={order.id} data={item.return_cyl_qty * gas.kg + " KG"} editable={false} tableName="" column="" />
+                              <Cell id={item.id} data={qty} tableName="purchase_order_items" column="qty" />
+                              <Cell id={order.id} data={totalKg + " KG"} editable={false} tableName="" column="" />
+                              <Cell id={item.id} data={rate} tableName="purchase_order_items" column="rate" />
+                              <Cell id={order.id} data={"₹" + totalAmt.toFixed(2)} editable={false} tableName="" column="" />
+                              <Cell id={item.id} data={returnQty} tableName="purchase_order_items" column="return_cyl_qty" />
+                              <Cell id={order.id} data={totalReturnKg + " KG"} editable={false} tableName="" column="" />
                          </tr >
                     )
                })
-               // console.log(gasListMap);
-               ballance = totalAmt - totalPayAmt;
-               grandTotalBallance += ballance
-               grandTotalPayAmt += totalPayAmt
+
+               orderTotalFOR = (orderFOR * orderTotalKg)
+               orderTotalTCS = (orderTCS * orderTotalAmt)
+               orderTotalScheme = (orderSchemeRate * orderTotalKg)
+
+               orderTotalAmt += (orderTotalFOR + orderTotalTCS) - orderTotalScheme
+
+               grandTotalBallance += orderTotalAmt
+               grandTotalPayAmt += orderTtotalPayAmt
+
+               orderTotalRemainingAmt = orderTotalAmt - orderTtotalPayAmt
+
                orderRows.push(<tr key={`order-row-total-${order.id}-${index}`}>
-                    <td style={{ borderWidth: 0, padding: 0, margin: 0, height: 24, }} colSpan={11}>
+                    <td style={{ borderWidth: 0, padding: 0, margin: 0, height: 24, }} colSpan={12}>
                          <React.Fragment>
                               <TotalRow
                                    order={order}
                                    data={
                                         {
-                                             kg: totalKg,
-                                             qty: totalQty,
-                                             amt: grandTotal,
-                                             pay_amt: totalPayAmt,
-                                             remaning_amt: ballance,
-                                             rKg: totalReturnKg,
-                                             rQty: totalReturnQty,
+                                             kg: orderTotalKg,
+                                             qty: orderTotalQty,
+                                             amt: orderTotalAmt.toFixed(2),
+                                             pay_amt: orderTtotalPayAmt,
+                                             remaning_amt: orderTotalRemainingAmt.toFixed(2),
+                                             rKg: orderTotalReturnKg,
+                                             rQty: orderTotalReturnQty,
                                         }
                                    }>
                                    <div
@@ -173,36 +241,65 @@ export default function Purchase() {
                                              flexGrow: 1,
                                         }}
                                    />
-                                   <List size="md">
+
+                                   <List
+                                        sx={{
+
+                                        }}
+                                        size="md">
                                         {
                                              [
-                                                  { label: "Total Kg", value: totalKg },
-                                                  { label: "Total Qty", value: totalQty },
-                                                  { label: "Total Return Kg", value: totalReturnKg },
-                                                  { label: "Total Return Qty", value: totalReturnQty },
-                                                  { label: "Total Amt", value: grandTotal },
+                                                  { label: "Total Kg", value: orderTotalKg },
+                                                  { label: "Total Qty", value: orderTotalQty },
+                                                  { label: "Total Return Kg", value: orderTotalReturnKg },
+                                                  { label: "Total Return Qty", value: orderTotalReturnQty },
+                                                  //TODO FIX THIS td in span
                                                   {
-                                                       label: "Pay Amt", value: <Cell
+                                                       label: "Scheme", value: <React.Fragment> <Cell
+                                                            column=""
+                                                            id={order.id}
+                                                            data={orderSchemeRate}
+                                                            tableName=""
+                                                       /></React.Fragment>
+                                                  },
+                                                  {
+                                                       label: "TCS", value: <React.Fragment> <Cell
+                                                            column=""
+                                                            id={order.id}
+                                                            data={orderTCS}
+                                                            tableName=""
+                                                       /></React.Fragment>
+                                                  },
+                                                  {
+                                                       label: "FOR", value: <React.Fragment><Cell
+                                                            column=""
+                                                            id={order.id}
+                                                            data={orderFOR}
+                                                            tableName=""
+                                                       /></React.Fragment>
+                                                  },
+                                                  { label: "Total Amt", value: orderTotalAmt.toFixed(2) },
+                                                  {
+                                                       label: "Pay Amt", value: <React.Fragment> <Cell
                                                             column="pay_amt"
                                                             id={order.id}
-                                                            data={order.pay_amt}
+                                                            data={orderTtotalPayAmt}
                                                             tableName="purchase_orders"
-                                                       />
+                                                       /></React.Fragment>
                                                   },
-                                                  { label: "Pending Amt", value: ballance },
+                                                  { label: "Pending Amt", value: orderTotalRemainingAmt.toFixed(2) },
                                              ].map((data, index) => (
                                                   <ListItem key={index}>
                                                        <ListItemContent
                                                             sx={{
                                                                  textAlign: "end",
-
                                                             }}
                                                        >{data.label}</ListItemContent>
                                                        <ListItemDecorator>:</ListItemDecorator>
                                                        <ListItemDecorator
                                                             sx={{
                                                                  textAlign: "left",
-
+                                                                 width: "256px",
                                                             }}
                                                        >{data.value}</ListItemDecorator>
                                                        <ListItemDecorator />
@@ -210,43 +307,6 @@ export default function Purchase() {
                                              ))
                                         }
                                    </List>
-                                   <Table
-                                        borderAxis="none"
-                                        color="neutral"
-                                        size="sm"
-                                        sx={{
-                                             tableLayout: "auto",
-                                             fontWeight: "bold",
-                                             textAlign: 'right',
-                                             display: "none",
-                                        }}
-                                        variant="soft"
-                                   >
-                                        <tbody>
-                                             <TotalData text="Total Qty :-" value={totalQty} />
-                                             <TotalData text="Total KG :-" value={totalKg + " KG"} />
-                                             <TotalData text="Total Amount :-" value={"₹" + totalAmt} bgColor={"#C8A1E0"} />
-                                             <tr
-                                                  style={{
-                                                       borderWidth: 0,
-                                                       padding: 0,
-                                                       margin: 0,
-                                                       height: 24,
-                                                       backgroundColor: "#D5ED9F"
-                                                  }}
-                                             >
-                                                  <td style={{
-                                                       borderWidth: 0, padding: 0, margin: 0, height: 24,
-                                                       backgroundColor: "#7ABA78"
-                                                  }} >Pay Amt :-</td>
-
-                                                  <Cell data={totalPayAmt} />
-                                             </tr>
-                                             <TotalData text="Payment Pending :-" value={"₹" + ballance} bgColor={"#F4A261"} />
-                                             <TotalData text="Total Return Qty :-" value={totalReturnQty + " KG"} />
-                                             <TotalData text="Total Return KG :-" value={totalReturnKg + " KG"} />
-                                        </tbody>
-                                   </Table>
                               </TotalRow>
                          </React.Fragment>
                     </td>
@@ -262,12 +322,43 @@ export default function Purchase() {
           "&:hover": {
           },
      }
+     if (allGases.data === null || allGases.data.length === 0 || plants.length === 0) {
+          return <Box
+               sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    height: "100%",
+                    width: "100%",
+               }}
+          >
+               <CircularProgress />
+          </Box>
+     }
      return (
           <Sheet
                sx={{
                     width: "100%",
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    borderRadius: "lg",
+                    backgroundColor: "#263043",
                }}
           >
+               <Box>
+                    <LinearProgress
+                         sx={{
+                              padding: "0px",
+                              margin: "0px",
+                              width: "100%",
+                              backgroundColor: "#263043",
+                              color: "#efefef",
+                              borderRadius: "0px",
+                              display: (itemLoading || loading) ? "block" : "none",
+                         }}
+                    />
+               </Box>
                <Stack
                     direction="row"
                     sx={{
@@ -295,7 +386,7 @@ export default function Purchase() {
                                    color: "white",
                                    fontWeight: "bold",
                               }}
-                         >{`Pending Payment : ₹${grandTotalBallance}`}</span>
+                         >{`Pending Payment : ₹${(grandTotalBallance - grandTotalPayAmt).toFixed(2)}`}</span>
                     </Chip>
                     <Chip
                          sx={
@@ -340,10 +431,16 @@ export default function Purchase() {
                               required
                               size="sm"
                               value={startDate}
-                              onKeyDown={(e) => e.preventDefault()}
-                              onFocus={(e) => e.target.showPicker()}
-                              onClick={(e) => e.target.showPicker()}
-                              onChange={(e) => setStartDate(e.target.value)}
+                              onKeyDown={(e) => {
+                                   try { e.preventDefault() } catch (e) { console.warn(e) }
+                              }
+                              }
+                              onFocus={(e) => { try { e.target.showPicker() } catch (e) { console.warn(e) } }
+                              }
+                              onClick={(e) => { try { e.target.showPicker() } catch (e) { console.warn(e) } }
+                              }
+                              onChange={(e) => { try { setStartDate(e.target.value) } catch (e) { console.warn(e) } }
+                              }
                               sx={{
                                    width: '100%',
                                    flexGrow: 1,
@@ -370,10 +467,18 @@ export default function Purchase() {
                               required
                               size="sm"
                               value={endDate}
-                              onKeyDown={(e) => e.preventDefault()}
-                              onFocus={(e) => e.target.showPicker()}
-                              onClick={(e) => e.target.showPicker()}
-                              onChange={(e) => setEndDate(e.target.value)}
+                              onKeyDown={(e) => {
+                                   try { e.preventDefault() } catch (e) { console.warn(e) }
+                              }}
+                              onFocus={(e) => {
+                                   try { e.target.showPicker() } catch (e) { console.warn(e) }
+                              }}
+                              onClick={(e) => {
+                                   try { e.target.showPicker() } catch (e) { console.warn(e) }
+                              }}
+                              onChange={(e) => {
+                                   try { setEndDate(e.target.value) } catch (e) { console.warn(e) }
+                              }}
                               sx={{
                                    width: '100%',
                                    flexGrow: 1,
@@ -385,52 +490,44 @@ export default function Purchase() {
                               }}
                          />
                     </Stack>
-                    <AddPurchaseUI gaslistData={gasList} />
+                    <AddPurchaseUI gaslistData={gasList} plants={plants} />
                </Stack>
-               <LinearProgress
-                    sx={{
-                         padding: "0px",
-                         margin: "0px",
-                         width: "100%",
-                         backgroundColor: "#263043",
-                         color: "#efefef",
-                         borderRadius: "0px",
-                         display: (itemLoading || loading) ? "block" : "none",
+               <Box sx={{ borderRadius: "lg", height: "100%", overflow: "auto", backgroundColor: "white" }}>
+                    <Box
+                         sx={{
+                              overflow: "auto",
+                         }}
+                    >
+                         <Table
+                              borderAxis="bothBetween"
+                              color="neutral"
+                              size="md"
+                              stickyFooter={false}
+                              stickyHeader={true}
+                              stripe="odd"
+                              variant="soft"
+                              sx={{
+                                   tableLayout: "auto",
+                                   fontWeight: "bold",
+                              }}
 
-                    }}
-               />
-               <Table
-                    borderAxis="bothBetween"
-                    color="neutral"
-                    size="md"
-                    stickyFooter={false}
-                    stickyHeader={true}
-                    stripe="odd"
-                    variant="soft"
-                    sx={{
-                         tableLayout: "auto",
-                         fontWeight: "bold",
-                    }}
-               >
-                    <thead>
-                         <tr>
-                              <th style={thStyle}>Order No.</th>
-                              <th style={thStyle}>Date</th>
-                              <th style={thStyle}>Scheme</th>
-                              <th style={thStyle}>Scheme Type</th>
-                              <th style={thStyle}>Gas</th>
-                              <th style={thStyle}>Qty</th>
-                              <th style={thStyle}>Total Kg</th>
-                              <th style={thStyle}>Rate</th>
-                              <th style={thStyle}>Total</th>
-                              <th style={thStyle}>Return Qty</th>
-                              <th style={thStyle}>Return Total Kg</th>
-                         </tr>
-                    </thead>
-                    <tbody>
-                         {orderRows}
-                    </tbody>
-               </Table>
+                         >
+                              <thead>
+                                   <tr>
+                                        {
+                                             ["Order No.", "Date", "Plant", "Scheme Type", "Scheme Rate", "Gas", "Qty", "Total Kg", "Rate", "Total", "Return Qty", "Return Total Kg"]
+                                                  .map((label, index) => {
+                                                       return <th key={index} style={thStyle}>{label}</th>
+                                                  })
+                                        }
+                                   </tr>
+                              </thead>
+                              <tbody>
+                                   {orderRows}
+                              </tbody>
+                         </Table>
+                    </Box>
+               </Box>
           </Sheet >)
 }
 export const Cell = ({ id, data, tableName, column, editable = true }) => {
@@ -1002,12 +1099,13 @@ const AddGas = ({ order }) => {
                                         {
                                              order.items.map((item, index) => {
                                                   //console.log(item)
+                                                  const gas = gasListMap.get(item.gas_id)
                                                   return (
                                                        <tr key={index}>
-                                                            <td >{gasListMap.get(item.gas_id).company_name}</td>
+                                                            <td >{`${gas.company_name} : ${gas.kg} KG`}</td>
                                                             <td >{item.qty}</td>
                                                             <td >{item.rate}</td>
-                                                            <td >{item.return_cyl_qty * gasListMap.get(item.gas_id).kg}</td>
+                                                            <td >{gas.kg * item.qty}</td>
                                                             <td >{item.qty * item.rate}</td>
                                                             <td >{item.return_cyl_qty}</td>
                                                             <td >

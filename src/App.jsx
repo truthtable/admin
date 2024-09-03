@@ -74,13 +74,274 @@ function App() {
           setOpenSidebarToggle(!openSidebarToggle);
      };
 
-     let username = "srd_admin";
-     let password = "admin@srd";
-
      if (loginData.isError && !checkLoginData.isLoading) {
           alert(loginData.errorMessage);
      }
 
+     let username = "";
+     let password = "";
+
+     const LoginUI = () => {
+          return <div
+               style={{
+                    justifyContent: "center",
+                    display: "flex",
+               }}
+          >
+               <Card
+                    orientation="vertical"
+                    size="lg"
+                    variant="outlined"
+                    sx={{ mt: 10 }}
+               >
+                    <Stack
+                         direction="column"
+                         justifyContent="center"
+                         alignItems="stretch"
+                         spacing={2}
+                    >
+                         <Typography level="title-lg">
+                              Admin Login
+                         </Typography>
+                         <Stack
+                              direction="row"
+                              justifyContent="center"
+                              alignItems="center"
+                              spacing={2}
+                         >
+                              <Chip
+                                   disabled={false}
+                                   size="lg"
+                                   variant="soft"
+                              >
+                                   USER NAME :
+                              </Chip>
+                              <Input
+                                   placeholder="User Name"
+                                   size="lg"
+                                   variant="soft"
+                                   onChange={(event) => {
+                                        username = event.target.value;
+                                   }}
+                              />
+                         </Stack>
+                         <Stack
+                              direction="row"
+                              justifyContent="center"
+                              alignItems="center"
+                              spacing={2}
+                         >
+                              <Chip
+                                   disabled={false}
+                                   size="lg"
+                                   variant="soft"
+                              >
+                                   PASSWORD :
+                              </Chip>
+                              <Input
+                                   placeholder="Password"
+                                   size="lg"
+                                   variant="soft"
+                                   onChange={(event) => {
+                                        password = event.target.value;
+                                   }}
+                              />
+                         </Stack>
+                         <LinearProgress
+                              sx={{
+                                   display:
+                                        loginData.isLoading ||
+                                             checkLoginData.isLoading
+                                             ? "block"
+                                             : "none",
+                              }}
+                              color="primary"
+                              variant="soft"
+                         />
+                         <Button
+                              color="primary"
+                              sx={{
+                                   display:
+                                        loginData.isLoading ||
+                                             checkLoginData.isLoading
+                                             ? "none"
+                                             : "block",
+                              }}
+                              onClick={function () {
+                                   if (
+                                        username.trim() === "" ||
+                                        password.trim() === ""
+                                   ) {
+                                        alert(
+                                             "Please input username and password",
+                                        );
+                                   } else {
+                                        dispatch(
+                                             fetchLogin({
+                                                  username,
+                                                  password,
+                                                  isLoadFromCookie: false,
+                                             }),
+                                        );
+                                   }
+                              }}
+                              size="lg"
+                              variant="soft"
+                         >
+                              LOGIN
+                         </Button>
+                    </Stack>
+               </Card>
+          </div>
+     }
+
+     return (
+          <CssVarsProvider>
+               <Stack
+                    direction="column"
+                    sx={{
+                         width: "100vw",
+                         height: "100vh",
+                    }}
+               >
+                    <Stack
+                         sx={{ width: "100vw", p: 1, }}
+                         direction="row"
+                         alignContent={"center"}
+                         justifyContent={"flex-start"}
+                         alignItems={"center"}
+                    >
+                         <Header OpenSidebar={OpenSidebar} />
+                         <img src="vite.svg" style={{ height: "48px" }} alt="logo" />
+                         <Typography
+                              level="title-lg"
+                              sx={{ fontWeight: "bold", color: "#9e9ea4" }}
+                         >
+                              Shree Ram Distributer
+                         </Typography>
+                    </Stack>
+                    {
+                         isLogoded ? <HashRouter>
+                              <Stack
+                                   sx={{ flexGrow: 1, overflow: "hidden" }}
+                                   direction="row"
+                              >
+                                   <Box
+                                        sx={{ height: "100%", }}
+                                   >
+                                        <Sidebar
+                                             openSidebarToggle={openSidebarToggle}
+                                             OpenSidebar={OpenSidebar}
+                                        />
+                                   </Box>
+                                   <Box
+                                        sx={{
+                                             flexGrow: 1,
+                                             width: "100%",
+                                             height: "100%",
+                                        }}
+                                   >
+                                        <Routes>
+                                             <Route path="/admin/" Component={Home} />
+                                             {/* gas service */}
+                                             <Route
+                                                  path="/admin/insert"
+                                                  Component={insert}
+                                             />
+                                             <Route path="/admin/read" Component={GasDataView} />
+                                             <Route
+                                                  path="/admin/update"
+                                                  Component={update}
+                                             />
+
+                                             {/* delivery boy */}
+                                             <Route
+                                                  path="/admin/addDeliveryBoy"
+                                                  Component={addDeliveryBoy}
+                                             />
+                                             <Route
+                                                  path="/admin/readDeliveryBoy"
+                                                  Component={DeliveryBoyDetails}
+                                             />
+                                             <Route
+                                                  path="/admin/updateDeliveryBoy"
+                                                  Component={updateDeliveryBoy}
+                                             />
+
+                                             {/* wherehouse */}
+                                             <Route
+                                                  path="/admin/addWherehouse"
+                                                  Component={addWherehouse}
+                                             />
+                                             <Route
+                                                  path="/admin/readWherehouse"
+                                                  Component={Warehouse}
+                                             />
+                                             <Route
+                                                  path="/admin/updateWherehouse"
+                                                  Component={updateWherehouse}
+                                             />
+
+                                             {/* //report */}
+                                             <Route
+                                                  path="/admin/InsertReport"
+                                                  Component={InsertReport}
+                                             />
+                                             <Route
+                                                  path="/admin/readReport"
+                                                  Component={ReportSection}
+                                             />
+                                             <Route
+                                                  path="/admin/readReport"
+                                                  Component={UpdateReport}
+                                             />
+                                             <Route
+                                                  path="/admin/PrintReport"
+                                                  Component={PrintReport}
+                                             />
+
+                                             <Route
+                                                  path="/admin/deliveryHistory"
+                                                  Component={deliveryHistory}
+                                             />
+
+
+                                             <Route
+                                                  path="/admin/ViewCustomer"
+                                                  Component={ViewCustomer}
+                                             />
+
+                                             <Route
+                                                  path="/admin/expence"
+                                                  Component={Expences}
+                                             />
+                                             <Route
+                                                  path="/admin/purchase"
+                                                  Component={Purchase}
+                                             />
+                                        </Routes>
+                                   </Box>
+                              </Stack>
+                         </HashRouter> : <LoginUI />
+                    }
+               </Stack>
+          </CssVarsProvider>
+
+     );
+}
+
+export default App;
+
+function removeUserDataFromCookie() {
+     document.cookie = `token=;`;
+     document.cookie = `user_id=;`;
+     document.cookie = `role=;`;
+     document.cookie = `username=;`;
+     document.cookie = `name=;`;
+}
+
+const UI = () => {
+     const isLogoded = true;
      return (
           <CssVarsProvider>
                <Stack
@@ -107,12 +368,12 @@ function App() {
                                         flexDirection: "row",
                                         alignItems: "flex-start",
                                         justifyContent: "flex-start",
-                                        height: "100vh",
+                                        height: "100%",
                                    }}
                               >
                                    <Box
                                         sx={{
-                                             height: "100vh",
+                                             height: "100%",
                                         }}
                                    >
                                         <Sidebar
@@ -327,15 +588,5 @@ function App() {
                     )}
                </div>
           </CssVarsProvider>
-     );
-}
-
-export default App;
-
-function removeUserDataFromCookie() {
-     document.cookie = `token=;`;
-     document.cookie = `user_id=;`;
-     document.cookie = `role=;`;
-     document.cookie = `username=;`;
-     document.cookie = `name=;`;
+     )
 }

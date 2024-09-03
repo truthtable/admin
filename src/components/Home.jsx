@@ -10,7 +10,7 @@ import {
 
 import "../css/home.css";
 import { Link } from "react-router-dom";
-import { CircularProgress } from "@mui/joy";
+import { Box, CircularProgress } from "@mui/joy";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCount } from "../state/Count";
 
@@ -39,9 +39,20 @@ function Home() {
      const loadingView = loading ? "block" : "none";
 
      return (
-          <main className="main-container main-box">
+          <Box
+               sx={{
+                    color: "white",
+                    overflow: "auto",
+                    height: "100%",
+                    pr: 2,
+               }}
+          >
                <div className="main-title">
-                    <h3>Admin Dashboard</h3>
+                    <h3
+                         style={{
+                              color: "white",
+                         }}
+                    >Admin Dashboard</h3>
                </div>
                <div className="main-cards">
 
@@ -193,7 +204,7 @@ function Home() {
                          </div>
                     </Link>
                </div>
-          </main>
+          </Box>
      );
 }
 

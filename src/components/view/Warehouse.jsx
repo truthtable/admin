@@ -1,410 +1,187 @@
 import {
-    Box,
-    Button,
-    Card,
-    CardContent,
-    Container,
-    Divider,
-    Input,
-    LinearProgress,
-    Option,
-    Select,
-    Stack,
-    Typography
+     Box,
+     Button,
+     Card,
+     Chip,
+     CircularProgress,
+     Stack,
+     Table,
+     Typography
 } from "@mui/joy";
-import DataTable from "../table/DataTable.jsx";
-import TableHead from "../table/TableHead.jsx";
-import {BsPlus} from "react-icons/bs";
-import {useDispatch, useSelector} from "react-redux";
-import {
-    createWarehouse,
-    deleteWarehouse,
-    fetchWarehouses,
-    updateWarehouse
-} from "../../redux/actions/warehouseActions.js";
-import {useEffect, useState} from "react";
-import {fetchGasData} from "../../state/GasList.jsx";
-import ModalClose from "@mui/joy/ModalClose";
-import Sheet from "@mui/joy/Sheet";
-import Modal from "@mui/joy/Modal";
-import {FaCheck, FaCompressArrowsAlt, FaTrash} from "react-icons/fa";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { getPlants } from "../../redux/actions/plantsActions";
+import { fetchGasData } from "../../state/GasList";
+import { fetchOrders } from "../../redux/actions/purchaseOrderActions";
+import { fetchWarehouses } from "../../redux/actions/warehouseActions";
 
 const Warehouse = () => {
+     const dispatch = useDispatch();
 
-    let dispatch = useDispatch();
+     const allGases = useSelector(state => state.gas);
+     const { warehouses, loading, error } = useSelector(state => state.warehouses);
 
-    const data = useSelector(state => state.warehouses);
+     //console.log({ warehouses });
 
-    const allGases = useSelector(state => state.gas);
+     useEffect(() => {
+          dispatch(fetchWarehouses());
+          if (allGases.data === null) {
+               dispatch(fetchGasData());
+          }
+     }, []);
 
-    const [addWarehouseModel, setAddWarehouseModel] = useState(false);
-
-    useEffect(() => {
-        dispatch(fetchWarehouses());
-        dispatch(fetchGasData());
-    }, [dispatch]);
-
-    let fullCylinders = []
-    let emptyCylinders = []
-
-    let totalFullCount = 0;
-    let totalEmptyCount = 0;
-
-    let allGas = []
-
-    if (allGases.data != null) {
-        try {
-            allGas = allGases.data.data
-
-            if (allGas !== null) {
-
-                if (data.warehouses.length !== 0) {
-                    data.warehouses.forEach((warehouse) => {
-                        const gas = allGas.find(gas => gas.id === warehouse.gas_cylinder_id);
-                        if (warehouse.is_empty === 0) {
-                            totalFullCount = parseInt(totalFullCount) + parseInt(warehouse.count);
-                            fullCylinders.push([
-                                <Cell
-                                    id={warehouse.id}
-                                    data={gas.company_name}
-                                    column="company_name"
-                                />,
-                                <Cell
-                                    id={warehouse.id}
-                                    data={gas.kg + "KG"}
-                                    column="kg"
-                                />,
-                                <Cell
-                                    id={warehouse.id}
-                                    data={warehouse.count}
-                                    column="count"
-                                />,
-                                <Button
-                                    variant="soft"
-                                    color="danger"
-                                    onClick={() => dispatch(deleteWarehouse(warehouse.id))}
-                                    sx={{
-                                        width: "100%",
-                                        height: "100%",
-                                        borderRadius: "0px",
-                                    }}
-                                >
-                                    <FaTrash/>
-                                </Button>
-                            ])
-                        } else {
-                            totalEmptyCount = parseInt(totalEmptyCount) + parseInt(warehouse.count);
-                            emptyCylinders.push([
-                                <Cell
-                                    id={warehouse.id}
-                                    data={gas.company_name}
-                                    column="company_name"
-                                />,
-                                <Cell
-                                    id={warehouse.id}
-                                    data={gas.kg + "KG"}
-                                    column="kg"
-                                />,
-                                <Cell
-                                    id={warehouse.id}
-                                    data={warehouse.count}
-                                    column="count"
-                                />,
-                                <Button
-                                    variant="soft"
-                                    color="danger"
-                                    onClick={() => dispatch(deleteWarehouse(warehouse.id))}
-                                    sx={{
-                                        width: "100%",
-                                        height: "100%",
-                                        borderRadius: "0px",
-                                    }}
-                                >
-                                    <FaTrash/>
-                                </Button>
-                            ])
-                        }
-                    })
-                }
-            }
-        } catch (error) {
-            console.log(error)
-            window.location.reload();
-        }
-    }
-
-    return (
-        <div
-            style={{
-                width: "100%",
-                overflow: "auto",
-                padding: "10px",
-            }}
-        >
-            <LinearProgress
-                sx={{
-                    my: 1,
-                    width: "100%",
-                    display: (data.loading) ? "block" : "none",
-                }}
-            />
-            <Modal
-                aria-labelledby="modal-title"
-                aria-describedby="modal-desc"
-                open={addWarehouseModel}
-                onClose={() => setAddWarehouseModel(false)}
-                sx={{
+     if (allGases.data === null || warehouses == null || warehouses.length === 0) {
+          return <Box
+               sx={{
                     display: "flex",
-                    justifyContent: "center",
                     alignItems: "center",
-                }}
-            >
-                <Container>
-                    <Sheet
-                        variant="outlined"
-                        sx={{
-                            borderRadius: "md",
-                            p: 3,
-                            boxShadow: "lg",
-                            maxHeight: "100vh"
-                        }}
-                    >
-                        <ModalClose variant="plain" sx={{m: 1}}/>
-                        <Typography
-                            component="h2"
-                            id="modal-title"
-                            level="h4"
-                            textColor="inherit"
-                            fontWeight="lg"
-                        >
-                            Add Warehouse
-                        </Typography>
-                        <Divider sx={{
-                            my: 1
-                        }}/>
-                        <form
-                            onSubmit={(event) => {
-                                event.preventDefault();
-                                const formData = new FormData(event.currentTarget);
-                                const formJson = Object.fromEntries(formData.entries());
-                                console.log(formJson);
-                                dispatch(createWarehouse(formJson));
-                                setAddWarehouseModel(false);
-                            }}
-                        >
-                            <Stack
-                                direction="column"
-                                gap={1}
-                                sx={{
-                                    width: "100%",
-                                    borderRadius: "md",
-                                    padding: 1,
-                                    marginTop: 1,
-                                    backgroundColor: "transparent",
-                                    color: "black",
-                                }}
-                            >
-                                <Select
-                                    label="Is Empty"
-                                    name="gas_cylinder_id"
-                                    defaultValue={0}
-                                    placeholder="Select Gas"
-                                    required
-                                >
-                                    {
-                                        allGas.map((gas, index) => {
-                                            return <Option key={index}
-                                                           value={gas.id}>{`${gas.company_name} ${gas.kg}KG`}</Option>
-                                        })
-                                    }
-                                </Select>
-                                <Select
-                                    label="Is Empty"
-                                    name="is_empty"
-                                    defaultValue={0}
-                                    required
-                                >
-                                    <Option value={0}>Full</Option>
-                                    <Option value={1}>Empty</Option>
-                                </Select>
-                                <Input
-                                    placeholder="Count"
-                                    type="number"
-                                    name="count"
-                                    required
-                                />
-                                <Button
-                                    type="submit"
-                                    color="primary"
-                                    sx={{mt: 3}}
-                                >
-                                    Submit
-                                </Button>
-                            </Stack>
-                        </form>
-                    </Sheet>
-                </Container>
-            </Modal>
-            <Stack
-                direction="row"
-                justifyContent="end"
-                alignItems="right"
-                spacing={1}
-                mb={1}
-                sx={{
+                    justifyContent: "center",
+                    height: "100%",
                     width: "100%",
-                }}
-            >
-                <Button
-                    variant="soft"
-                    onClick={() => setAddWarehouseModel(true)}
-                    startDecorator={
-                        <BsPlus/>
-                    }
-                >
-                    Add Cylinder
-                </Button>
+               }}>
+               <CircularProgress />
+          </Box>
+     }
 
-            </Stack>
+     let rows = []
 
-            <Stack
-                direction="column"
-                justifyContent="center"
-                alignItems="stretch"
-                spacing={1}
-            >
-                <Card
+     let fullMap = new Map();
+     let emptyMap = new Map();
+
+     warehouses.fullData.forEach(warehouse => {
+          fullMap.set(warehouse.gas_cylinder_id, warehouse.count)
+     })
+
+     warehouses.emptyData.forEach(warehouse => {
+          emptyMap.set(warehouse.gas_cylinder_id, warehouse.count)
+     })
+
+     //console.log(fullMap, emptyMap);
+
+     allGases.data.data.forEach(gas => {
+          let full = 0
+          let empty = 0
+
+          try {
+               full = fullMap.get(gas.id)
+               empty = emptyMap.get(gas.id)
+          } catch (e) {
+               full = 0
+               empty = 0
+          }
+          rows.push(
+               {
+                    gasId: gas.id,
+                    name: gas.company_name,
+                    kg: gas.kg,
+                    full_quantity: full,
+                    empty_quantity: empty,
+               }
+          )
+     });
+
+     rows = rows.filter(
+          (row) => (
+               (row.empty_quantity != undefined && row.empty_quantity != null && row.empty_quantity != 0)
+               || (row.full_quantity != undefined && row.full_quantity != null && row.full_quantity != 0)
+          )
+     )
+
+     rows = rows.map((row) => {
+          return {
+               name: row.name,
+               kg: row.kg,
+               full_quantity: (row.full_quantity == undefined || row.full_quantity == null) ? 0 : row.full_quantity,
+               empty_quantity: (row.empty_quantity == undefined || row.empty_quantity == null) ? 0 : row.empty_quantity,
+          }
+     })
+
+     let totalFull = 0
+     let totalEmpty = 0
+
+     rows = rows.map((row, index) => {
+          totalFull += row.full_quantity
+          totalEmpty += row.empty_quantity
+          return <tr key={index}>
+               <td>{row.name}</td>
+               <td>{row.kg} KG</td>
+               <td>{row.full_quantity}</td>
+               <td>{row.empty_quantity}</td>
+          </tr>
+     })
+
+     return <Stack
+          sx={{
+               backgroundColor: "white",
+               height: "100%",
+               width: "100%",
+               overflow: "auto",
+               p: 1,
+               borderRadius: "lg",
+          }}
+          direction="column"
+          alignContent="flex-start"
+          justifyContent="flex-start"
+          alignItems="stretch"
+          gap={1}
+     >
+          <Stack
+               direction="row"
+          >
+               <Card
                     sx={{
-                        flexGrow: 1,
-                        backgroundColor: "#f5f5f5",
-                        padding: "0px",
+                         p: 1,
+                         m: 1,
+                         backgroundColor: "#BDE8CA",
+                         fontWeight: "bold",
                     }}
-                >
-                    <CardContent>
-                        <Button
-                            sx={{
-                                width: "100%",
-                                backgroundColor: "#379777",
-                                color: "white",
-
-                            }}
-                        >
-                            Full cylinders
-                        </Button>
-                        <DataTable thead={[
-                            <TableHead>Company Name</TableHead>,
-                            <TableHead>Weight</TableHead>,
-                            <TableHead>Total</TableHead>,
-                            <TableHead>Delete</TableHead>,
-                        ]} tbody={fullCylinders} loading={false}/>
-                        <Button
-                            sx={{
-                                width: "100%",
-                                backgroundColor: "#379777",
-                                color: "white",
-
-                            }}
-                        >
-                            {`Total : ${totalFullCount} KG`}
-                        </Button>
-                    </CardContent>
-                </Card>
-                <div
-                    style={{
-                        flexGrow: 1,
+               >
+                    <Stack mx={1} direction="row" alignContent={"center"} justifyContent="center" alignItems={"center"}>
+                         Total&nbsp;Full&nbsp;:&nbsp;
+                         <Chip size="lg" sx={{ backgroundColor: "#0D7C66", color: "white", fontWeight: "bold" }}>{totalFull}</Chip>
+                    </Stack>
+               </Card>
+               <Card
+                    sx={{
+                         p: 1,
+                         m: 1,
+                         backgroundColor: "#F1F3C2",
+                         fontWeight: "bold",
                     }}
-                >
-                    <Button
-                        sx={{
-                            width: "100%",
-                            backgroundColor: "#FF9800",
-                            color: "white",
-                        }}
-                    >
-                        Empty cylinders
-                    </Button>
-                    <DataTable
-                        thead={[
-                            <TableHead>Company Name</TableHead>,
-                            <TableHead>Weight</TableHead>,
-                            <TableHead>Total</TableHead>,
-                            <TableHead>Delete</TableHead>,
-                        ]}
-                        tbody={emptyCylinders}
-                        loading={false}
-                    />
-                    <Button
-                        sx={{
-                            width: "100%",
-                            backgroundColor: "#FF9800",
-                            color: "white",
-                        }}
-                    >
-                        {`Total : ${totalEmptyCount} KG`}
-                    </Button>
-                </div>
-            </Stack>
-        </div>
-    );
+               >
+                    <Stack mx={1} direction="row" alignContent={"center"} justifyContent="center" alignItems={"center"}>
+                         Total&nbsp;Empty&nbsp;:&nbsp;
+                         <Chip size="lg" sx={{ backgroundColor: "#CD5C08", color: "white", fontWeight: "bold" }}>{totalEmpty}</Chip>
+                    </Stack>
+               </Card>
+          </Stack>
+          <Card
+               sx={{
+                    p: 0,
+                    m: 0,
+               }}
+          >
+               <Table
+                    sx={{
+                         fontWeight: "bold",
+                         tableLayout: "fixed",
+                    }}
+               >
+                    <thead>
+                         <tr>
+                              {
+                                   ["Gas Name", "KG", "Full Quantity", "Empty quantity"]
+                                        .map((label, index) => {
+                                             return <th key={index} style={{ color: "white", backgroundColor: "#16423C", fontWeight: "bold" }}>{label}</th>
+                                        })
+                              }
+                         </tr>
+                    </thead>
+                    <tbody>
+                         {rows}
+                    </tbody>
+               </Table>
+          </Card>
+     </Stack>
 };
 export default Warehouse;
-
-
-export const Cell = ({id, data, column}) => {
-    const [editMode, setEditMode] = useState(false);
-    const [editValue, setEditValue] = useState(data);
-    const dispatch = useDispatch();
-    return <Box
-        sx={{
-            cursor: "pointer",
-            height: "100%",
-            flexGrow: 1,
-        }}
-    >
-        {
-            editMode ? <Stack direction="column">
-                <Input
-                    sx={{
-                        color: "black",
-                        backgroundColor: "rgba(84,167,255,0.69)",
-                    }}
-                    name={column}
-                    type="text"
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
-                    endDecorator={
-                        <Stack direction="row" gap={2}>
-                            <FaCompressArrowsAlt
-                                onClick={() => {
-                                    setEditMode(false)
-                                }}
-                            />
-                            <FaCheck
-                                onClick={() => {
-                                    setEditMode(false)
-                                    dispatch(updateWarehouse(id, {[column]: editValue}))
-                                    //console.log(id, {[column]: editValue});
-                                }}
-                            />
-                        </Stack>
-                    }
-                />
-            </Stack> : <Button
-                sx={{
-                    width: "100%",
-                    height: "100%",
-                    color: "black",
-                    backgroundColor: "transparent",
-                    whiteSpace: "nowrap",
-                    transition: "background-color 0.3s",
-                    "&:hover": {
-                        color: "white",
-                    },
-                }}
-                onClick={() => setEditMode(true)}
-            >
-                {data}
-            </Button>
-        }
-    </Box>
-}

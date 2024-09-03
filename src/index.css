@@ -48,3 +48,9 @@ body {
      -moz-border-radius: 16px 0px 0px 0px;
      background-color: white;
 }
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+     -webkit-appearance: none;
+     margin: 0;
+}
