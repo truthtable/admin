@@ -17,6 +17,7 @@ import warehouseReducer from "../redux/reducers/warehouseReducer.js";
 import plantsReducer from "../redux/reducers/plantsReducer.js";
 import { deliveryHistory } from "../crud/index.js";
 import deliverysReducer from "../redux/reducers/deliverysReducer.js";
+import userReducer from "../redux/reducers/userReducer.js";
 
 export const store = configureStore({
      reducer: {
@@ -52,6 +53,8 @@ export const store = configureStore({
           plants: plantsReducer,
 
           warehouses: warehouseReducer,
+
+          user: userReducer,
      },
      devTools: process.env.NODE_ENV !== "production",
 });
