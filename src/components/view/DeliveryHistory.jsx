@@ -41,8 +41,11 @@ export default function deliveryHistory() {
           </Box>
      }
      let gasList = new Map();
+     let deleveryGasEditUiGasList = [];
      allGasData.data.data.forEach((value) => {
           gasList.set(value.id, value)
+          deleveryGasEditUiGasList.push(<Option key={value.id} value={value.id}>{value.company_name} - {value.kg}KG</Option>)
+
      })
      let usersList = new Map();
      users.forEach((value) => {
@@ -153,11 +156,28 @@ export default function deliveryHistory() {
           const [edit, setEdit] = useState(false);
           const [editName, setEditName] = useState("");
           let glist = [];
+          let tempGas = new Map();
+          selectedGasList.forEach((gas) => {
+               tempGas.set(gas.id, gas)
+          })
+          const [gasData, setGasData] = useState(tempGas);
+          const handleSetGasData = (id, key, value) => {
+               let tempGas = new Map(gasData);
+               tempGas.set(id, { ...tempGas.get(id), [key]: value })
+               console.log([...tempGas.values()])
+               setGasData(tempGas)
+          }
+          const handleAddGasData = (gasId) => {
+               let tempGas = new Map(gasData);
+               tempGas.set("new_" + gasData.size + 1, { id: "new_" + gasData.size + 1, is_empty: 0, quantity: 0, price: 0, gas_id: + gasId })
+               setGasData(tempGas)
+          }
           for (const [index, gas] of gasList.entries()) {
                if ((gas.company_name.toLowerCase().includes(editName.toLowerCase()) && editName.length > 0)) {
                     glist.push(
                          <ListItem key={index}>
                               <ListItemButton onClick={() => {
+                                   handleAddGasData(gas.id)
                               }}>
                                    <ListItemDecorator>
                                         <TbCylinder />
@@ -188,65 +208,89 @@ export default function deliveryHistory() {
                onClose={() => setEdit(false)}
                sx={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', mb: 10 }}
           >
-               <Sheet
-                    variant="outlined"
-                    sx={{ borderRadius: 'md', p: 3, boxShadow: 'lg', my: 10, overflow: "auto" }}
+               <form
+                    onSubmit={(event) => {
+                         event.preventDefault();
+                         //dispatch();
+                    }}
                >
-                    <ModalClose variant="plain" sx={{ m: 1 }} />
-                    <Typography
-                         component="h2"
-                         id="modal-title"
-                         level="h4"
-                         textColor="inherit"
-                         sx={{ fontWeight: 'lg', mb: 1 }}
+                    <Sheet
+                         variant="outlined"
+                         sx={{ borderRadius: 'md', p: 3, boxShadow: 'lg', my: 10, overflow: "auto" }}
                     >
-                         Edit Delivery of {customer} by {deliveryBoy}
-                    </Typography>
-                    <Sheet>
-                         <List>
-                              {
-                                   selectedGasList.map((gasData) => {
-                                        const gas = gasList.get(gasData.gas_id)
-                                        console.log(gasData)
-                                        return <ListItem key={gasData.id} sx={{ width: "100%" }}>
-                                             <ListItemContent sx={{ color: "black", fontWeight: "bold" }}>
-                                                  {/* {gas.company_name} - {gas.kg}KG {gasData.quantity}Qty ₹{gasData.price} */}
-                                                  <Stack direction="row" spacing={1} alignItems={"center"}>
-                                                       <RadioGroup defaultValue="outlined" name="radio-buttons-group" orientation="horizontal">
-                                                            <Radio value="1" label="Recived" variant="outlined" color="danger" />
-                                                            <Radio value="0" label="Delivered" variant="outlined" color="success" />
-                                                       </RadioGroup>
-                                                       <Select sx={{ width: "220px", ml: 2 }} defaultValue={"1"} >
-                                                            <Option value="1">GO GASS - 12KG</Option>
-                                                            <Option value="2">2</Option>
-                                                       </Select>
-                                                       <Input sx={{ width: "168px" }} value={gasData.quantity} startDecorator={<span>Qty : </span>} />
-                                                       {
-                                                            (gasData.is_empty == 1) ? <Input sx={{ width: "168px" }} value={gasData.price} startDecorator={<span>Amt : </span>} /> : <></>
-                                                       }
-                                                  </Stack>
-                                             </ListItemContent>
-                                        </ListItem>
-                                   })
-                              }
-                              <ListItem>
-                                   <ListItemContent>
-                                        <Input value={editName} onChange={(event) => { setEditName(event.target.value) }} placeholder="Add Gas" />
-                                   </ListItemContent>
-                              </ListItem>
-                         </List>
+                         <ModalClose variant="plain" sx={{ m: 1 }} />
+                         <Typography
+                              component="h2"
+                              id="modal-title"
+                              level="h4"
+                              textColor="inherit"
+                              sx={{ fontWeight: 'lg', mb: 1 }}
+                         >
+                              Edit Delivery of {customer} by {deliveryBoy}
+                         </Typography>
+                         <Sheet>
+                              <List>
+                                   {
+                                        [...gasData.values()].map((data) => {
+                                             return <ListItem key={data.id} sx={{ width: "100%" }}>
+                                                  <ListItemContent sx={{ color: "black", fontWeight: "bold" }}>
+                                                       {/* {gas.company_name} - {gas.kg}KG {data.quantity}Qty ₹{data.price} */}
+                                                       <Stack direction="row" spacing={1} alignItems={"center"} >
+                                                            <RadioGroup
+                                                                 value={data.is_empty ?? 0} // Ensure a fallback value if data.is_empty is undefined
+                                                                 name="radio-buttons-group"
+                                                                 orientation="horizontal"
+                                                                 required
+                                                                 onChange={(event) => {
+                                                                      handleSetGasData(data.id, "is_empty", event.target.value); // Update gasData with the selected value
+                                                                 }}
+                                                            >
+                                                                 <Radio value={0} label="Delivered" variant="outlined" color="success" />
+                                                                 <Radio value={1} label="Received" variant="outlined" color="danger" />
+                                                            </RadioGroup>
+                                                            <Select required sx={{ width: "220px", ml: 2 }} defaultValue={data.gas_id}
+                                                                 onChange={(event, value) => {
+                                                                      handleSetGasData(data.id, "gas_id", value);
+                                                                 }}
+                                                            >
+                                                                 {
+                                                                      deleveryGasEditUiGasList
+                                                                 }
+                                                            </Select>
+                                                            <Input required sx={{ width: "168px" }} value={data.quantity} startDecorator={<span>Qty : </span>}
+                                                                 onChange={(event) => {
+                                                                      handleSetGasData(data.id, "quantity", event.target.value);
+                                                                 }}
+                                                            />
+                                                            {
+                                                                 (data.is_empty == 0) ? <Input sx={{ width: "168px" }} value={data.price} startDecorator={<span>Amt : </span>} onChange={(event) => {
+                                                                      handleSetGasData(data.id, "price", event.target.value);
+                                                                 }} /> : <></>
+                                                            }
+                                                       </Stack>
+                                                  </ListItemContent>
+                                             </ListItem>
+                                        })
+                                   }
+                                   <ListItem>
+                                        <ListItemContent>
+                                             <Input value={editName} onChange={(event) => { setEditName(event.target.value) }} placeholder="Add Gas" />
+                                        </ListItemContent>
+                                   </ListItem>
+                              </List>
+                         </Sheet>
+                         <Sheet sx={{
+                              overflow: "auto",
+                              maxHeight: "90vh",
+                         }}>
+                              <List>
+                                   {
+                                        glist
+                                   }
+                              </List>
+                         </Sheet>
                     </Sheet>
-                    <Sheet sx={{
-                         overflow: "auto",
-                         maxHeight: "90vh",
-                    }}>
-                         <List>
-                              {
-                                   glist
-                              }
-                         </List>
-                    </Sheet>
-               </Sheet>
+               </form>
           </Modal>
      }
 
