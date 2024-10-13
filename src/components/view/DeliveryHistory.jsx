@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import React, { useEffect, useState } from "react";
-import { Box, Chip, Divider, LinearProgress, Select, Stack, Tab, Table, TabList, TabPanel, Tabs, Option, Button, Modal, Sheet, ModalClose, Typography, Input, List, ListItem, ListItemButton, ListItemDecorator, ListItemContent } from "@mui/joy";
+import { Box, Chip, Divider, LinearProgress, Select, Stack, Tab, Table, TabList, TabPanel, Tabs, Option, Button, Modal, Sheet, ModalClose, Typography, Input, List, ListItem, ListItemButton, ListItemDecorator, ListItemContent, FormControl, FormLabel, RadioGroup, Radio } from "@mui/joy";
 import { useDispatch, useSelector } from "react-redux";
 import { deliveriesIniState, fetchDeliveries, updateDelivery } from "../../redux/actions/deliveryActions";
 import { fetchGasData } from "../../state/GasList";
@@ -8,7 +8,9 @@ import { fetchUser, fetchUserRequest } from "../../redux/actions/userActions";
 import { RxFontStyle } from "react-icons/rx";
 import { FcHighPriority } from "react-icons/fc";
 import { CgUser } from "react-icons/cg";
-import { MdKeyboardArrowRight } from "react-icons/md";
+import { MdDone, MdEdit, MdKeyboardArrowRight } from "react-icons/md";
+import { IoMdClose } from "react-icons/io";
+import { TbCylinder } from "react-icons/tb";
 const headColor = "white";
 export default function deliveryHistory() {
      const dispatch = useDispatch();
@@ -123,7 +125,7 @@ export default function deliveryHistory() {
           const [edit, setEdit] = useState(false);
           const [editValue, setEditValue] = useState(value);
           if (!edit) {
-               <Button variant="outlined" sx={{ color: "black", backgroundColor: "transparent", width: "100%", fontWeight: "bold", outlineColor: "transparent", borderWidth: "0px" }}
+               return <Button variant="outlined" sx={{ color: "black", backgroundColor: "transparent", width: "100%", fontWeight: "bold", outlineColor: "transparent", borderWidth: "0px" }}
                     onClick={() => {
                          setEdit(true)
                     }}
@@ -131,7 +133,121 @@ export default function deliveryHistory() {
                     {value}
                </Button>
           }
-          return <Input value={value} placeholder={"Input Value"} />
+          return <Input value={editValue} type="number" placeholder={"Input Value"} onChange={(event) => { setEditValue(event.target.value) }} endDecorator={
+               <Stack direction="row" spacing={1}>
+                    <IoMdClose style={{ color: "white", backgroundColor: "#FF6600" }} onClick={() => { setEdit(false) }} />
+                    <MdDone style={{ color: "white", backgroundColor: "green" }} onClick={() => {
+                         setEdit(false);
+                         console.log({ id: id, [columnName]: editValue });
+                         dispatch(updateDelivery({ id: id, [columnName]: editValue, columnName: columnName }))
+                    }} />
+               </Stack>
+          }
+               sx={{
+                    width: "100%",
+               }}
+          />
+     }
+
+     const GasEditUi = ({ selectedGasList, customer, deliveryBoy }) => {
+          const [edit, setEdit] = useState(false);
+          const [editName, setEditName] = useState("");
+          let glist = [];
+          for (const [index, gas] of gasList.entries()) {
+               if ((gas.company_name.toLowerCase().includes(editName.toLowerCase()) && editName.length > 0)) {
+                    glist.push(
+                         <ListItem key={index}>
+                              <ListItemButton onClick={() => {
+                              }}>
+                                   <ListItemDecorator>
+                                        <TbCylinder />
+                                   </ListItemDecorator>
+                                   <ListItemContent sx={{ color: "black", fontWeight: "bold" }}>
+                                        {gas.company_name} : {gas.kg}{"kg"}
+                                   </ListItemContent>
+                                   <ListItemDecorator>
+                                        <MdKeyboardArrowRight />
+                                   </ListItemDecorator>
+                              </ListItemButton>
+                         </ListItem>
+                    )
+               }
+          }
+          if (!edit) {
+               return <Button variant="outlined" sx={{ borderRadius: "16px", fontWeight: "bold", fontStyle: "oblique" }}
+                    onClick={() => {
+                         setEdit(true);
+                    }}
+                    startDecorator={<MdEdit />}
+               >Change</Button>
+          }
+          return <Modal
+               aria-labelledby="modal-title"
+               aria-describedby="modal-desc"
+               open={edit}
+               onClose={() => setEdit(false)}
+               sx={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', mb: 10 }}
+          >
+               <Sheet
+                    variant="outlined"
+                    sx={{ borderRadius: 'md', p: 3, boxShadow: 'lg', my: 10, overflow: "auto" }}
+               >
+                    <ModalClose variant="plain" sx={{ m: 1 }} />
+                    <Typography
+                         component="h2"
+                         id="modal-title"
+                         level="h4"
+                         textColor="inherit"
+                         sx={{ fontWeight: 'lg', mb: 1 }}
+                    >
+                         Edit Delivery of {customer} by {deliveryBoy}
+                    </Typography>
+                    <Sheet>
+                         <List>
+                              {
+                                   selectedGasList.map((gasData) => {
+                                        const gas = gasList.get(gasData.gas_id)
+                                        console.log(gasData)
+                                        return <ListItem key={gasData.id} sx={{ width: "100%" }}>
+                                             <ListItemContent sx={{ color: "black", fontWeight: "bold" }}>
+                                                  {/* {gas.company_name} - {gas.kg}KG {gasData.quantity}Qty ₹{gasData.price} */}
+                                                  <Stack direction="row" spacing={1} alignItems={"center"}>
+                                                       <RadioGroup defaultValue="outlined" name="radio-buttons-group" orientation="horizontal">
+                                                            <Radio value="1" label="Recived" variant="outlined" color="danger" />
+                                                            <Radio value="0" label="Delivered" variant="outlined" color="success" />
+                                                       </RadioGroup>
+                                                       <Select sx={{ width: "220px", ml: 2 }} defaultValue={"1"} >
+                                                            <Option value="1">GO GASS - 12KG</Option>
+                                                            <Option value="2">2</Option>
+                                                       </Select>
+                                                       <Input sx={{ width: "168px" }} value={gasData.quantity} startDecorator={<span>Qty : </span>} />
+                                                       {
+                                                            (gasData.is_empty == 1) ? <Input sx={{ width: "168px" }} value={gasData.price} startDecorator={<span>Amt : </span>} /> : <></>
+                                                       }
+                                                  </Stack>
+                                             </ListItemContent>
+                                        </ListItem>
+                                   })
+                              }
+                              <ListItem>
+                                   <ListItemContent>
+                                        <Input value={editName} onChange={(event) => { setEditName(event.target.value) }} placeholder="Add Gas" />
+                                   </ListItemContent>
+                              </ListItem>
+                         </List>
+                    </Sheet>
+                    <Sheet sx={{
+                         overflow: "auto",
+                         maxHeight: "90vh",
+                    }}>
+                         <List>
+                              {
+                                   glist
+                              }
+                         </List>
+                    </Sheet>
+               </Sheet>
+          </Modal>
      }
 
      let deliveryRows = [];
@@ -228,10 +344,13 @@ export default function deliveryHistory() {
                                         {delevered ? "Delivered" : "Recived"}
                                    </Box> </Stack>
                          </td>
-                         <td style={{ ...tdsx, }}>{gasDeliverie.quantity}</td>
+                         <td style={{ ...tdsx }}>
+                              <NumberTextEditUi value={gasDeliverie.quantity} id={gasDeliverie.id} columnName={"quantity"} />
+                         </td>
                          <td style={{ ...tdsx, }}>
                               {
-                                   delevered ? `₹${gasDeliverie.price}` : "-"
+                                   //`₹${gasDeliverie.price}`
+                                   delevered ? <NumberTextEditUi value={gasDeliverie.price} id={gasDeliverie.id} columnName={"price"} /> : "-"
                               }
                          </td>
                          <td style={tdsx}>
@@ -269,6 +388,8 @@ export default function deliveryHistory() {
                          borderBottomLeftRadius: "16px",
                     }}>
                          <Stack sx={{ fontWeight: "bold", fontStyle: "oblique", pr: 1 }} direction="row" justifyContent="flex-end" justifyItems="flex-end" alignItems="center" spacing={1}>
+                              <GasEditUi selectedGasList={delivery.gas_deliveries} customer={delivery.courier_boy.username} deliveryBoy={user.name} />
+                              <Divider orientation="horizontal" sx={{ flexGrow: 1, opacity: 0 }} />
                               <Box>{`Total : ₹${totalPrice.toFixed(2)}`}</Box>
                               <Divider orientation="vertical" />
                               <Box >

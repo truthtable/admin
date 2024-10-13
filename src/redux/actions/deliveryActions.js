@@ -37,6 +37,7 @@ export const updateDeliverySuccess = (deliveries) => ({
 });
 
 const API = "https://adminsr.life/public/api/delivery";
+const GAS_API = "https://adminsr.life/public/api/gasDeliverys";
 
 //initial state
 export const deliveriesIniState = () => {
@@ -64,10 +65,21 @@ export const updateDelivery = (delivery) => {
      return async (dispatch) => {
           dispatch(updateDeliveryRequest());
           try {
-               const response = await axios.put(
-                    `${API}/${delivery.id}`,
-                    delivery,
-               );
+               let response;
+               if (
+                    delivery.columnName != null &&
+                    delivery.columnName == "quantity"
+               ) {
+                    response = await axios.put(
+                         `${GAS_API}/${delivery.id}`,
+                         delivery,
+                    );
+               } else {
+                    response = await axios.put(
+                         `${API}/${delivery.id}`,
+                         delivery,
+                    );
+               }
                const deliveries = response.data;
                //console.log(deliveries);
                dispatch(updateDeliverySuccess(deliveries));
