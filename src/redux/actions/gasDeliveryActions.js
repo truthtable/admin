@@ -30,12 +30,19 @@ export const getGasDeliveries = () => async (dispatch) => {
 };
 
 // Add a new gas delivery
-export const addGasDelivery = (deliverys) => async (dispatch) => {
+export const addGasDelivery = (deliveries) => async (dispatch) => {
+     console.log("adding gas delivery");
+     if (deliveries.length === 0) {
+          return;
+     }
      try {
-          await axios.post(
+          const res = await axios.post(
                "https://adminsr.life/public/api/gasDeliverys",
-               deliverys,
+               {
+                    deliveries,
+               },
           );
+          console.log(res);
           dispatch({
                type: ADD_GAS_DELIVERY,
           });
@@ -65,6 +72,11 @@ export const updateGasDelivery = (updatedData) => async (dispatch) => {
 
 // Delete a gas delivery
 export const deleteGasDelivery = (ids) => async (dispatch) => {
+     console.log("deleting gas delivery");
+     //return if no ids
+     if (ids.length === 0) {
+          return;
+     }
      try {
           const res = await axios.delete(
                `https://adminsr.life/public/api/gasDeliverys/0`,

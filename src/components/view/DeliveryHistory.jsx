@@ -12,7 +12,7 @@ import { MdDone, MdEdit, MdKeyboardArrowRight } from "react-icons/md";
 import { IoMdClose } from "react-icons/io";
 import { TbCylinder } from "react-icons/tb";
 import { ImCross } from "react-icons/im";
-import { deleteGasDelivery, gasDeliveriesIniState } from "../../redux/actions/gasDeliveryActions";
+import { addGasDelivery, deleteGasDelivery, gasDeliveriesIniState } from "../../redux/actions/gasDeliveryActions";
 import { gasDeliverys } from "../../state/UpdateGasDelivery";
 const headColor = "white";
 export default function deliveryHistory() {
@@ -347,15 +347,34 @@ export default function deliveryHistory() {
                                    )
                                    //console.log(newGasAdded, updateGasData, deletedGasData)
                                    //call API
-                                   //Delete
+
                                    //console.log(deletedGasData)
                                    const deleteDeliveryGasIds = [...deletedGasData.values()].map((gas) => {
                                         return gas.id
                                    })
-                                   console.log(deleteDeliveryGasIds)
-                                   dispatch(deleteGasDelivery(deleteDeliveryGasIds))
-                                   //Create
-                                   //Update
+
+
+                                   //remove id fied or key from each gas and add delivery id
+                                   const newGasDataNoIds = newGasAdded.map(
+                                        (gas) => {
+                                             delete gas.id;
+                                             return gas;
+                                        }
+                                   )
+
+                                   console.log(newGasDataNoIds)
+
+                                   dispatch(
+                                        //Delete
+                                        deleteGasDelivery(deleteDeliveryGasIds),
+                                   )
+                                   dispatch(
+                                        //Create
+                                        addGasDelivery(newGasDataNoIds),
+                                        //Update
+                                   )
+
+
                                    setEdit(false)
                               }}>
                                    Save
