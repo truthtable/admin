@@ -11,6 +11,9 @@ import { CgUser } from "react-icons/cg";
 import { MdDone, MdEdit, MdKeyboardArrowRight } from "react-icons/md";
 import { IoMdClose } from "react-icons/io";
 import { TbCylinder } from "react-icons/tb";
+import { ImCross } from "react-icons/im";
+import { deleteGasDelivery, gasDeliveriesIniState } from "../../redux/actions/gasDeliveryActions";
+import { gasDeliverys } from "../../state/UpdateGasDelivery";
 const headColor = "white";
 export default function deliveryHistory() {
      const dispatch = useDispatch();
@@ -18,6 +21,8 @@ export default function deliveryHistory() {
      //console.log(updateSuccess);
      const allGasData = useSelector((state) => state.gas);
      const { userDataLoading, users, userDataError } = useSelector((state) => state.user);
+     const gasDelivery = useSelector((state) => state.gasDelivery);
+     console.log(gasDelivery);
      useEffect(() => {
           if (deliveries == null || deliveries.length == 0) {
                dispatch(fetchDeliveries());
@@ -34,6 +39,10 @@ export default function deliveryHistory() {
                dispatch(deliveriesIniState());
                console.log("updateSuccess");
           }
+          if (gasDelivery.gasDeliverysSucsess == true) {
+               dispatch(gasDeliveriesIniState());
+               dispatch(deliveriesIniState());
+          }
      });
      if (allGasData.data === null || deliveries == null || deliveries.length == 0 || users == null || users.length == 0) {
           return <Box sx={{ height: "100%", width: "100%", backgroundColor: "white", borderRadius: "lg", overflow: "auto" }}>
@@ -45,7 +54,6 @@ export default function deliveryHistory() {
      allGasData.data.data.forEach((value) => {
           gasList.set(value.id, value)
           deleveryGasEditUiGasList.push(<Option key={value.id} value={value.id}>{value.company_name} - {value.kg}KG</Option>)
-
      })
      let usersList = new Map();
      users.forEach((value) => {
@@ -152,7 +160,7 @@ export default function deliveryHistory() {
           />
      }
 
-     const GasEditUi = ({ selectedGasList, customer, deliveryBoy }) => {
+     const GasEditUi = ({ selectedGasList, customer, deliveryBoy, deleveryId }) => {
           const [edit, setEdit] = useState(false);
           const [editName, setEditName] = useState("");
           let glist = [];
@@ -161,10 +169,11 @@ export default function deliveryHistory() {
                tempGas.set(gas.id, gas)
           })
           const [gasData, setGasData] = useState(tempGas);
+          const [deletedGasData, setDeletedGasData] = useState(new Map())
           const handleSetGasData = (id, key, value) => {
                let tempGas = new Map(gasData);
                tempGas.set(id, { ...tempGas.get(id), [key]: value })
-               console.log([...tempGas.values()])
+               //console.log([...tempGas.values()])
                setGasData(tempGas)
           }
           const handleAddGasData = (gasId) => {
@@ -172,12 +181,23 @@ export default function deliveryHistory() {
                tempGas.set("new_" + gasData.size + 1, { id: "new_" + gasData.size + 1, is_empty: 0, quantity: 0, price: 0, gas_id: + gasId })
                setGasData(tempGas)
           }
+          const handleDeleteGasData = (gasId) => {
+               let tempDeletedGas = new Map(deletedGasData); // Clone the current deletedGasData Map
+               tempDeletedGas.set(gasId, gasData.get(gasId)); // Add deleted gas to the map
+
+               setDeletedGasData(tempDeletedGas); // Update the deletedGasData state
+
+               let tempGas = new Map(gasData); // Clone current gasData
+               tempGas.delete(gasId); // Remove the gas by id
+               setGasData(tempGas); // Update the gasData state
+          }
           for (const [index, gas] of gasList.entries()) {
                if ((gas.company_name.toLowerCase().includes(editName.toLowerCase()) && editName.length > 0)) {
                     glist.push(
                          <ListItem key={index}>
                               <ListItemButton onClick={() => {
                                    handleAddGasData(gas.id)
+                                   setEditName("")
                               }}>
                                    <ListItemDecorator>
                                         <TbCylinder />
@@ -257,16 +277,25 @@ export default function deliveryHistory() {
                                                                       deleveryGasEditUiGasList
                                                                  }
                                                             </Select>
-                                                            <Input required sx={{ width: "168px" }} value={data.quantity} startDecorator={<span>Qty : </span>}
+                                                            <Input required sx={{ width: "168px" }} type="number" value={data.quantity} startDecorator={<span>Qty : </span>}
                                                                  onChange={(event) => {
                                                                       handleSetGasData(data.id, "quantity", event.target.value);
                                                                  }}
                                                             />
-                                                            {
-                                                                 (data.is_empty == 0) ? <Input sx={{ width: "168px" }} value={data.price} startDecorator={<span>Amt : </span>} onChange={(event) => {
-                                                                      handleSetGasData(data.id, "price", event.target.value);
-                                                                 }} /> : <></>
-                                                            }
+                                                            <Input required={(data.is_empty == 0)} sx={{ width: "168px", visibility: (data.is_empty == 0) ? "visible" : "hidden" }} type="number" value={data.price} startDecorator={<span>Amt : </span>} onChange={(event) => {
+                                                                 handleSetGasData(data.id, "price", event.target.value);
+                                                            }} />
+                                                            <Box
+                                                                 onClick={() => {
+                                                                      handleDeleteGasData(data.id)
+                                                                 }}
+                                                                 sx={{
+                                                                      padding: "6px",
+                                                                      backgroundColor: "#e34a4c",
+                                                                      color: "white",
+                                                                      borderRadius: "16px",
+                                                                 }}
+                                                            ><ImCross /></Box>
                                                        </Stack>
                                                   </ListItemContent>
                                              </ListItem>
@@ -289,6 +318,49 @@ export default function deliveryHistory() {
                                    }
                               </List>
                          </Sheet>
+                         <Stack direction="row" gap={1} justifyContent={"flex-end"}>
+                              <Button color="warning" variant="outlined" onClick={() => {
+                                   setEdit(false)
+                              }}>
+                                   Cancel
+                              </Button>
+                              <Button type="submit" onClick={() => {
+                                   //setEdit(false)
+                                   let tempGasData = new Map(gasData);
+                                   //console.log(tempGasData)
+                                   let newGasAdded = [...tempGasData.values()].filter(
+                                        (gas) => {
+                                             return `${gas.id}`.startsWith("new_")
+                                        }
+                                   )
+                                   //remove id fied or key from each gas and add delivery id
+                                   newGasAdded.forEach((gas, index) => {
+                                        gas.delivery_id = deleveryId;
+                                        newGasAdded[index] = gas;
+                                   });
+
+                                   tempGasData = new Map(gasData);
+                                   let updateGasData = [...tempGasData.values()].filter(
+                                        (gas) => {
+                                             return !(`${gas.id}`.startsWith("new_"))
+                                        }
+                                   )
+                                   //console.log(newGasAdded, updateGasData, deletedGasData)
+                                   //call API
+                                   //Delete
+                                   //console.log(deletedGasData)
+                                   const deleteDeliveryGasIds = [...deletedGasData.values()].map((gas) => {
+                                        return gas.id
+                                   })
+                                   console.log(deleteDeliveryGasIds)
+                                   dispatch(deleteGasDelivery(deleteDeliveryGasIds))
+                                   //Create
+                                   //Update
+                                   setEdit(false)
+                              }}>
+                                   Save
+                              </Button>
+                         </Stack>
                     </Sheet>
                </form>
           </Modal>
@@ -432,7 +504,7 @@ export default function deliveryHistory() {
                          borderBottomLeftRadius: "16px",
                     }}>
                          <Stack sx={{ fontWeight: "bold", fontStyle: "oblique", pr: 1 }} direction="row" justifyContent="flex-end" justifyItems="flex-end" alignItems="center" spacing={1}>
-                              <GasEditUi selectedGasList={delivery.gas_deliveries} customer={delivery.courier_boy.username} deliveryBoy={user.name} />
+                              <GasEditUi selectedGasList={delivery.gas_deliveries} customer={delivery.courier_boy.username} deliveryBoy={user.name} deleveryId={delivery.id} />
                               <Divider orientation="horizontal" sx={{ flexGrow: 1, opacity: 0 }} />
                               <Box>{`Total : ₹${totalPrice.toFixed(2)}`}</Box>
                               <Divider orientation="vertical" />
@@ -459,7 +531,7 @@ export default function deliveryHistory() {
                     width: "100%",
                }}
           >
-               <Box><LinearProgress color="primary" variant="soft" sx={{ backgroundColor: "transparent", m: .5, display: loading ? "block" : "none" }} /></Box>
+               <Box><LinearProgress color="primary" variant="soft" sx={{ backgroundColor: "transparent", m: .5, display: (loading || gasDelivery.loading) ? "block" : "none" }} /></Box>
                <Tabs aria-label="Basic tabs" defaultValue={0} >
                     <TabList sx={{ backgroundColor: headColor, }}>
                          <Tab>All Deliveries</Tab>

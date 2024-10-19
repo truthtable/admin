@@ -18,6 +18,7 @@ import plantsReducer from "../redux/reducers/plantsReducer.js";
 import { deliveryHistory } from "../crud/index.js";
 import deliverysReducer from "../redux/reducers/deliverysReducer.js";
 import userReducer from "../redux/reducers/userReducer.js";
+import gasDeliveryReducer from "../redux/reducers/gasDeliveryReducer.js";
 
 export const store = configureStore({
      reducer: {
@@ -44,7 +45,11 @@ export const store = configureStore({
 
           getData: getDataReducer,
 
+          //old
           gasDeliverys: gasDeliverysReducer,
+
+          //new
+          gasDelivery: gasDeliveryReducer,
 
           purchaseOrders: purchaseOrderReducer,
 

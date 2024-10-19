@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import "./App.css";
 import { HashRouter, Route, Routes } from "react-router-dom";
@@ -30,7 +30,7 @@ import {
      ViewAdmin,
      ViewCustomer,
 } from "./crud";
-import { Box, Button, Card, Chip, CssVarsProvider, Input, LinearProgress, Stack, Typography, } from "@mui/joy";
+import { Box, Button, Card, Chip, CssVarsProvider, Input, LinearProgress, Sheet, Stack, Typography, } from "@mui/joy";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchLogin } from "./state/LoginAPI";
 import { fetchCheckLogin } from "./state/CheckLogin";
@@ -40,13 +40,16 @@ import Expences from "./components/view/Expences.jsx";
 import Purchase from "./components/view/Purchase.jsx";
 import DeliveryHistory from "./components/view/DeliveryHistory.jsx";
 import deliveryHistory from "./components/view/DeliveryHistory.jsx";
+import { FcHighPriority } from "react-icons/fc";
 
 function App() {
+
      const dispatch = useDispatch();
      const loginData = useSelector((state) => state.login);
      const checkLoginData = useSelector((state) => state.checkLogin);
 
      let isLogoded = false;
+
 
      //console.log(checkLoginData);
 
@@ -193,6 +196,49 @@ function App() {
                     </Stack>
                </Card>
           </div>
+     }
+
+     if (navigator.onLine == false) {
+          return <Box sx={{
+               height: "100vh",
+               width: "100vw",
+               display: "flex",
+               justifyContent: "center",
+               alignItems: "center",
+          }}>
+               <Sheet
+                    sx={{
+                         display: "flex",
+                         flexDirection: "column",
+                         alignItems: "center",
+                         backgroundColor: "#FEF9F2",
+                         padding: 10,
+                         borderRadius: "16px",
+                    }}
+               >
+                    <Typography level="title-lg"
+                         sx={{
+                              fontWeight: "bold",
+                              fontSize: "16px",
+                         }}
+                    >
+                         Shree Ram Distributer
+                    </Typography>
+                    <FcHighPriority style={{ fontSize: "128px", }} />
+                    <Typography level="title-lg" sx={{
+                         fontWeight: "bold",
+                         fontSize: "32px",
+                    }}>
+                         Offline
+                    </Typography>
+                    <Typography level="title-lg" sx={{
+                         fontWeight: "bold",
+                         fontSize: "16px",
+                    }}>
+                         No Internet Connection...
+                    </Typography>
+               </Sheet>
+          </Box>
      }
 
      return (
