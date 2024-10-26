@@ -11,7 +11,7 @@ import {
 const initialState = {
      loading: false,
      deliveries: [],
-     error: "",
+     error: false,
      updateSuccess: false,
 };
 
@@ -21,7 +21,7 @@ const deliverysReducer = (state = initialState, action) => {
                return {
                     loading: false,
                     deliveries: [],
-                    error: "",
+                    error: false,
                     updateSuccess: false,
                };
           case FETCH_DELIVERIES_REQUEST:
@@ -29,19 +29,20 @@ const deliverysReducer = (state = initialState, action) => {
                     ...state,
                     loading: true,
                     updateSuccess: false,
+                    error: false,
                };
           case FETCH_DELIVERIES_SUCCESS:
                return {
                     loading: false,
                     deliveries: action.payload,
-                    error: "",
+                    error: false,
                     updateSuccess: false,
                };
           case FETCH_DELIVERIES_FAILURE:
                return {
                     loading: false,
                     deliveries: [],
-                    error: action.payload,
+                    error: true,
                     updateSuccess: false,
                };
           case UPDATE_DELIVERY_SUCCESS:
@@ -49,6 +50,7 @@ const deliverysReducer = (state = initialState, action) => {
                     ...state,
                     loading: false,
                     updateSuccess: true,
+                    error: false,
                };
           default:
                return state;

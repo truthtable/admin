@@ -7,7 +7,7 @@ import {
 const initialState = {
      userDataLoading: false,
      users: null,
-     userDataError: "",
+     userDataError: false,
 };
 const userReducer = (state = initialState, action) => {
      switch (action.type) {
@@ -15,18 +15,19 @@ const userReducer = (state = initialState, action) => {
                return {
                     ...state,
                     userDataLoading: true,
+                    userDataError: false,
                };
           case FETCH_USER_SUCCESS:
                return {
                     userDataLoading: false,
                     users: action.payload,
-                    userDataError: "",
+                    userDataError: false,
                };
           case FETCH_USER_FAILURE:
                return {
                     userDataLoading: false,
                     users: null,
-                    userDataError: action.payload,
+                    userDataError: true,
                };
           default:
                return state;

@@ -19,6 +19,8 @@ import { deliveryHistory } from "../crud/index.js";
 import deliverysReducer from "../redux/reducers/deliverysReducer.js";
 import userReducer from "../redux/reducers/userReducer.js";
 import gasDeliveryReducer from "../redux/reducers/gasDeliveryReducer.js";
+import { expencesIniState } from "../redux/actions/expencesActions.js";
+import expencesReducer from "../redux/reducers/expencesReducer.js";
 
 export const store = configureStore({
      reducer: {
@@ -60,6 +62,8 @@ export const store = configureStore({
           warehouses: warehouseReducer,
 
           user: userReducer,
+
+          expence: expencesReducer,
      },
      devTools: process.env.NODE_ENV !== "production",
 });

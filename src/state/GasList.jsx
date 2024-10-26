@@ -4,7 +4,7 @@ import { GAS_DATA } from "../services/Api";
 export const fetchGasData = createAsyncThunk("gas/fetchGasData", async () => {
      let error = true;
      let data = null;
-     let errorMessage = "";
+     let errorMessage = false;
      try {
           const response = await fetch(GAS_DATA, {
                method: "get",
@@ -34,11 +34,12 @@ const gasSlice = createSlice({
      extraReducers: (builder) => {
           builder.addCase(fetchGasData.pending, (state, action) => {
                state.isLoading = true;
+               state.isError = false;
           });
           builder.addCase(fetchGasData.fulfilled, (state, action) => {
                state.isLoading = false;
                state.data = action.payload.data;
-               state.isError = action.payload.error;
+               state.isError = false;
                state.errorMessage = action.payload.errorMessage;
           });
           builder.addCase(fetchGasData.rejected, (state, action) => {

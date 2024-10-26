@@ -6,6 +6,7 @@ import {
      UPDATE_GAS_DELIVERY,
      DELETE_GAS_DELIVERY,
      GAS_DELIVERY_ERROR,
+     LOADING,
 } from "../actions/gasDeliveryActions";
 
 const initialState = {
@@ -21,6 +22,11 @@ const gasDeliveryReducer = (state = initialState, action) => {
                     gasDeliverysSucsess: false,
                     loading: false,
                     error: null,
+               };
+          case LOADING:
+               return {
+                    ...state,
+                    loading: true,
                };
           case GET_GAS_DELIVERIES:
                return {

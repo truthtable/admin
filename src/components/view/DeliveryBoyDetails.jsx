@@ -1,4 +1,4 @@
-import { Box, Button, Input, LinearProgress, Stack } from "@mui/joy";
+import { Box, Button, Input, LinearProgress, Stack, Table } from "@mui/joy";
 import { BsSearch } from "react-icons/bs";
 import DataTable from "../table/DataTable.jsx";
 import TableHead from "../table/TableHead.jsx";
@@ -9,6 +9,7 @@ import React, { useEffect, useState } from "react";
 import { GET_COURIER_BOY_DATA, UPDATE_COURIER_BOY, UPDATE_USER, } from "../../services/Api.jsx";
 import UpdateCustomerCell, { NUMBER, TEXT } from "../edit/UpdateCustomerCell.jsx";
 import DeliveryBoyCard from "./DeliveryBoyCard.jsx";
+import { Link } from "react-router-dom";
 
 export default function DeliveryBoyDetails() {
      const dispatch = useDispatch();
@@ -49,9 +50,12 @@ export default function DeliveryBoyDetails() {
      return (
           <div
                style={{
+                    height: "100%",
                     width: "100%",
                     overflow: "auto",
                     padding: "10px",
+                    backgroundColor: 'white',
+                    borderRadius: '10px',
                }}
           >
                <Stack direction="row" mb={1} spacing={1} justifyContent="flex-end">
@@ -73,7 +77,7 @@ export default function DeliveryBoyDetails() {
                <div style={{ display: data.isLoading ? "block" : "none" }}>
                     <LinearProgress color="primary" variant="soft" />
                </div>
-               <Box
+               {/* <Box
                     sx={{
                          display: 'flex',
                          justifyContent: 'center',
@@ -96,7 +100,58 @@ export default function DeliveryBoyDetails() {
                          }
                          )
                     }
-               </Box>
+               </Box> */}
+               <Table>
+                    <thead>
+                         <tr>
+                              <th>Username</th>
+                              <th>Password</th>
+                              <th colSpan={3}>Expense</th>
+                         </tr>
+                    </thead>
+                    <tbody>
+                         {rows.map((row, index) => (
+                              <tr key={index}>
+                                   {row.map((cell, index) => (
+                                        <td key={index}>{cell}</td>
+                                   ))}
+                                   {
+
+                                        <td>
+                                             <Link
+                                                  to={"/admin/expence?user_id=" + deliveryBoyData[index].id}
+                                             ><Button
+                                                  variant="soft"
+                                                  color="success"
+                                                  sx={{
+                                                       width: '100%',
+                                                  }}
+                                             >
+                                                       View Expences
+                                                  </Button>
+                                             </Link></td>
+                                   }
+                                   {
+                                        <td>
+                                             <Link
+                                                  to={`/admin/deliveryHistory?courier_boy_id=${deliveryBoyData[index].id}`}
+                                             >
+                                                  <Button
+                                                       variant="soft"
+                                                       color="warning"
+                                                       sx={{
+                                                            width: '100%',
+                                                       }}
+                                                  >
+                                                       View Deliveries
+                                                  </Button>
+                                             </Link>
+                                        </td>
+                                   }
+                              </tr>
+                         ))}
+                    </tbody>
+               </Table>
           </div>
      );
 }

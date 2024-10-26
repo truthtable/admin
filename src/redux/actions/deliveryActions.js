@@ -47,11 +47,21 @@ export const deliveriesIniState = () => {
 };
 
 // Async Action to Fetch Deliveries
-export const fetchDeliveries = () => {
+export const fetchDeliveries = (params) => {
      return async (dispatch) => {
           dispatch(fetchDeliveriesRequest());
+          console.log(params);
           try {
-               const response = await axios.get(API);
+               const response = await axios.get(API, {
+                    params: params,
+               });
+
+               let logs = response.headers["x-log-data"];
+               //conver url encoded string to json
+               logs = decodeURIComponent(logs);
+               logs = JSON.parse(logs);
+               console.log(logs);
+
                const deliveries = response.data;
                dispatch(fetchDeliveriesSuccess(deliveries));
           } catch (error) {

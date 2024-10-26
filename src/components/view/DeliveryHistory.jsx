@@ -12,28 +12,75 @@ import { MdDone, MdEdit, MdKeyboardArrowRight } from "react-icons/md";
 import { IoMdClose } from "react-icons/io";
 import { TbCylinder } from "react-icons/tb";
 import { ImCross } from "react-icons/im";
-import { addGasDelivery, deleteGasDelivery, gasDeliveriesIniState } from "../../redux/actions/gasDeliveryActions";
-import { gasDeliverys } from "../../state/UpdateGasDelivery";
+import { addGasDelivery, deleteGasDelivery, gasDeliveriesIniState, updateGasDelivery } from "../../redux/actions/gasDeliveryActions";
+import { set } from "firebase/database";
 const headColor = "white";
 export default function deliveryHistory() {
      const dispatch = useDispatch();
-     const { deliveries, loading, updateSuccess } = useSelector((state) => state.deliverys);
+     const { deliveries, loading, updateSuccess, error } = useSelector((state) => state.deliverys);
      //console.log(updateSuccess);
      const allGasData = useSelector((state) => state.gas);
      const { userDataLoading, users, userDataError } = useSelector((state) => state.user);
      const gasDelivery = useSelector((state) => state.gasDelivery);
-     console.log(gasDelivery);
+     //console.log(gasDelivery);
+
+     //parmas
+     const [dateStart, setDateStart] = useState(new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0]);
+     const [dateEnd, setDateEnd] = useState(new Date().toISOString().split('T')[0]);
+     //
+     const currentUrl = window.location.href;
+     const hashIndex = currentUrl.indexOf('#');
+     const hashPart = currentUrl.substring(hashIndex + 1);
+     const url = new URL(hashPart, window.location.origin);
+     const searchParams = new URLSearchParams(url.search);
+     const urlCustomerId = searchParams.get('customer_id');
+     console.log(urlCustomerId);
+     //
+     const [customerId, setCustomerId] = useState(urlCustomerId ? Number(urlCustomerId) : null);
+     const [deliverBoyId, setDeliverBoyId] = useState(null);
+
+     //console.log({ dateStart, dateEnd, customerId, deliverBoyId });
+
+     const fetchDeliveriesData = (cid = customerId) => {
+          dispatch(fetchDeliveries({ dateStart: dateStart, dateEnd: dateEnd, customer_id: cid, courier_boy_id: deliverBoyId }));
+     }
+
      useEffect(() => {
-          if (deliveries == null || deliveries.length == 0) {
-               dispatch(fetchDeliveries());
+          const networkCall = () => {
+               if (
+                    !error
+                    && !loading
+                    && !allGasData.isLoading
+                    && !userDataLoading
+                    && (deliveries == null || deliveries.length === 0)
+               ) {
+                    console.log("fetchDeliveries...");
+                    fetchDeliveriesData();
+
+               }
+               if (
+                    !(allGasData.isError)
+                    && !allGasData.isLoading
+                    && !loading
+                    && !userDataLoading
+                    && (allGasData.data == null || allGasData.data.data.length === 0)
+               ) {
+                    console.log("fetchGasData...");
+                    dispatch(fetchGasData());
+               }
+               if (
+                    !userDataError
+                    && !userDataLoading
+                    && !allGasData.isLoading
+                    && !loading
+                    && (users == null || users.length === 0)
+               ) {
+                    console.log("fetchUser...");
+                    dispatch(fetchUser());
+               }
           }
-          if (allGasData.data == null || allGasData.data.data.length == 0) {
-               dispatch(fetchGasData());
-          }
-          if (users == null || users.length == 0) {
-               dispatch(fetchUser());
-          }
-     }, [dispatch, deliveries, allGasData, users]);
+          networkCall();
+     }, [dispatch, deliveries, allGasData, users, loading, userDataLoading, error, userDataError, deliverBoyId]);
      useEffect(() => {
           if (updateSuccess == true) {
                dispatch(deliveriesIniState());
@@ -44,6 +91,69 @@ export default function deliveryHistory() {
                dispatch(deliveriesIniState());
           }
      });
+
+     // console.log({
+     //      userError: userDataError,
+     //      gasDataError: allGasData.isError,
+     //      deliveriesError: error
+     // })
+
+     if (userDataError || allGasData.isError || error) {
+          return <Box
+               sx={{
+                    height: "100%",
+                    width: "100%",
+                    backgroundColor: "white",
+                    borderRadius: "lg",
+                    overflow: "auto",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+               }}
+          >
+               <Stack>
+                    <Typography
+                         sx={{
+                              color: "#FF6600",
+                              fontWeight: "bold",
+                         }}
+                    >
+                         Problem In Server please try again later
+                    </Typography>
+                    <Button
+                         onClick={() => {
+                              dispatch(fetchUserRequest());
+                              dispatch(fetchGasData());
+                              dispatch(fetchDeliveries());
+                         }}
+                         sx={{
+                              color: "white",
+                              backgroundColor: "#FF6600",
+                              fontWeight: "bold",
+                         }}
+                    >
+                         Retry
+                    </Button>
+               </Stack>
+          </Box>
+     }
+
+     let customers = [];
+     let deliveryBoys = [];
+     const usersMap = new Map();
+
+     if (users != null) {
+          users.forEach((user) => {
+               usersMap.set(user.id, user)
+               if (user.courier_boys.length > 0) {
+                    deliveryBoys.push(user.courier_boys[0])
+               }
+               if (user.customers.length > 0) {
+                    customers.push(user.customers[0])
+               }
+          })
+     }
+
      if (allGasData.data === null || deliveries == null || deliveries.length == 0 || users == null || users.length == 0) {
           return <Box sx={{ height: "100%", width: "100%", backgroundColor: "white", borderRadius: "lg", overflow: "auto" }}>
                <LinearProgress color="primary" variant="soft" sx={{ backgroundColor: "transparent", m: .5, display: "block" }} />
@@ -362,7 +472,7 @@ export default function deliveryHistory() {
                                         }
                                    )
 
-                                   console.log(newGasDataNoIds)
+                                   console.log(updateGasData)
 
                                    dispatch(
                                         //Delete
@@ -371,10 +481,11 @@ export default function deliveryHistory() {
                                    dispatch(
                                         //Create
                                         addGasDelivery(newGasDataNoIds),
-                                        //Update
                                    )
-
-
+                                   dispatch(
+                                        //Update
+                                        updateGasDelivery(updateGasData),
+                                   )
                                    setEdit(false)
                               }}>
                                    Save
@@ -411,139 +522,271 @@ export default function deliveryHistory() {
           "Rate",
           "Correction",
      ];
+     const correctionsRowsIndex = [];
      const colspan = tableHead.length;
-     deliveries.forEach(delivery => {
-          let totalPrice = 0;
-          const receivedAmount = delivery.received_amount;
+     try {
+          deliveries.forEach(delivery => {
+               let totalPrice = 0;
+               const receivedAmount = delivery.received_amount;
 
-          const correction = (delivery.correction == 1)
-          const user = usersList.get(delivery.customer.user_id)
-          //console.log(delivery)
-          //console.log(user);
-          deliveryRows.push(<tr key={"delivery_" + delivery.id + "header"}>
-               <td colSpan={colspan} style={{
-                    borderColor: "transparent",
-                    height: "1px",
-               }}></td>
-          </tr>)
-          deliveryRows.push(<tr key={"delivery_" + delivery.id + "header1"}>
-               <td colSpan={colspan} style={{
-                    borderColor: borderColor,
-                    borderBottomColor: "transparent",
-                    borderWidth: "1px",
-                    borderTopRightRadius: "16px",
-                    borderTopLeftRadius: "16px",
-                    marginTop: "1px",
-                    paddingLeft: "16px",
-               }}>
-                    {`Delivery No : ${delivery.id}`}
-               </td>
-          </tr>)
-          delivery.gas_deliveries.forEach(gasDeliverie => {
-               const delevered = gasDeliverie.is_empty == 0
-               if (delevered) {
-                    totalPrice += gasDeliverie.quantity * gasDeliverie.price
-               }
-               const gasStyle = delevered ? sentGasCell : receivedGasCell;
-               const tdsx = correction ? { ...tdStyle, ...correctionCell, } : { ...tdStyle, };
-               const gas = gasList.get(gasDeliverie.gas_id)
-               //console.log(gasDeliverie)
-
-               deliveryRows.push(
-                    <tr key={"delivery_" + delivery.id + "_" + gasDeliverie.id}>
-                         <td style={tdsx}>{formatDateTime(delivery.created_at)}</td>
-                         {/* <td style={tdsx}>{formatDateTime(delivery.updated_at)}</td> */}
-                         <td style={tdsx}>{delivery.courier_boy.username}</td>
-                         <td style={tdsx}><CostomerEditUI name={user.name} id={delivery.id} /></td>
-                         <td style={tdsx}>{user.address}</td>
-                         <td style={{ ...tdsx, }}>
-                              <Stack direction="row" spacing={1}>
-                                   <Box
-                                        sx={{
-                                             flexGrow: 1,
-                                        }}
-                                   >{`${gas.company_name} - ${gas.kg}KG`}</Box>
-                                   <Box
-                                        sx={{
-                                             color: "#FFF0D1",
-                                             backgroundColor: delevered ? "#117554" : "#FF6600",
-                                             py: .1,
-                                             px: 1,
-                                             m: 0,
-                                             borderRadius: "xl",
-                                             flexGrow: 1,
-                                             maxWidth: "136px",
-                                             fontWeight: "bold",
-                                        }}
-                                   >
-                                        {delevered ? "Delivered" : "Recived"}
-                                   </Box> </Stack>
-                         </td>
-                         <td style={{ ...tdsx }}>
-                              <NumberTextEditUi value={gasDeliverie.quantity} id={gasDeliverie.id} columnName={"quantity"} />
-                         </td>
-                         <td style={{ ...tdsx, }}>
-                              {
-                                   //`₹${gasDeliverie.price}`
-                                   delevered ? <NumberTextEditUi value={gasDeliverie.price} id={gasDeliverie.id} columnName={"price"} /> : "-"
-                              }
-                         </td>
-                         <td style={tdsx}>
-                              {/* {correction ? "Yes" : "No"} */}
-                              <Select defaultValue={correction ? "Mistake" : "No"} endDecorator={correction ? <FcHighPriority /> : null}
-                                   onChange={
-                                        (event, value) => {
-                                             //console.log(value)
-                                             if (value === "Mistake") {
-                                                  dispatch(updateDelivery({ id: delivery.id, correction: 1 }))
-                                             }
-                                             if (value === "No") {
-                                                  dispatch(updateDelivery({ id: delivery.id, correction: 0 }))
-                                             }
-                                        }
-                                   }
-                                   sx={{
-                                        color: correction ? "#C80036" : "black",
+               const correction = (delivery.correction == 1)
+               const user = usersList.get(delivery.customer.user_id)
+               //console.log(delivery)
+               //console.log(user);
+               deliveryRows.push(<tr key={"delivery_" + delivery.id + "header"}>
+                    <td colSpan={colspan} style={{
+                         borderColor: "transparent",
+                         height: "1px",
+                    }}></td>
+               </tr>)
+               correction ? correctionsRowsIndex.push(deliveryRows.length) : null
+               deliveryRows.push(<tr key={"delivery_" + delivery.id + "header1"}>
+                    <td colSpan={colspan} style={{
+                         borderColor: borderColor,
+                         borderBottomColor: "transparent",
+                         borderWidth: "1px",
+                         borderTopRightRadius: "16px",
+                         borderTopLeftRadius: "16px",
+                         marginTop: "1px",
+                         paddingLeft: "16px",
+                    }}>
+                         <Stack
+                              direction={"row"}
+                              alignContent={"center"}
+                         >
+                              <span
+                                   style={{
+                                        //middle text
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        fontWeight: "bold",
+                                        fontStyle: "oblique",
+                                        opacity: 0.8,
                                    }}
                               >
-                                   <Option value="Mistake">Mistake</Option>
-                                   <Option value="No">No</Option>
-                              </Select>
+                                   {`Delivery No : ${delivery.id}`}
+                              </span>
+                              <Divider orientation="horizontal" sx={{ opacity: 0, flexGrow: 1 }} />
+                              <GasEditUi selectedGasList={delivery.gas_deliveries} customer={delivery.courier_boy.username} deliveryBoy={user.name} deleveryId={delivery.id} />
+                         </Stack>
+
+                    </td>
+               </tr>)
+               correction ? correctionsRowsIndex.push(deliveryRows.length) : null
+               delivery.gas_deliveries.forEach(gasDeliverie => {
+                    const delevered = gasDeliverie.is_empty == 0
+                    if (delevered) {
+                         totalPrice += gasDeliverie.quantity * gasDeliverie.price
+                    }
+                    const gasStyle = delevered ? sentGasCell : receivedGasCell;
+                    const tdsx = correction ? { ...tdStyle, ...correctionCell, } : { ...tdStyle, };
+                    const gas = gasList.get(gasDeliverie.gas_id)
+                    //console.log(gasDeliverie)
+                    deliveryRows.push(
+                         <tr key={"delivery_" + delivery.id + "_" + gasDeliverie.id}>
+                              <td style={tdsx}>{formatDateTime(delivery.created_at)}</td>
+                              {/* <td style={tdsx}>{formatDateTime(delivery.updated_at)}</td> */}
+                              <td style={tdsx}>{delivery.courier_boy.username}</td>
+                              <td style={tdsx}><CostomerEditUI name={user.name} id={delivery.id} /></td>
+                              <td style={tdsx}>{user.address}</td>
+                              <td style={{ ...tdsx, }}>
+                                   <Stack direction="row" spacing={1}>
+                                        <Box
+                                             sx={{
+                                                  flexGrow: 1,
+                                             }}
+                                        >{`${gas.company_name} - ${gas.kg}KG`}</Box>
+                                        <Box
+                                             sx={{
+                                                  color: "#FFF0D1",
+                                                  backgroundColor: delevered ? "#117554" : "#FF6600",
+                                                  py: .1,
+                                                  px: 1,
+                                                  m: 0,
+                                                  borderRadius: "xl",
+                                                  flexGrow: 1,
+                                                  maxWidth: "136px",
+                                                  fontWeight: "bold",
+                                             }}
+                                        >
+                                             {delevered ? "Delivered" : "Recived"}
+                                        </Box> </Stack>
+                              </td>
+                              <td style={{ ...tdsx }}>
+                                   <NumberTextEditUi value={gasDeliverie.quantity} id={gasDeliverie.id} columnName={"quantity"} />
+                              </td>
+                              <td style={{ ...tdsx, }}>
+                                   {
+                                        //`₹${gasDeliverie.price}`
+                                        delevered ? <NumberTextEditUi value={gasDeliverie.price} id={gasDeliverie.id} columnName={"price"} /> : "-"
+                                   }
+                              </td>
+                              <td style={tdsx}>
+                                   {/* {correction ? "Yes" : "No"} */}
+                                   <Select defaultValue={correction ? "Mistake" : "No"} endDecorator={correction ? <FcHighPriority /> : null}
+                                        onChange={
+                                             (event, value) => {
+                                                  //console.log(value)
+                                                  if (value === "Mistake") {
+                                                       dispatch(updateDelivery({ id: delivery.id, correction: 1 }))
+                                                  }
+                                                  if (value === "No") {
+                                                       dispatch(updateDelivery({ id: delivery.id, correction: 0 }))
+                                                  }
+                                             }
+                                        }
+                                        sx={{
+                                             color: correction ? "#C80036" : "black",
+                                        }}
+                                   >
+                                        <Option value="Mistake">Mistake</Option>
+                                        <Option value="No">No</Option>
+                                   </Select>
+                              </td>
+                         </tr>
+                    )
+                    correction ? correctionsRowsIndex.push(deliveryRows.length) : null
+               })
+               deliveryRows.push(
+                    <tr key={"delivery_" + delivery.id + "total"}>
+                         <td colSpan={colspan} style={{
+                              borderColor: borderColor,
+                              borderTopColor: "transparent",
+                              borderWidth: "1px",
+                              borderBottomRightRadius: "16px",
+                              borderBottomLeftRadius: "16px",
+                         }}>
+                              <Stack sx={{ fontWeight: "bold", fontStyle: "oblique", pr: 1 }} direction="row" justifyContent="flex-end" justifyItems="flex-end" alignItems="center" spacing={1}>
+                                   <Divider orientation="horizontal" sx={{ flexGrow: 1, opacity: 0 }} />
+                                   <Box>{`Total : ₹${totalPrice.toFixed(2)}`}</Box>
+                                   <Divider orientation="vertical" />
+                                   <Box >
+                                        {`Received : ₹${receivedAmount.toFixed(2)}`}
+                                   </Box>
+                                   <Divider orientation="vertical" />
+                                   <Box >
+                                        {`${delivery.payment_method == 0 ? "Cash" : "Online"}`}
+                                   </Box>
+                                   <Divider orientation="vertical" />
+                                   <Box >
+                                        {`Remaining : ₹${(totalPrice - receivedAmount).toFixed(2)}`}
+                                   </Box>
+                              </Stack>
                          </td>
                     </tr>
                )
-          })
-          deliveryRows.push(
-               <tr key={"delivery_" + delivery.id + "total"}>
-                    <td colSpan={colspan} style={{
-                         borderColor: borderColor,
-                         borderTopColor: "transparent",
-                         borderWidth: "1px",
-                         borderBottomRightRadius: "16px",
-                         borderBottomLeftRadius: "16px",
-                    }}>
-                         <Stack sx={{ fontWeight: "bold", fontStyle: "oblique", pr: 1 }} direction="row" justifyContent="flex-end" justifyItems="flex-end" alignItems="center" spacing={1}>
-                              <GasEditUi selectedGasList={delivery.gas_deliveries} customer={delivery.courier_boy.username} deliveryBoy={user.name} deleveryId={delivery.id} />
-                              <Divider orientation="horizontal" sx={{ flexGrow: 1, opacity: 0 }} />
-                              <Box>{`Total : ₹${totalPrice.toFixed(2)}`}</Box>
-                              <Divider orientation="vertical" />
-                              <Box >
-                                   {`Received : ₹${receivedAmount.toFixed(2)}`}
-                              </Box>
-                              <Divider orientation="vertical" />
-                              <Box >
-                                   {`${delivery.payment_method == 0 ? "Cash" : "Online"}`}
-                              </Box>
-                              <Divider orientation="vertical" />
-                              <Box >
-                                   {`Remaining : ₹${(totalPrice - receivedAmount).toFixed(2)}`}
-                              </Box>
-                         </Stack>
-                    </td>
-               </tr>
-          )
-     });
+               correction ? correctionsRowsIndex.push(deliveryRows.length) : null
+          });
+     } catch (e) {
+          console.log(deliveries)
+          deliveryRows = <tr>
+               <td colSpan={tableHead.length} style={{ textAlign: "center", fontWeight: "bold" }}>No Data</td>
+          </tr>
+
+     }
+     const tableHeadRow = tableHead.map((head, index) => {
+          return <th style={{ fontWeight: "bold", backgroundColor: headColor, }} key={index}>
+               {head}
+          </th>
+     })
      return <Box sx={{ height: "100%", width: "100%", backgroundColor: "white", borderRadius: "lg", overflow: "auto", px: 1 }}>
+          {/*Filtering the deliveries */}
+          <form>
+               <Stack direction="row" spacing={1} alignItems="center" sx={{ m: .6 }}>
+                    <Divider sx={{ opacity: 0, flexGrow: 1 }} />
+                    <span
+                         style={{ fontWeight: "bold", fontStyle: "oblique" }}
+                    >From :</span>
+                    <FormControl>
+                         <Input
+                              type="date"
+                              defaultValue={dateStart}
+                              onChange={(event) => {
+                                   // Handle date start change
+                                   setParamsUpdate(true);
+                                   setDateStart(event.target.value)
+                              }}
+                         />
+                    </FormControl>
+                    <span
+                         style={{ fontWeight: "bold", fontStyle: "oblique" }}
+                    >To :</span>
+                    <FormControl>
+                         <Input
+                              type="date"
+                              defaultValue={dateEnd}
+                              onChange={(event) => {
+                                   // Handle date end change
+                                   setParamsUpdate(true);
+                                   setDateEnd(event.target.value)
+                              }}
+                         />
+                    </FormControl>
+                    <span
+                         style={{ fontWeight: "bold", fontStyle: "oblique" }}
+                    >Customer :</span>
+                    <FormControl>
+                         <Select
+                              defaultValue={customerId ? customerId : "null"}
+                              onChange={(event, value) => {
+                                   console.log(value)
+                                   // Handle customer change
+                                   let temp = (value === "null") ? null : value;
+                                   //clear url params
+                                   let url = new URL(window.location.href);
+                                   url.searchParams.delete('customer_id');
+                                   window.history.pushState({}, '', url);
+                                   setCustomerId(temp)
+                                   fetchDeliveriesData(temp);
+                                   //dispatch(deliveriesIniState());
+                              }}
+                         >
+                              <Option value={"null"}>All Customers</Option>
+                              {/* {users.map((user) => (
+                                   <Option key={user.id} value={user.id}>
+                                        {user.name}
+                                   </Option>
+                              ))} */}
+                              {
+                                   customers.map((user) => {
+                                        {
+                                             const data = usersMap.get(user.user_id)
+                                             //console.log(user, data)
+                                             return <Option key={user.id} value={user.id}>
+                                                  {data.name}
+                                             </Option>
+                                        }
+                                        // <Option key={usersMap.get(user.user_id)} value={usersMap.get(user.user_id)}>
+                                        //      {usersMap.get(user.user_id).name}
+                                        // </Option>
+                                   })
+                              }
+                         </Select>
+                    </FormControl>
+                    <span
+                         style={{ fontWeight: "bold", fontStyle: "oblique" }}
+                    >Delivery Boy :</span>
+                    <FormControl>
+                         <Select
+                              defaultValue={deliverBoyId ? deliverBoyId : "null"}
+                              onChange={(event, value) => {
+                                   // Handle delivery boy change
+                                   let temp = (value === "null") ? null : value;
+                                   setDeliverBoyId(temp)
+                              }}
+                         >
+                              <Option value={"null"}>All Delivery Boys</Option>
+                              {deliveryBoys.map((user) => (
+                                   <Option key={user.id} value={user.id}>
+                                        {user.username}
+                                   </Option>
+                              ))}
+                         </Select>
+                    </FormControl>
+               </Stack>
+          </form>
+          <Divider sx={{ my: 1 }} />
           <Stack
                sx={{
                     height: "100%",
@@ -556,24 +799,27 @@ export default function deliveryHistory() {
                          <Tab>All Deliveries</Tab>
                          <Tab>
                               Correction Deliveries
-                              <Chip color="danger" variant="solid" size="sm">
-                                   {0}
-                              </Chip>
                          </Tab>
                     </TabList>
                     <TabPanel sx={{ p: 0, m: 0, backgroundColor: "white" }} value={0}>
                          <TableUI head={
                               <tr>
-                                   {tableHead.map((head, index) => {
-                                        return <th style={{ fontWeight: "bold", backgroundColor: headColor, }} key={index}>
-                                             {head}
-                                        </th>
-                                   })}
+                                   {tableHeadRow}
                               </tr>
                          } body={deliveryRows} />
                     </TabPanel>
                     <TabPanel sx={{ p: 0, m: 0 }} value={1}>
-                         <TableUI head={[]} body={[]} />
+                         <TableUI head={
+                              <tr>
+                                   {tableHeadRow}
+                              </tr>
+                         } body={
+                              correctionsRowsIndex.map(
+                                   (index) => {
+                                        return deliveryRows[index]
+                                   }
+                              )
+                         } />
                     </TabPanel>
                </Tabs>
           </Stack>

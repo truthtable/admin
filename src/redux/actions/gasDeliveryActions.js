@@ -7,6 +7,7 @@ export const ADD_GAS_DELIVERY = "ADD_GAS_DELIVERY";
 export const UPDATE_GAS_DELIVERY = "UPDATE_GAS_DELIVERY";
 export const DELETE_GAS_DELIVERY = "DELETE_GAS_DELIVERY";
 export const GAS_DELIVERY_ERROR = "GAS_DELIVERY_ERROR";
+export const LOADING = "LOADING";
 
 // Initial state
 export const gasDeliveriesIniState = () => async (dispatch) => {
@@ -18,7 +19,10 @@ export const gasDeliveriesIniState = () => async (dispatch) => {
 // Fetch all gas deliveries
 export const getGasDeliveries = () => async (dispatch) => {
      try {
-          await axios.get("https://adminsr.life/public/api/gasDeliverys");
+          const res = await axios.get(
+               "https://adminsr.life/public/api/gasDeliverys",
+          );
+
           dispatch({
                type: GET_GAS_DELIVERIES,
           });
@@ -35,6 +39,9 @@ export const addGasDelivery = (deliveries) => async (dispatch) => {
      if (deliveries.length === 0) {
           return;
      }
+     dispatch({
+          type: LOADING,
+     });
      try {
           const res = await axios.post(
                "https://adminsr.life/public/api/gasDeliverys",
@@ -54,12 +61,21 @@ export const addGasDelivery = (deliveries) => async (dispatch) => {
 };
 
 // Update an existing gas delivery
-export const updateGasDelivery = (updatedData) => async (dispatch) => {
+export const updateGasDelivery = (deliveries) => async (dispatch) => {
+     if (deliveries.length === 0) {
+          return;
+     }
+     dispatch({
+          type: LOADING,
+     });
      try {
-          await axios.put(
-               `https://adminsr.life/public/api/gasDeliverys/`,
-               updatedData,
+          const res = await axios.put(
+               `https://adminsr.life/public/api/gasDeliverys/0`,
+               {
+                    deliveries,
+               },
           );
+          console.log(res);
           dispatch({
                type: UPDATE_GAS_DELIVERY,
           });
@@ -77,6 +93,9 @@ export const deleteGasDelivery = (ids) => async (dispatch) => {
      if (ids.length === 0) {
           return;
      }
+     dispatch({
+          type: LOADING,
+     });
      try {
           const res = await axios.delete(
                `https://adminsr.life/public/api/gasDeliverys/0`,
