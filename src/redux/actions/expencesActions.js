@@ -35,7 +35,7 @@ export const expencesIniState = () => {
 export const fetchExpences = (params) => {
      return async (dispatch) => {
           dispatch(expenceRequest());
-          console.log(params);
+          console.log("params : ", params);
           try {
                const response = await axios.get(API, {
                     params: params,
@@ -44,7 +44,7 @@ export const fetchExpences = (params) => {
                let logs = response.headers["x-log-data"];
                //conver url encoded string to json
                logs = decodeURIComponent(logs);
-               console.log(logs);
+               console.log("xlog : ", logs);
                dispatch(expenceSuccess(response.data));
           } catch (error) {
                dispatch(expenceFailure(error.message));

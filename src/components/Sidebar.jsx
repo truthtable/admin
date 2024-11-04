@@ -49,8 +49,8 @@ function Sidebar({ openSidebarToggle, OpenSidebar }) {
                               { label: "Deliveries", path: "/admin/deliveryHistory", icon: <FcViewDetails className="icon" /> },
                               { label: "Customers", path: "/admin/ViewCustomer", icon: <FcContacts className="icon" /> },
                               { label: "Delivery Boys", path: "/admin/readDeliveryBoy", icon: <FcManager className="icon" /> },
-                              { label: "Gas Cylinders", path: "/admin/read", icon: <FcFullBattery className="icon" /> },
-                              { label: "Reports", path: "/admin/", icon: <FcDocument className="icon" /> },
+                              // { label: "Gas Cylinders", path: "/admin/read", icon: <FcFullBattery className="icon" /> },
+                              { label: "Bills & Reports", path: "/admin/report", icon: <FcDocument className="icon" /> },
                               { label: "Setting", path: "/admin/", icon: <FcRating className="icon" /> },
                          ].map((data, index) => (
                               <Link to={data.path} key={index}>

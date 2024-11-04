@@ -34,15 +34,18 @@ export default function deliveryHistory() {
      const url = new URL(hashPart, window.location.origin);
      const searchParams = new URLSearchParams(url.search);
      const urlCustomerId = searchParams.get('customer_id');
-     console.log(urlCustomerId);
+     const urlCourierBoyId = searchParams.get('courier_boy_id');
+     console.log(urlCustomerId, urlCourierBoyId);
      //
      const [customerId, setCustomerId] = useState(urlCustomerId ? Number(urlCustomerId) : null);
-     const [deliverBoyId, setDeliverBoyId] = useState(null);
+     const [deliverBoyId, setDeliverBoyId] = useState(urlCourierBoyId ? Number(urlCourierBoyId) : null);
 
      //console.log({ dateStart, dateEnd, customerId, deliverBoyId });
 
-     const fetchDeliveriesData = (cid = customerId) => {
-          dispatch(fetchDeliveries({ dateStart: dateStart, dateEnd: dateEnd, customer_id: cid, courier_boy_id: deliverBoyId }));
+     //console.log(deliverBoyId)
+
+     const fetchDeliveriesData = (cid = customerId, did = deliverBoyId) => {
+          dispatch(fetchDeliveries({ dateStart: dateStart, dateEnd: dateEnd, customer_id: cid, courier_boy_id: did }));
      }
 
      useEffect(() => {
@@ -80,7 +83,7 @@ export default function deliveryHistory() {
                }
           }
           networkCall();
-     }, [dispatch, deliveries, allGasData, users, loading, userDataLoading, error, userDataError, deliverBoyId]);
+     }, [dispatch, deliveries, allGasData, users, loading, userDataLoading, error, userDataError, deliverBoyId, dateStart, dateEnd]);
      useEffect(() => {
           if (updateSuccess == true) {
                dispatch(deliveriesIniState());
@@ -704,8 +707,10 @@ export default function deliveryHistory() {
                               defaultValue={dateStart}
                               onChange={(event) => {
                                    // Handle date start change
-                                   setParamsUpdate(true);
-                                   setDateStart(event.target.value)
+                                   // setParamsUpdate(true);
+                                   // dateStart = event.target.value;
+                                   setDateStart(event.target.value);
+                                   fetchDeliveriesData(customerId, deliverBoyId);
                               }}
                          />
                     </FormControl>
@@ -718,8 +723,10 @@ export default function deliveryHistory() {
                               defaultValue={dateEnd}
                               onChange={(event) => {
                                    // Handle date end change
-                                   setParamsUpdate(true);
-                                   setDateEnd(event.target.value)
+                                   // setParamsUpdate(true);
+                                   //dateEnd = event.target.value
+                                   setDateEnd(event.target.value);
+                                   fetchDeliveriesData(customerId, deliverBoyId);
                               }}
                          />
                     </FormControl>
@@ -738,7 +745,7 @@ export default function deliveryHistory() {
                                    url.searchParams.delete('customer_id');
                                    window.history.pushState({}, '', url);
                                    setCustomerId(temp)
-                                   fetchDeliveriesData(temp);
+                                   fetchDeliveriesData(temp, deliverBoyId);
                                    //dispatch(deliveriesIniState());
                               }}
                          >
@@ -774,6 +781,7 @@ export default function deliveryHistory() {
                                    // Handle delivery boy change
                                    let temp = (value === "null") ? null : value;
                                    setDeliverBoyId(temp)
+                                   fetchDeliveriesData(customerId, temp);
                               }}
                          >
                               <Option value={"null"}>All Delivery Boys</Option>

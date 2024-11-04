@@ -1,7 +1,9 @@
-import { Box, Button, Input, LinearProgress, Stack, Table } from "@mui/joy";
+import { Box, Button, Container, Divider, Input, LinearProgress, Modal, ModalClose, Sheet, Stack, Table, Typography } from "@mui/joy";
 import { BsSearch } from "react-icons/bs";
 import DataTable from "../table/DataTable.jsx";
 import TableHead from "../table/TableHead.jsx";
+
+import axios from "axios";
 
 import { useDispatch, useSelector } from "react-redux";
 import { fetchGetData } from "../../state/GetData.jsx";
@@ -23,13 +25,27 @@ export default function DeliveryBoyDetails() {
      if (data.data !== null) {
           if (data.data.data.length > 0 && data.url == GET_COURIER_BOY_DATA) {
                data.data.data.forEach((item) => {
-                    rows.push(makeRow(item));
+                    let expenses = 0;
+                    try {
+                         let temp = data.data.expenses.find((element) => {
+                              if (element.user_id === item.id) {
+                                   expenses = element.expense;
+                                   return true;
+                              }
+                              return false;
+                         })
+                         expenses = temp.total_expense
+                    } catch (e) {
+                         expenses = 0;
+                    }
+                    console.log(expenses);
+                    rows.push(makeRow(item, expenses));
                     deliveryBoyData.push(item);
                });
           }
      }
 
-     //console.log(update);
+     console.log(data);
 
      useEffect(() => {
           if (data.data == null || data.url != GET_COURIER_BOY_DATA) {
@@ -47,6 +63,109 @@ export default function DeliveryBoyDetails() {
           // console.log(update);
      },); // Add an empty dependency array here
 
+     const NewBoy = () => {
+          const [open, setOpen] = useState(false);
+          if (!open) {
+               return (
+                    <Button sx={
+                         {
+                              mb: 1
+                         }
+                    }
+                         onClick={() => setOpen(true)}
+                    >New Delivery Boy</Button>
+               )
+          }
+          return (
+               <Modal
+                    open={open}
+                    onClose={() => setOpen(false)}
+                    title="New Connection"
+                    sx={{
+                         display: "flex",
+                         flexDirection: "column",
+                         justifyContent: "center",
+                         alignItems: "center",
+                         gap: "10px",
+                    }
+                    }
+               >
+                    <Container maxWidth={"xs"}>
+                         <Sheet
+                              sx={{
+                                   padding: "20px",
+                                   borderRadius: "10px",
+                                   backgroundColor: "#fff",
+                                   boxShadow: "0px 0px 10px 0px #0000001a",
+                              }}
+                         >
+                              <ModalClose variant="outlined" />
+                              <Typography >New Delivery Boy</Typography>
+                              <Divider sx={{
+                                   p: 1,
+                                   opacity: 0,
+                              }} />
+                              <form
+                                   //hande submit
+                                   onSubmit={
+                                        (e) => {
+                                             e.preventDefault();
+                                             //get the form data in json format
+                                             const formData = new FormData(e.target);
+                                             const t = {};
+                                             formData.forEach((value, key) => {
+                                                  t[key] = value;
+                                             })
+                                             console.log(t)
+
+                                             let data = JSON.stringify({
+                                                  "name": t.name,
+                                                  "username": t.username,
+                                                  "password": t.password,
+                                             });
+
+                                             console.log(data);
+
+                                             // return;
+
+                                             let config = {
+                                                  method: 'post',
+                                                  maxBodyLength: Infinity,
+                                                  url: 'https://adminsr.life/public/api/createDeliveryBoy',
+                                                  headers: {
+                                                       'Content-Type': 'application/json'
+                                                  },
+                                                  data: data
+                                             };
+                                             setOpen(false);
+                                             axios.request(config)
+                                                  .then((response) => {
+                                                       console.log(response.data);
+                                                       dispatch(fetchGetData(GET_COURIER_BOY_DATA))
+                                                  })
+                                                  .catch((error) => {
+                                                       console.log(error);
+                                                  });
+
+                                        }
+                                   }
+                              >
+                                   <Stack spacing={2}
+                                        direction={"column"}
+                                   >
+                                        <Input placeholder="Full Name" name="name" required />
+                                        <Input placeholder="User Name" name="username" required />
+                                        <Input placeholder="Password" name="password" required />
+                                        <Button type="submit"
+                                        >Add</Button>
+                                   </Stack>
+                              </form>
+                         </Sheet>
+                    </Container>
+               </Modal>
+          )
+     }
+
      return (
           <div
                style={{
@@ -59,9 +178,11 @@ export default function DeliveryBoyDetails() {
                }}
           >
                <Stack direction="row" mb={1} spacing={1} justifyContent="flex-end">
-                    <Input placeholder="Name" />
-                    <Button startDecorator={<BsSearch />}>Search</Button>
+                    {/* <Input placeholder="Name" />
+                    <Button startDecorator={<BsSearch />}>Search</Button> */}
+                    <NewBoy />
                </Stack>
+
                {/* <DataTable
                     thead={[
                          // <TableHead>Name</TableHead>,
@@ -119,7 +240,7 @@ export default function DeliveryBoyDetails() {
 
                                         <td>
                                              <Link
-                                                  to={"/admin/expence?user_id=" + deliveryBoyData[index].id}
+                                                  to={"/admin/expence?user_id=" + deliveryBoyData[index].id + "&user_name=" + deliveryBoyData[index].username}
                                              ><Button
                                                   variant="soft"
                                                   color="success"
@@ -156,7 +277,7 @@ export default function DeliveryBoyDetails() {
      );
 }
 
-function makeRow(item) {
+function makeRow(item, expense) {
      //console.log(item);
      return [
 
@@ -195,17 +316,12 @@ function makeRow(item) {
                type={TEXT}
                name='password'
           />,
-          <UpdateCustomerCell
-               updateUser={false}
-               key={item.id}
-               userId={item.userId}
-               custId={item.id}
-               text={"134"}
-               value={123}
-               table={UPDATE_COURIER_BOY}
-               type={NUMBER}
-               name='expense'
-          />,
+          <span
+               style={{
+                    fontSize: '1.2em',
+                    fontWeight: 'bold',
+               }}
+          >₹{expense}</span>,
           //item.password,
           // item.expense,
           // item.truck,

@@ -220,7 +220,7 @@ export default function Purchase() {
                orderTotalRemainingAmt = orderTotalAmt - orderTtotalPayAmt
 
                orderRows.push(<tr key={`order-row-total-${order.id}-${index}`}>
-                    <td style={{ borderWidth: 0, padding: 0, margin: 0, height: 24, }} colSpan={12}>
+                    <td style={{ borderWidth: 0, padding: 0, margin: 0, }} colSpan={12}>
                          <React.Fragment>
                               <TotalRow
                                    order={order}
@@ -262,6 +262,7 @@ export default function Purchase() {
                                                             tableName=""
                                                        /></React.Fragment>
                                                   },
+                                                  { label: "Total Scheme", value: orderTotalScheme.toFixed(2) },
                                                   {
                                                        label: "TCS", value: <React.Fragment> <Cell
                                                             column=""
@@ -271,6 +272,10 @@ export default function Purchase() {
                                                        /></React.Fragment>
                                                   },
                                                   {
+                                                       label: "Total TCS", value: orderTotalTCS.toFixed(2)
+
+                                                  },
+                                                  {
                                                        label: "FOR", value: <React.Fragment><Cell
                                                             column=""
                                                             id={order.id}
@@ -278,6 +283,8 @@ export default function Purchase() {
                                                             tableName=""
                                                        /></React.Fragment>
                                                   },
+                                                  { label: "Total FOR", value: orderTotalFOR.toFixed(2) },
+                                                  { label: "------------", value: "------------" },
                                                   { label: "Total Amt", value: orderTotalAmt.toFixed(2) },
                                                   {
                                                        label: "Pay Amt", value: <React.Fragment> <Cell
@@ -865,7 +872,7 @@ const TotalRow = ({ children, data, order }) => {
                <Box
                     sx={{
                          transition: `all ${duration}s`,
-                         maxHeight: (show) ? "500px" : "0px",
+                         maxHeight: (show) ? "612px" : "0px",
                          opacity: (show) ? 1 : 0,
                          transform: (show) ? "scaleY(1)" : "scaleY(0)",
 

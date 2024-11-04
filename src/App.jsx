@@ -38,6 +38,7 @@ import { getUserDataFromCookie } from "./services/Api";
 import DeliveryBoyDetails from "./components/view/DeliveryBoyDetails.jsx";
 import Expences from "./components/view/Expences.jsx";
 import Purchase from "./components/view/Purchase.jsx";
+import { Report } from "./components/view/Report.jsx";
 import DeliveryHistory from "./components/view/DeliveryHistory.jsx";
 import deliveryHistory from "./components/view/DeliveryHistory.jsx";
 import { FcHighPriority } from "react-icons/fc";
@@ -364,6 +365,10 @@ function App() {
                                              <Route
                                                   path="/admin/purchase"
                                                   Component={Purchase}
+                                             />
+                                             <Route
+                                                  path="/admin/report"
+                                                  Component={Report}
                                              />
                                         </Routes>
                                    </Box>

@@ -162,9 +162,9 @@ function Home() {
                          </div>
                     </Link>
 
-                    <Link to="/admin/readReport" className="link shadow-lg">
+                    <Link to="/admin/report" className="link shadow-lg">
                          <div className="card-inner">
-                              <h3>Report</h3>
+                              <h3>Bills & Report</h3>
                               <BsMenuButtonWideFill className="card_icon" />
                          </div>
                          <div>
@@ -183,7 +183,7 @@ function Home() {
                          </div>
                     </Link>
 
-                    <Link to="/admin/read" className="link shadow-lg">
+                    {/* <Link to="/admin/read" className="link shadow-lg">
                          <div className="card-inner">
                               <h3>Gas Cylinders </h3>
                               <BsFillArchiveFill className="card_icon" />
@@ -202,7 +202,7 @@ function Home() {
                                    {counts.gas_count}
                               </span>
                          </div>
-                    </Link>
+                    </Link> */}
                </div>
           </Box>
      );

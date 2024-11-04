@@ -72,13 +72,15 @@ export const fetchDeliveries = (params) => {
 
 //update delivery
 export const updateDelivery = (delivery) => {
+     console.log("req", delivery);
      return async (dispatch) => {
           dispatch(updateDeliveryRequest());
           try {
                let response;
                if (
                     delivery.columnName != null &&
-                    delivery.columnName == "quantity"
+                    (delivery.columnName == "quantity" ||
+                         delivery.columnName == "price")
                ) {
                     response = await axios.put(
                          `${GAS_API}/${delivery.id}`,
@@ -90,9 +92,14 @@ export const updateDelivery = (delivery) => {
                          delivery,
                     );
                }
+               console.log("res", response.data);
                const deliveries = response.data;
-               //console.log(deliveries);
-               dispatch(updateDeliverySuccess(deliveries));
+               if (deliveries.success == false) {
+                    //error
+                    dispatch(fetchDeliveriesFailure(deliveries.message));
+               } else {
+                    dispatch(updateDeliverySuccess(deliveries));
+               }
           } catch (error) {
                dispatch(fetchDeliveriesFailure(error.message));
           }

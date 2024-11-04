@@ -23,7 +23,7 @@ const expencesReducer = (state = initialState, action) => {
                return {
                     ...state,
                     expenceLoading: true,
-                    expenceError: false,
+                    expenceErroxr: false,
                };
           case EXPENSES_SUCCESS:
                return {
