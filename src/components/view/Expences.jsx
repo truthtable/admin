@@ -100,6 +100,9 @@ export default function Expences() {
                                    backgroundColor: '#FFF4B7',
                               }
                          }}
+                         onClick={() => {
+                              window.history.back();
+                         }}
                     >
                          <FcDown />
                     </Box>

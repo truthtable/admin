@@ -3,7 +3,7 @@ import axios from "axios";
 const API = "https://adminsr.life/public/api/expenses";
 
 //Action Types
-export const INIT_STATE = "INIT_STATE";
+export const INIT_STATE = "EXPENSES_INIT_STATE";
 export const EXPENSES_REQUEST = "EXPENSES_REQUEST";
 export const EXPENSES_SUCCESS = "EXPENSES_SUCCESS";
 export const EXPENSES_FAILURE = "EXPENSES_FAILURE";

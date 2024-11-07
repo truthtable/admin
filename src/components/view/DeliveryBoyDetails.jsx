@@ -22,6 +22,30 @@ export default function DeliveryBoyDetails() {
      const rows = [];
      const deliveryBoyData = []
 
+     //
+     const [startDate, setStartDate] = React.useState(() => {
+          const firstDateOfCurrentMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+
+          const year = firstDateOfCurrentMonth.getFullYear();
+          const month = String(firstDateOfCurrentMonth.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+          const day = String(firstDateOfCurrentMonth.getDate()).padStart(2, '0');
+
+          const formattedDate = `${year}-${month}-${day}`;
+          return formattedDate;
+     });
+     //console.log(startDate)
+     const [endDate, setEndDate] = React.useState(() => {
+          const lastDateOfCurrentMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+
+          const year = lastDateOfCurrentMonth.getFullYear();
+          const month = String(lastDateOfCurrentMonth.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+          const day = String(lastDateOfCurrentMonth.getDate()).padStart(2, '0');
+
+          const formattedDate = `${year}-${month}-${day}`;
+          return formattedDate;
+     });
+     //
+
      if (data.data !== null) {
           if (data.data.data.length > 0 && data.url == GET_COURIER_BOY_DATA) {
                data.data.data.forEach((item) => {
@@ -45,7 +69,7 @@ export default function DeliveryBoyDetails() {
           }
      }
 
-     console.log(data);
+     //console.log(data);
 
      useEffect(() => {
           if (data.data == null || data.url != GET_COURIER_BOY_DATA) {
@@ -180,6 +204,30 @@ export default function DeliveryBoyDetails() {
                <Stack direction="row" mb={1} spacing={1} justifyContent="flex-end">
                     {/* <Input placeholder="Name" />
                     <Button startDecorator={<BsSearch />}>Search</Button> */}
+                    {/* <Stack gap={1} direction={"row"} alignContent={"center"} alignItems={"center"} >
+                         <span style={{ fontWeight: "bold", color: "black" }}>Date&nbsp;Start&nbsp;:&nbsp;</span>
+                         <Input type="date" sx={{ width: "100%" }}
+                              onChange={(event) => {
+                                   setStartDate(event.target.value)
+                              }}
+                              defaultValue={startDate}
+                         />
+                    </Stack>
+                    <Stack gap={1} direction={"row"} alignContent={"center"} alignItems={"center"} mr={2}>
+                         <span style={{ fontWeight: "bold", color: "black" }}>End&nbsp;Start&nbsp;:&nbsp;</span>
+                         <Input type="date" sx={{ width: "100%" }}
+                              onChange={(event) => {
+                                   setEndDate(event.target.value)
+                              }}
+                              defaultValue={endDate}
+                         />
+                    </Stack>
+                    <Stack gap={1} direction={"row"} alignContent={"center"} alignItems={"center"} mr={2}>
+                         <Button
+                         //onClick={get}
+                         >OK</Button>
+                    </Stack> */}
+                    <Divider sx={{ flexGrow: 1, opacity: 0 }} />
                     <NewBoy />
                </Stack>
 
@@ -227,7 +275,7 @@ export default function DeliveryBoyDetails() {
                          <tr>
                               <th>Username</th>
                               <th>Password</th>
-                              <th colSpan={3}>Expense</th>
+                              <th colSpan={3}>Expense : <i>{getCurrentMonthString()}</i></th>
                          </tr>
                     </thead>
                     <tbody>
@@ -334,4 +382,49 @@ function combineData(data, user_data) {
           result.push({ ...item, ...user });
      });
      return result;
+}
+
+function getCurrentMonthString() {
+     //return current month string like january, february etc
+     let month = new Date().getMonth();
+     let monthString = "";
+     switch (month) {
+          case 0:
+               monthString = "January";
+               break;
+          case 1:
+               monthString = "February";
+               break;
+          case 2:
+               monthString = "March";
+               break;
+          case 3:
+               monthString = "April";
+               break;
+          case 4:
+               monthString = "May";
+               break;
+          case 5:
+               monthString = "June";
+               break;
+          case 6:
+               monthString = "July";
+               break;
+          case 7:
+               monthString = "August";
+               break;
+          case 8:
+               monthString = "September";
+               break;
+          case 9:
+               monthString = "October";
+               break;
+          case 10:
+               monthString = "November";
+               break;
+          case 11:
+               monthString = "December";
+               break;
+     }
+     return monthString;
 }

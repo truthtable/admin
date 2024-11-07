@@ -22,6 +22,8 @@ import gasDeliveryReducer from "../redux/reducers/gasDeliveryReducer.js";
 import { expencesIniState } from "../redux/actions/expencesActions.js";
 import expencesReducer from "../redux/reducers/expencesReducer.js";
 import newGasReducer from "../redux/reducers/gasReducer.js";
+import customersReducer from "../redux/reducers/customerReducers.js";
+import reportReducer from "../redux/reducers/reportReducers.js";
 
 export const store = configureStore({
      reducer: {
@@ -41,6 +43,8 @@ export const store = configureStore({
           search_customer: customerSearhReducer,
 
           customers: customerReducer,
+          //new
+          customer: customersReducer,
 
           updateDeliveryData: UpdateDeliveryReducer,
 
@@ -59,6 +63,8 @@ export const store = configureStore({
           purchaseOrders: purchaseOrderReducer,
 
           purchaseOrderItems: purchaseOrderItemReducer,
+
+          reports: reportReducer,
 
           plants: plantsReducer,
 
