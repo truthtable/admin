@@ -1,8 +1,9 @@
-import React, { useEffect } from "react";
-import { Button, Divider, Input, LinearProgress, Option, Select, Stack } from "@mui/joy";
+import React, { useEffect, useRef } from "react";
+import { Box, Button, Divider, Input, LinearProgress, Option, Select, Stack } from "@mui/joy";
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCustomers } from "../../redux/actions/customerActions";
 import { fetchReport } from "../../redux/actions/reportActions";
+import { useReactToPrint } from "react-to-print";
 
 const CUSTOMER = "customer";
 const DELIVERY = "delivery";
@@ -13,6 +14,11 @@ export const Report = () => {
      const hashPart = currentUrl.substring(hashIndex + 1);
      const url = new URL(hashPart, window.location.origin);
      const searchParams = new URLSearchParams(url.search);
+
+
+     const contentRef = useRef();
+     const reactToPrintFn = useReactToPrint({ contentRef })
+
 
      const [selected, setSelected] = React.useState(CUSTOMER);
 
@@ -91,8 +97,11 @@ export const Report = () => {
                }
           }, []);
 
+          console.log(report)
+          let grandTotal = 0;
+          let grandTotalPaid = 0;
           return (
-               <Stack sx={{ width: "100%", height: "100%", padding: 1 }} direction={"row"} gap={1}>
+               <Stack sx={{ padding: 1, flexGrow: 1 }} direction={"row"} gap={1}>
                     <Stack gap={1}>
                          <Stack>
                               <Stack gap={1} direction={"row"} alignContent={"center"} alignItems={"center"}>
@@ -151,8 +160,174 @@ export const Report = () => {
                          </Button>
                     </Stack>
                     <Divider orientation={"vertical"} sx={{ m: 1, backgroundColor: "#979797" }} />
-                    <Stack>dsfds</Stack>
-               </Stack>
+                    <Stack
+                         sx={{
+                              overflow: "auto",
+                         }}
+                    >
+                         <Stack
+                              sx={{
+                                   padding: 4, m: 2, overflow: "auto", flexGrow: 1, height: "100%", alignItems: "stretch",
+                                   border: "1px solid #979797",
+                              }}
+                              direction={"column"}
+                              ref={contentRef}
+                         >
+                              <span style={{ fontWeight: "bold", color: "black", fontSize: "xx-large", textAlign: "center" }}>
+                                   SHREE RAM DISTRIBUTORS
+                              </span>
+                              <span style={{ color: "black", textAlign: "center" }}><i>
+                                   Address:SHREE RAM DISTRIBUTOR SHOP NO. 3 OPP ESSAR PUMP , NEAR DADRA GARDEN VAPI SILVASSA ROAD DADRA , DADRA NAGAR HAVELI (U.T.), <br /> Phone: +917984240723, Email : jitenrpande@gmail.com
+                              </i> </span>
+                              <Divider sx={{ backgroundColor: "#979797", m: 1 }} />
+                              {
+                                   (report) ? (
+                                        <>
+                                             <span style={{ fontWeight: "bold", color: "black" }}>
+                                                  {
+                                                       `Customer : ${report.customer.user.name}`
+                                                  }
+                                             </span>
+                                             <span style={{ fontWeight: "bold", color: "black" }}>
+                                                  {
+                                                       `Address : ${report.customer.user.address}`
+                                                  }
+                                             </span>
+                                             <span style={{ fontWeight: "bold", color: "black" }}>
+                                                  {
+                                                       `Phone No. : ${report.customer.user.phone_no}`
+                                                  }
+                                             </span>
+                                             <span style={{ fontWeight: "bold", color: "black" }}>
+                                                  {
+                                                       `Bill Date Range : ${startDate} to ${endDate}`
+                                                  }
+                                             </span>
+                                             <Divider sx={{ backgroundColor: "#979797", m: 1 }} />
+                                             <span style={{ fontWeight: "bold", color: "black" }}>
+                                                  {
+                                                       "Delivered Gas List"
+                                                  }
+                                             </span>
+                                             <Stack sx={{ color: "black", backgroundColor: "#e3e3e3", p: 1, borderRadius: "sm" }}>
+                                                  {
+                                                       report.deliveries.map((delivery, index1) => {
+                                                            let subTotal = 0;
+                                                            grandTotalPaid += delivery.received_amount;
+                                                            return <Stack key={index1}>
+                                                                 <span
+                                                                      style={{
+                                                                           textDecoration: "underline",
+                                                                           fontWeight: "bold",
+                                                                      }}
+                                                                 >{`${formatDateTime(delivery.created_at)} : ${report.courierBoy.find((boy) => boy.id === delivery.courier_boy_id).user.name
+                                                                      }`}</span>{delivery.id}
+                                                                 {
+                                                                      delivery.gas_deliveries.map((gasDelivery, index) => {
+                                                                           if (gasDelivery.is_empty == 1) {
+                                                                                return
+                                                                           }
+                                                                           let tempTotal = gasDelivery.price * gasDelivery.quantity;
+                                                                           subTotal += tempTotal;
+                                                                           grandTotal += tempTotal;
+                                                                           return (<span key={index} > {
+                                                                                `
+                                                                      ${gasDelivery.gas_cylinder.company_name} :  ${gasDelivery.gas_cylinder.kg}KG
+                                                                      : ${gasDelivery.quantity} QTY
+                                                                      : Rate ${gasDelivery.price}₹
+                                                                      : Total ${tempTotal}₹
+                                                                      `
+                                                                           }</span>)
+                                                                      })}
+                                                                 {
+                                                                      delivery.gas_deliveries.map((gasDelivery, index) => {
+                                                                           if (gasDelivery.is_empty == 0) {
+                                                                                return
+                                                                           }
+                                                                           return (<span key={index} > {
+                                                                                `
+                                                                      ${gasDelivery.gas_cylinder.company_name} :  ${gasDelivery.gas_cylinder.kg}KG
+                                                                      : ${gasDelivery.quantity} QTY
+                                                                      `
+                                                                           }</span>)
+                                                                      })}
+                                                                 <span style={{ fontWeight: "bold", color: "black" }}>
+                                                                      {
+                                                                           `Sub Total : ${subTotal}₹`
+                                                                      }
+                                                                 </span>
+                                                                 <span style={{ fontWeight: "bold", color: "black" }}>
+                                                                      {
+                                                                           `Paid Amount : ${delivery.received_amount}₹`
+                                                                      }
+                                                                 </span>
+                                                                 <span style={{ fontWeight: "bold", color: "black" }}>
+                                                                      {
+                                                                           `Remaining Amount : ${subTotal - delivery.received_amount}₹`
+                                                                      }
+                                                                 </span>
+                                                                 <Divider sx={{ backgroundColor: "#979797", m: 1, opacity: 0.5 }} />
+                                                            </Stack>
+                                                       })
+                                                  }
+                                             </Stack>
+                                             <span style={{ fontWeight: "bold", color: "black", marginTop: 8 }}>
+                                                  {
+                                                       `Grand Total : ${grandTotal}₹`
+                                                  }
+                                             </span>
+                                             <span style={{ fontWeight: "bold", color: "#0A6847" }}>
+                                                  {
+                                                       `Total Paid : ${grandTotalPaid}₹`
+                                                  }
+                                             </span>
+                                             <Divider sx={{ backgroundColor: "#979797", m: 1, opacity: 0.5 }} />
+                                             <span style={{ fontWeight: "bold", color: "#A0153E" }}>
+                                                  {
+
+                                                       `Total Remaining : ${grandTotal - grandTotalPaid}₹`
+                                                  }
+                                             </span>
+                                             <span style={{ fontWeight: "bold", color: "black" }}>
+                                                  {
+                                                  }
+                                             </span>
+                                             <div
+                                                  style={{
+                                                       display: "flex",
+                                                       justifyContent: "end",
+                                                       alignItems: "center",
+                                                       marginTop: "20px",
+                                                  }}
+                                             >
+                                                  <img style={{
+                                                       height: "100px",
+                                                       width: "100px",
+                                                       rotate: "-45deg",
+                                                  }} src="stamp.svg" ></img>
+                                             </div>
+                                        </>
+                                   ) : ("Select customer and date range to view report")
+                              }
+                              <Box
+                                   sx={
+                                        {
+                                             width: "100%",
+                                             display: "flex",
+                                             justifyContent: "end"
+                                        }
+                                   }
+                              >
+                              </Box>
+                         </Stack>
+
+                         <div
+                              style={{ display: "flex", justifyContent: "end" }}
+                         >
+                              <Button onClick={reactToPrintFn}>Print Bill</Button>
+                         </div>
+                    </Stack>
+               </Stack >
           );
      };
 
@@ -165,15 +340,21 @@ export const Report = () => {
      };
 
      return (
-          <Stack sx={{ height: "100%", width: "100%", borderRadius: "16px", backgroundColor: "white", padding: 1 }}>
-               <LinearProgress sx={{ display: (reportLoading || customersLoading) ? "block" : "none" }} />
+          <Stack sx={{
+               height: "100%", width: "100%", borderRadius: "16px", backgroundColor: "white", padding: 1,
+               flexGrow: 1,
+               overflow: "auto",
+          }}>
+               <Box>
+                    <LinearProgress sx={{ display: (reportLoading || customersLoading) ? "block" : "none" }} />
+               </Box>
                <Stack sx={{ display: "flex", flexDirection: "row", gap: 1 }}>
                     <Button variant="soft" onClick={() => setSelected(CUSTOMER)}>
                          Customer
                     </Button>
-                    <Button variant="soft" onClick={() => setSelected(DELIVERY)}>
+                    {/* <Button variant="soft" onClick={() => setSelected(DELIVERY)}>
                          Delivery Boy
-                    </Button>
+                    </Button> */}
                </Stack>
                <Divider sx={{ m: 1, backgroundColor: "#979797" }} />
                {selected === CUSTOMER && <Customer />}
@@ -184,4 +365,12 @@ export const Report = () => {
 
 function checkValidDate(date) {
      return date.match(/^\d{4}-\d{2}-\d{2}$/);
+}
+
+//2024-11-11T11:31:05.000000Z format to 2024-11-11 : 11:31:PM
+function formatDateTime(dateTime) {
+     const date = new Date(dateTime);
+     const formattedDate = date.toLocaleDateString('en-GB').split('/').reverse().join('-');
+     const formattedTime = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+     return `${formattedDate} : ${formattedTime}`;
 }

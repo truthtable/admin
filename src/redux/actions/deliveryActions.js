@@ -7,6 +7,7 @@ export const FETCH_DELIVERIES_REQUEST = "FETCH_DELIVERIES_REQUEST";
 export const FETCH_DELIVERIES_SUCCESS = "FETCH_DELIVERIES_SUCCESS";
 export const FETCH_DELIVERIES_FAILURE = "FETCH_DELIVERIES_FAILURE";
 export const UPDATE_DELIVERY_SUCCESS = "UPDATE_DELIVERY_SUCCESS";
+export const DELETE_DELIVERY = "DELETE_DELIVERY";
 
 // Action Creators
 export const initialState = () => ({
@@ -34,6 +35,11 @@ export const updateDeliveryRequest = () => ({
 export const updateDeliverySuccess = (deliveries) => ({
      type: UPDATE_DELIVERY_SUCCESS,
      payload: deliveries,
+});
+
+export const deleteDelivery = (id) => ({
+     type: DELETE_DELIVERY,
+     payload: id,
 });
 
 const API = "https://adminsr.life/public/api/delivery";
@@ -92,6 +98,28 @@ export const updateDelivery = (delivery) => {
                          delivery,
                     );
                }
+               console.log("res", response.data);
+               const deliveries = response.data;
+               if (deliveries.success == false) {
+                    //error
+                    dispatch(fetchDeliveriesFailure(deliveries.message));
+               } else {
+                    dispatch(updateDeliverySuccess(deliveries));
+               }
+          } catch (error) {
+               dispatch(fetchDeliveriesFailure(error.message));
+          }
+     };
+};
+
+//delete delivery
+export const deleteDeliveryById = (id) => {
+     if (id == null) {
+          return;
+     }
+     return async (dispatch) => {
+          try {
+               let response = await axios.delete(`${API}/${id}`);
                console.log("res", response.data);
                const deliveries = response.data;
                if (deliveries.success == false) {

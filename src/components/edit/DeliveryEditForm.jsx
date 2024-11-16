@@ -45,7 +45,7 @@ const DeliveryEditForm = () => {
      let customer_search_input = "";
 
      const data = prams.state.data;
-     console.log(data);
+     console.log("data", data);
      let {
           customer_id: { id: customerId, name: customerName, address },
           gas_id: { id: gasId, company_name: companyName, kg },

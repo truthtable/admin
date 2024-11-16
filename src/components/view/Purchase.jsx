@@ -48,8 +48,19 @@ export default function Purchase() {
      const oneMonthAgo = new Date(new Date().setMonth(new Date().getMonth() - 1))
           .toISOString()
           .split('T')[0];
-     const [startDate, setStartDate] = useState(oneMonthAgo);
-     const [endDate, setEndDate] = useState(currentDate);
+     const [startDate, setStartDate] = useState(() => {
+          const now = new Date();
+          const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+          const formattedDate = startOfMonth.toLocaleDateString('en-GB').split('/').reverse().join('-');
+          return formattedDate;
+     }
+     );
+     const [endDate, setEndDate] = useState(() => {
+          const now = new Date();
+          const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+          const formattedDate = endOfMonth.toLocaleDateString('en-GB').split('/').reverse().join('-');
+          return formattedDate;
+     });
 
      useEffect(() => {
           dispatch(fetchOrders({ startDate, endDate }));
@@ -256,31 +267,32 @@ export default function Purchase() {
                                                   //TODO FIX THIS td in span
                                                   {
                                                        label: "Scheme", value: <React.Fragment> <Cell
-                                                            column=""
+                                                            column="scheme"
                                                             id={order.id}
                                                             data={orderSchemeRate}
-                                                            tableName=""
+                                                            tableName="purchase_orders"
                                                        /></React.Fragment>
                                                   },
                                                   { label: "Total Scheme", value: orderTotalScheme.toFixed(2) },
                                                   {
                                                        label: "TCS", value: <React.Fragment> <Cell
-                                                            column=""
+                                                            column="tcs"
                                                             id={order.id}
                                                             data={orderTCS}
-                                                            tableName=""
+                                                            tableName="purchase_orders"
                                                        /></React.Fragment>
                                                   },
+
                                                   {
                                                        label: "Total TCS", value: orderTotalTCS.toFixed(2)
 
                                                   },
                                                   {
-                                                       label: "FOR", value: <React.Fragment><Cell
-                                                            column=""
+                                                       label: "FOR", value: <React.Fragment> <Cell
+                                                            column="for_charges"
                                                             id={order.id}
                                                             data={orderFOR}
-                                                            tableName=""
+                                                            tableName="purchase_orders"
                                                        /></React.Fragment>
                                                   },
                                                   { label: "Total FOR", value: orderTotalFOR.toFixed(2) },
@@ -567,14 +579,14 @@ export const Cell = ({ id, data, tableName, column, editable = true }) => {
                          setEditMode(true)
                }}
           >
-               <span
+               <div
                     style={{
                          display: "flex",
                          fontWeight: "bold",
                     }}
                >
                     {data}
-               </span>
+               </div>
           </Box>
      }
      const gas = data
@@ -585,7 +597,12 @@ export const Cell = ({ id, data, tableName, column, editable = true }) => {
           data = `${data.company_name} : ${data.kg} KG`
 
      }
-     if (column === "pay_amt") {
+     if (
+          column === "pay_amt"
+          || column === "scheme"
+          || column === "tcs"
+          || column === "for_charges"
+     ) {
           return (!editMode) ? (<Box>
                <Stack direction="row" alignContent="center" justifyContent="center" alignItems={"center"} sx={{ width: "100%" }}>
                     <DataDisplay />

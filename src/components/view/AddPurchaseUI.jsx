@@ -8,6 +8,19 @@ import { FaRegPlusSquare } from "react-icons/fa";
 
 export default function AddPurchaseUI({ gaslistData, plants }) {
 
+     // console.log(
+     //      calculatePurchaseSummary(
+     //           [
+     //                { qty: 6, kg: 12, rate: 10, return_cyl_qty: 4 }, // GO GASS : 12 KG
+     //                { qty: 10, kg: 15, rate: 12, return_cyl_qty: 2 }, // GO GASS : 15 KG
+     //                { qty: 7, kg: 17, rate: 45, return_cyl_qty: 1 }   // GO GASS : 17 KG
+     //           ],
+     //           0.01,
+     //           3.41,
+     //           5000
+     //      )
+     // )
+
      const dispatch = useDispatch();
 
      const [paid_val, setPaid_val] = useState(0);
@@ -773,7 +786,7 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
                                                                            color="success"
                                                                            arrow
                                                                            variant="outlined"
-                                                                           title={`${totalAmt} + ${totalTcs} + ${totalFor} - ${totalScheme}`}
+                                                                           title={`${totalAmt.toFixed(2)} + ${totalTcs.toFixed(2)} + ${totalFor.toFixed(2)} - ${totalScheme.toFixed(2)}`}
                                                                       >
                                                                            <span
                                                                                 style={{
@@ -864,4 +877,63 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
                </Modal>
           </>
      );
+}
+function calculatePurchaseSummary(items, tcsRate, forChargePerItem, paid) {
+     // Initialize totals
+     let totalAmt = 0;
+     let totalQty = 0;
+     let totalKg = 0;
+     let totalReturnQty = 0;
+     let totalReturnKg = 0;
+
+     // Array to store minimal calculations for each item
+     const itemCalculations = [];
+
+     // Loop through each item to calculate individual and total values
+     items.forEach(item => {
+          const { qty, kg, rate, return_cyl_qty } = item;
+
+          // Calculate minimal item values
+          const itemTotalKg = qty * kg;
+          const itemTotalAmt = qty * rate;
+          const itemReturnKg = return_cyl_qty * kg;
+
+          // Add minimal item calculations to the array
+          itemCalculations.push({
+               itemTotalKg,
+               itemTotalAmt,
+               itemReturnKg
+          });
+
+          // Accumulate totals
+          totalAmt += itemTotalAmt;
+          totalQty += qty;
+          totalKg += itemTotalKg;
+          totalReturnQty += return_cyl_qty;
+          totalReturnKg += itemReturnKg;
+     });
+
+     // Calculate TCS as a flat rate (e.g., 0.01 of total amount)
+     const tcs = totalAmt * tcsRate;
+
+     // Calculate FOR as a fixed charge per item
+     const forCharge = items.length * forChargePerItem;
+
+     // Calculate the final billing amount
+     const billingAmt = totalAmt + tcs + forCharge;
+     const balance = billingAmt - paid;
+
+     // Return all calculations as an object
+     return {
+          itemCalculations, // Minimal calculations for each item
+          totalAmt,
+          totalQty,
+          totalKg,
+          totalReturnQty,
+          totalReturnKg,
+          tcs,
+          forCharge,
+          billingAmt,
+          balance
+     };
 }

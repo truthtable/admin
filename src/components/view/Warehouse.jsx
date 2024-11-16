@@ -1,3 +1,4 @@
+import React from "react";
 import {
      Box,
      Button,
@@ -31,6 +32,20 @@ const Warehouse = () => {
      }, []);
 
      if (allGases.data === null || warehouses == null || warehouses.length === 0) {
+
+          if (!loading && warehouses.length === 0) {
+               return <Box
+                    sx={{
+                         display: "flex",
+                         alignItems: "center",
+                         justifyContent: "center",
+                         height: "100%",
+                         width: "100%",
+                    }}>
+                    <Typography variant="h5">No Data Available</Typography>
+               </Box>
+          }
+
           return <Box
                sx={{
                     display: "flex",
@@ -48,11 +63,15 @@ const Warehouse = () => {
      let fullMap = new Map();
      let emptyMap = new Map();
 
-     warehouses.fullData.forEach(warehouse => {
+     if (warehouses === null) return <span>Error</span>
+
+     warehouses.forEach(warehouse => {
+          if (warehouse.is_empty == 1) return
           fullMap.set(warehouse.gas_cylinder_id, warehouse.count)
      })
 
-     warehouses.emptyData.forEach(warehouse => {
+     warehouses.forEach(warehouse => {
+          if (warehouse.is_empty == 0) return
           emptyMap.set(warehouse.gas_cylinder_id, warehouse.count)
      })
 

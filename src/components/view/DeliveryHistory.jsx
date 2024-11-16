@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Box, Chip, Divider, LinearProgress, Select, Stack, Tab, Table, TabList, TabPanel, Tabs, Option, Button, Modal, Sheet, ModalClose, Typography, Input, List, ListItem, ListItemButton, ListItemDecorator, ListItemContent, FormControl, FormLabel, RadioGroup, Radio } from "@mui/joy";
 import { useDispatch, useSelector } from "react-redux";
-import { deliveriesIniState, fetchDeliveries, updateDelivery } from "../../redux/actions/deliveryActions";
+import { deleteDeliveryById, deliveriesIniState, fetchDeliveries, updateDelivery } from "../../redux/actions/deliveryActions";
 import { fetchGasData } from "../../state/GasList";
 import { fetchUser, fetchUserRequest } from "../../redux/actions/userActions";
 import { RxFontStyle } from "react-icons/rx";
@@ -14,6 +14,8 @@ import { TbCylinder } from "react-icons/tb";
 import { ImCross } from "react-icons/im";
 import { addGasDelivery, deleteGasDelivery, gasDeliveriesIniState, updateGasDelivery } from "../../redux/actions/gasDeliveryActions";
 import { set } from "firebase/database";
+import { RiDeleteBinFill } from "react-icons/ri";
+import gasServices from "../../services/gas-services.jsx";
 const headColor = "white";
 export default function deliveryHistory() {
      const dispatch = useDispatch();
@@ -24,9 +26,20 @@ export default function deliveryHistory() {
      const gasDelivery = useSelector((state) => state.gasDelivery);
      //console.log(gasDelivery);
 
-     //parmas
-     const [dateStart, setDateStart] = useState(new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0]);
-     const [dateEnd, setDateEnd] = useState(new Date().toISOString().split('T')[0]);
+     const formatDateToYYYYMMDD = (date) => {
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+     };
+     //cuurent month start date
+     const [dateStart, setDateStart] = useState(
+          formatDateToYYYYMMDD(new Date(new Date().getFullYear(), new Date().getMonth(), 1))
+     );
+     //cuurent month end date
+     const [dateEnd, setDateEnd] = useState(
+          formatDateToYYYYMMDD(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0))
+     );
      //
      const currentUrl = window.location.href;
      const hashIndex = currentUrl.indexOf('#');
@@ -35,7 +48,7 @@ export default function deliveryHistory() {
      const searchParams = new URLSearchParams(url.search);
      const urlCustomerId = searchParams.get('customer_id');
      const urlCourierBoyId = searchParams.get('courier_boy_id');
-     console.log(urlCustomerId, urlCourierBoyId);
+     // console.log(urlCustomerId, urlCourierBoyId);
      //
      const [customerId, setCustomerId] = useState(urlCustomerId ? Number(urlCustomerId) : null);
      const [deliverBoyId, setDeliverBoyId] = useState(urlCourierBoyId ? Number(urlCourierBoyId) : null);
@@ -94,6 +107,18 @@ export default function deliveryHistory() {
                dispatch(deliveriesIniState());
           }
      });
+
+     useEffect(() => {
+          gasServices.listenDataChange(() => {
+               if (
+                    !loading
+               ) {
+                    console.log("fetchDeliveries...");
+                    fetchDeliveriesData();
+
+               }
+          });
+     }, []);
 
      // console.log({
      //      userError: userDataError,
@@ -431,7 +456,29 @@ export default function deliveryHistory() {
                                    }
                               </List>
                          </Sheet>
-                         <Stack direction="row" gap={1} justifyContent={"flex-end"}>
+                         <Stack direction="row" gap={1} justifyContent={"flex-end"} alignItems={"flex-end"}>
+                              <Box
+                                   sx={{
+                                        color: "#B8001F",
+                                        p: 1,
+                                        borderRadius: "16px",
+                                        '&:hover': {
+                                             color: "white",
+                                             backgroundColor: "#B8001F",
+                                        },
+                                   }}
+                                   onClick={() => {
+                                        const confirm = window.prompt(`Are you sure you want to delete this delivery? Type ${deleveryId} to confirm.`);
+                                        if (Number(confirm) === Number(deleveryId)) {
+                                             console.log("Delete", deleveryId)
+                                             dispatch(deleteDeliveryById(deleveryId));
+                                        }
+                                        setEdit(false)
+                                   }}
+                              >
+                                   <RiDeleteBinFill />
+                              </Box>
+                              <Divider orientation="horizontal" sx={{ flexGrow: 1, opacity: 0 }} />
                               <Button color="warning" variant="outlined" onClick={() => {
                                    setEdit(false)
                               }}>
@@ -534,7 +581,7 @@ export default function deliveryHistory() {
 
                const correction = (delivery.correction == 1)
                const user = usersList.get(delivery.customer.user_id)
-               //console.log(delivery)
+               //console.log(delivery.id, delivery.gas_deliveries)
                //console.log(user);
                deliveryRows.push(<tr key={"delivery_" + delivery.id + "header"}>
                     <td colSpan={colspan} style={{
