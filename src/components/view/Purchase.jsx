@@ -5,7 +5,7 @@ import Modal from "@mui/joy/Modal";
 import Sheet from "@mui/joy/Sheet";
 import ModalClose from "@mui/joy/ModalClose";
 import React, { useEffect, useState } from "react";
-import { MdDelete, MdDone, MdModeEditOutline } from "react-icons/md";
+import { MdClear, MdDelete, MdDone, MdModeEditOutline, MdOutlineRemoveDone } from "react-icons/md";
 import { useDispatch, useSelector } from 'react-redux';
 import { createOrder, deleteOrder, fetchOrders, updateOrder, orderIniState } from "../../redux/actions/purchaseOrderActions.js";
 import DataTable from "../table/DataTable.jsx";
@@ -13,7 +13,7 @@ import { FaCheck, FaCompressArrowsAlt, FaEdit, FaFilter, FaRegPlusSquare } from 
 import { AiFillDelete } from "react-icons/ai";
 import { createItem, deleteItem, updateItem, iniState } from "../../redux/actions/purchaseOrderItemActions.js";
 import { fetchGasData } from "../../state/GasList.jsx";
-import { IoIosArrowDown, IoIosArrowUp, IoMdAdd, IoMdMedical } from "react-icons/io";
+import { IoIosArrowDown, IoIosArrowUp, IoMdAdd, IoMdDoneAll, IoMdMedical } from "react-icons/io";
 import { ImCross, ImCheckmark } from "react-icons/im";
 import { Collapse } from "@mui/material";
 import { FaArrowTurnDown } from "react-icons/fa6";
@@ -113,6 +113,8 @@ export default function Purchase() {
                let orderTotalRemainingAmt = 0;
                let orderTotalReturnQty = 0;
                let orderTotalReturnKg = 0;
+
+               let orderCleared = order.cleared;
 
                if (order.items.length === 0) {
                     orderRows.push(
@@ -225,8 +227,10 @@ export default function Purchase() {
 
                orderTotalAmt += (orderTotalFOR + orderTotalTCS) - orderTotalScheme
 
-               grandTotalBallance += orderTotalAmt
-               grandTotalPayAmt += orderTtotalPayAmt
+               if (!orderCleared) {
+                    grandTotalBallance += orderTotalAmt
+                    grandTotalPayAmt += orderTtotalPayAmt
+               }
 
                orderTotalRemainingAmt = orderTotalAmt - orderTtotalPayAmt
 
@@ -967,33 +971,6 @@ const TotalRow = ({ children, data, order }) => {
      )
 }
 
-const TotalData = ({ text, value, bgColor, input = false }) => {
-     const tdStyle = {
-          borderWidth: "0px",
-
-          backgroundColor: (bgColor) ? bgColor : "transparent",
-
-     }
-     if (input) {
-          return <tr>
-               {/* <td style={tdStyle}><p>{text}</p></td> */}
-               {value}
-          </tr>
-     }
-     return (
-          <tr>
-               <td
-                    style={tdStyle}
-               >
-                    <p>{text}</p>
-               </td>
-               <td
-                    style={tdStyle}
-               ><p>{value}</p></td>
-          </tr>
-     )
-}
-
 const AddGas = ({ order }) => {
      const [open, setOpen] = React.useState(false);
      //console.log(order)
@@ -1012,6 +989,29 @@ const AddGas = ({ order }) => {
      let totalAmt = qty * rate
      return (
           <React.Fragment>
+               &nbsp;
+               <Box
+                    sx={{
+                         fontWeight: "bold",
+                         display: "flex",
+                         alignItems: "center",
+                         justifyContent: "flex-end",
+                         px: 1,
+                         ms: 0,
+                         transition: "all 0.3s",
+                         cursor: "pointer",
+                         color: "#185ea5",
+                         borderRadius: "md",
+                         "&:hover": {
+                              backgroundColor: "#12467b7a",
+                              color: "white",
+                         },
+                    }}
+                    onClick={() => {
+                         setOpen(true)
+                    }}
+               > <MdModeEditOutline />&nbsp;Edit
+               </Box>
                <Box
                     sx={{
                          fontWeight: "bold",
@@ -1030,9 +1030,17 @@ const AddGas = ({ order }) => {
                          },
                     }}
                     onClick={() => {
-                         setOpen(true)
+                         const doOpraton = prompt(`Type Order No.: ${order.order_no} to ${order.cleared ? "Unclear" : "Clear"}`, "");
+                         if (doOpraton === order.order_no) {
+                              dispatch(updateOrder(order.id, { cleared: !order.cleared }))
+                         } else {
+                              alert("Invalid Order No.")
+                         }
+
                     }}
-               > <MdModeEditOutline />&nbsp;Edit
+               > {
+                         order.cleared ? <><MdOutlineRemoveDone />&nbsp;Mark Uncleared</> : <><IoMdDoneAll />&nbsp;Cleared</>
+                    }
                </Box>
                <Modal
                     aria-labelledby="modal-title-12"
