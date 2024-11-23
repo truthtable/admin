@@ -39,38 +39,21 @@ import DeliveryBoyDetails from "./components/view/DeliveryBoyDetails.jsx";
 import Expences from "./components/view/Expences.jsx";
 import Purchase from "./components/view/Purchase.jsx";
 import { Report } from "./components/view/Report.jsx";
-import DeliveryHistory from "./components/view/DeliveryHistory.jsx";
+// import DeliveryHistory from "./components/view/DeliveryHistory.jsx";
 import deliveryHistory from "./components/view/DeliveryHistory.jsx";
 import { FcHighPriority } from "react-icons/fc";
+import { login, validateLogin } from "./redux/authSlice.js";
 
 function App() {
 
      const dispatch = useDispatch();
-     const loginData = useSelector((state) => state.login);
-     const checkLoginData = useSelector((state) => state.checkLogin);
 
-     let isLogoded = false;
+     const loginData = useSelector((state) => state.loginV2);
 
+     //let isLogoded = false;
+     let isLogoded = loginData?.data?.loginStatus || false;
 
-     //console.log(checkLoginData);
-
-     useEffect(() => {
-          if (getUserDataFromCookie() != null) {
-               dispatch(fetchCheckLogin(getUserDataFromCookie().token));
-               dispatch(fetchLogin({ isLoadFromCookie: true }));
-          }
-     }, []);
-
-     try {
-          if (loginData.token != null) {
-               isLogoded = true;
-          }
-          if (checkLoginData.status) {
-               isLogoded = true;
-          }
-     } catch (e) {
-          //console.warn(e);
-     }
+     console.log(loginData);
 
      const [openSidebarToggle, setOpenSidebarToggle] = useState(false);
 
@@ -78,7 +61,7 @@ function App() {
           setOpenSidebarToggle(!openSidebarToggle);
      };
 
-     if (loginData.isError && !checkLoginData.isLoading) {
+     if (loginData.isError) {
           alert(loginData.errorMessage);
      }
 
@@ -154,8 +137,7 @@ function App() {
                          <LinearProgress
                               sx={{
                                    display:
-                                        loginData.isLoading ||
-                                             checkLoginData.isLoading
+                                        loginData.isLoading
                                              ? "block"
                                              : "none",
                               }}
@@ -166,8 +148,7 @@ function App() {
                               color="primary"
                               sx={{
                                    display:
-                                        loginData.isLoading ||
-                                             checkLoginData.isLoading
+                                        loginData.isLoading
                                              ? "none"
                                              : "block",
                               }}
@@ -181,11 +162,12 @@ function App() {
                                         );
                                    } else {
                                         dispatch(
-                                             fetchLogin({
-                                                  username,
-                                                  password,
-                                                  isLoadFromCookie: false,
-                                             }),
+                                             // fetchLogin({
+                                             //      username,
+                                             //      password,
+                                             //      isLoadFromCookie: false,
+                                             // }),
+                                             login(username, password)
                                         );
                                    }
                               }}
@@ -240,6 +222,10 @@ function App() {
                     </Typography>
                </Sheet>
           </Box>
+     }
+
+     if (isLogoded) {
+          dispatch(validateLogin());
      }
 
      return (

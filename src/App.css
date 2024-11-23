@@ -39,3 +39,9 @@ body {
 input[type="text"] {
      width: 100%;
 }
+.b {
+     font-weight: bold;
+}
+.ps1 {
+     padding: 10px;
+}

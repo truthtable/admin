@@ -9,7 +9,7 @@ import { RxFontStyle } from "react-icons/rx";
 import { FcHighPriority } from "react-icons/fc";
 import { CgUser } from "react-icons/cg";
 import { MdDone, MdEdit, MdKeyboardArrowRight } from "react-icons/md";
-import { IoMdClose } from "react-icons/io";
+import { IoMdClose, IoMdDoneAll } from "react-icons/io";
 import { TbCylinder } from "react-icons/tb";
 import { ImCross } from "react-icons/im";
 import { addGasDelivery, deleteGasDelivery, gasDeliveriesIniState, updateGasDelivery } from "../../redux/actions/gasDeliveryActions";
@@ -20,7 +20,7 @@ const headColor = "white";
 export default function deliveryHistory() {
      const dispatch = useDispatch();
      const { deliveries, loading, updateSuccess, error } = useSelector((state) => state.deliverys);
-     //console.log(updateSuccess);
+     console.log(deliveries);
      const allGasData = useSelector((state) => state.gas);
      const { userDataLoading, users, userDataError } = useSelector((state) => state.user);
      const gasDelivery = useSelector((state) => state.gasDelivery);
@@ -207,7 +207,7 @@ export default function deliveryHistory() {
           }).slice(0, 20);
           //only show 10 users at a time
           if (!edit) {
-               return <Button variant="outlined" sx={{ color: "black", backgroundColor: "transparent", width: "100%", fontWeight: "bold", outlineColor: "transparent", borderWidth: "0px" }}
+               return <Button size="sm" variant="outlined" sx={{ color: "black", backgroundColor: "transparent", width: "100%", fontWeight: "bold", outlineColor: "transparent", borderWidth: "0px" }}
                     onClick={() => {
                          setEdit(true)
                     }}
@@ -274,7 +274,7 @@ export default function deliveryHistory() {
           const [edit, setEdit] = useState(false);
           const [editValue, setEditValue] = useState(value);
           if (!edit) {
-               return <Button variant="outlined" sx={{ color: "black", backgroundColor: "transparent", width: "100%", fontWeight: "bold", outlineColor: "transparent", borderWidth: "0px" }}
+               return <Button size="sm" variant="outlined" sx={{ color: "black", backgroundColor: "transparent", width: "100%", fontWeight: "bold", outlineColor: "transparent", borderWidth: "0px" }}
                     onClick={() => {
                          setEdit(true)
                     }}
@@ -298,7 +298,9 @@ export default function deliveryHistory() {
           />
      }
 
-     const GasEditUi = ({ selectedGasList, customer, deliveryBoy, deleveryId }) => {
+     const GasEditUi = ({ selectedGasList, customer, deliveryBoy, deleveryId, receivedAmount, paymentMethod }) => {
+          const [received_amount, setReceivedAmount] = useState(receivedAmount);
+          const [payment_method, setPaymentMethod] = useState(paymentMethod);
           const [edit, setEdit] = useState(false);
           const [editName, setEditName] = useState("");
           let glist = [];
@@ -352,12 +354,12 @@ export default function deliveryHistory() {
                }
           }
           if (!edit) {
-               return <Button variant="outlined" sx={{ borderRadius: "16px", fontWeight: "bold", fontStyle: "oblique" }}
+               return <Chip size="sm" variant="outlined" color="danger" sx={{ borderRadius: "16px", fontWeight: "bold", fontStyle: "oblique" }}
                     onClick={() => {
                          setEdit(true);
                     }}
                     startDecorator={<MdEdit />}
-               >Change</Button>
+               >Change</Chip>
           }
           return <Modal
                aria-labelledby="modal-title"
@@ -387,7 +389,41 @@ export default function deliveryHistory() {
                               Edit Delivery of {customer} by {deliveryBoy}
                          </Typography>
                          <Sheet>
-                              <List>
+                              <Stack direction={"row"} gap={1} alignContent={"center"} sx={{ mb: 1 }}>
+                                   <Chip
+                                        size="lg"
+                                        color="success"
+                                        sx={{
+                                             fontWeight: "bold"
+                                        }}
+                                   >Received Amount</Chip>
+                                   <Input
+                                        startDecorator={<span>₹</span>}
+                                        type="number"
+                                        value={received_amount}
+                                        onChange={(event) => {
+                                             setReceivedAmount(event.target.value)
+                                        }}
+                                        required
+                                        sx={{
+                                             maxWidth: "128px",
+                                        }}
+                                   />
+                                   <Select defaultValue={payment_method}
+                                        onChange={(event, value) => {
+                                             setPaymentMethod(value)
+                                        }}
+                                   >
+                                        <Option value={0}>Cash</Option>
+                                        <Option value={1}>Online</Option>
+                                   </Select>
+                              </Stack>
+                              <span className="b">&nbsp;Gas List</span>
+                              <List
+                                   sx={{
+                                        backgroundColor: "#FFF1DB"
+                                   }}
+                              >
                                    {
                                         [...gasData.values()].map((data) => {
                                              return <ListItem key={data.id} sx={{ width: "100%" }}>
@@ -525,6 +561,15 @@ export default function deliveryHistory() {
                                    console.log(updateGasData)
 
                                    dispatch(
+                                        updateDelivery(
+                                             {
+                                                  id: deleveryId,
+                                                  received_amount: received_amount,
+                                                  payment_method: payment_method,
+                                             }
+                                        )
+                                   )
+                                   dispatch(
                                         //Delete
                                         deleteGasDelivery(deleteDeliveryGasIds),
                                    )
@@ -618,7 +663,7 @@ export default function deliveryHistory() {
                                    {`Delivery No : ${delivery.id}`}
                               </span>
                               <Divider orientation="horizontal" sx={{ opacity: 0, flexGrow: 1 }} />
-                              <GasEditUi selectedGasList={delivery.gas_deliveries} customer={delivery.courier_boy.username} deliveryBoy={user.name} deleveryId={delivery.id} />
+                              <GasEditUi selectedGasList={delivery.gas_deliveries} customer={delivery.courier_boy.username} deliveryBoy={user.name} deleveryId={delivery.id} receivedAmount={delivery.received_amount} paymentMethod={delivery.payment_method} />
                          </Stack>
 
                     </td>
@@ -641,7 +686,7 @@ export default function deliveryHistory() {
                               <td style={tdsx}><CostomerEditUI name={user.name} id={delivery.id} /></td>
                               <td style={tdsx}>{user.address}</td>
                               <td style={{ ...tdsx, }}>
-                                   <Stack direction="row" spacing={1}>
+                                   <Stack direction="row">
                                         <Box
                                              sx={{
                                                   flexGrow: 1,
@@ -674,7 +719,7 @@ export default function deliveryHistory() {
                               </td>
                               <td style={tdsx}>
                                    {/* {correction ? "Yes" : "No"} */}
-                                   <Select defaultValue={correction ? "Mistake" : "No"} endDecorator={correction ? <FcHighPriority /> : null}
+                                   <Select size="sm" defaultValue={correction ? "Mistake" : "No"} endDecorator={correction ? <FcHighPriority /> : null}
                                         onChange={
                                              (event, value) => {
                                                   //console.log(value)
@@ -708,6 +753,36 @@ export default function deliveryHistory() {
                               borderBottomLeftRadius: "16px",
                          }}>
                               <Stack sx={{ fontWeight: "bold", fontStyle: "oblique", pr: 1 }} direction="row" justifyContent="flex-end" justifyItems="flex-end" alignItems="center" spacing={1}>
+                                   <Box
+                                        sx={{
+                                             fontWeight: "bold",
+                                             display: "flex",
+                                             alignItems: "center",
+                                             justifyContent: "flex-end",
+                                             px: 1,
+                                             m: 0,
+                                             transition: "all 0.3s",
+                                             cursor: "pointer",
+                                             color: !delivery.cleared ? "#185ea5" : "white",
+                                             backgroundColor: !delivery.cleared ? "transparent" : "#0a6847",
+                                             borderRadius: "md",
+                                             "&:hover": {
+                                                  backgroundColor: "#12467b7a",
+                                                  color: "white",
+                                             },
+                                        }}
+                                        onClick={() => {
+                                             const doOpraton = prompt(`Type Deliviry No.: ${delivery.id} to ${delivery.cleared ? "Unclear" : "Clear"}`, "");
+                                             if (Number(doOpraton) == Number(delivery.id)) {
+                                                  dispatch(updateDelivery({ id: delivery.id, cleared: !delivery.cleared }))
+                                             } else {
+                                                  alert("Invalid Deliviry No.")
+                                             }
+                                        }}
+                                   > {
+                                             !delivery.cleared ? <><IoMdDoneAll />&nbsp;Mark Cleared</> : <><IoMdDoneAll />&nbsp;Cleared</>
+                                        }
+                                   </Box>
                                    <Divider orientation="horizontal" sx={{ flexGrow: 1, opacity: 0 }} />
                                    <Box>{`Total : ₹${totalPrice.toFixed(2)}`}</Box>
                                    <Divider orientation="vertical" />
@@ -885,6 +960,7 @@ const TableUI = ({ head, body }) => {
           sx={{
                tableLayout: "auto",
           }}
+          size="md"
      >
           <thead>
                {head}

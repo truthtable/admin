@@ -36,7 +36,9 @@ export default function Purchase() {
 
      //console.log(itemLoading, items, itemError, itemUpdateSuccess);
 
-     if (itemError) { console.warn(itemError); }
+     if (itemError) {
+          console.warn(itemError);
+     }
 
 
      let grandTotalBallance = 0
@@ -431,6 +433,26 @@ export default function Purchase() {
                               }}
                          >{`Payment Done : ₹${grandTotalPayAmt}`}</span>
                     </Chip>
+                    {/* <Chip
+                         sx={
+                              {
+
+                                   alignItems: "center",
+                                   justifyContent: "center",
+                                   backgroundColor: "#133E87",
+                                   display: loading ? "none" : "flex",
+                                   px: 2
+                              }
+                         }
+                         size="sm"
+                    >
+                         <span
+                              style={{
+                                   color: "white",
+                                   fontWeight: "bold",
+                              }}
+                         >{`Total Expance : ₹${(grandTotalBallance - grandTotalPayAmt).toFixed(2)}`}</span>
+                    </Chip> */}
                     <Divider
                          sx={{
                               flexGrow: 1,
@@ -1022,7 +1044,8 @@ const AddGas = ({ order }) => {
                          m: 0,
                          transition: "all 0.3s",
                          cursor: "pointer",
-                         color: "#185ea5",
+                         color: !order.cleared ? "#185ea5" : "white",
+                         backgroundColor: !order.cleared ? "transparent" : "#0a6847",
                          borderRadius: "md",
                          "&:hover": {
                               backgroundColor: "#12467b7a",
@@ -1039,7 +1062,7 @@ const AddGas = ({ order }) => {
 
                     }}
                > {
-                         order.cleared ? <><MdOutlineRemoveDone />&nbsp;Mark Uncleared</> : <><IoMdDoneAll />&nbsp;Cleared</>
+                         !order.cleared ? <><IoMdDoneAll />&nbsp;Mark Cleared</> : <><IoMdDoneAll />&nbsp;Cleared</>
                     }
                </Box>
                <Modal
@@ -1146,7 +1169,10 @@ const AddGas = ({ order }) => {
                                                                       color="danger"
                                                                       sx={{ width: "100%" }}
                                                                       onClick={() => {
-                                                                           dispatch(deleteItem(item.id))
+                                                                           const deleteThisItem = confirm("Are you sure you want to delete this item?");
+                                                                           if (deleteThisItem) {
+                                                                                dispatch(deleteItem(item.id))
+                                                                           }
                                                                       }}
                                                                  >
                                                                       <CgTrash />
@@ -1213,8 +1239,18 @@ const AddGas = ({ order }) => {
                                                        placeholder="Return Qty"
                                                        type="number"
                                                        name="return_cyl_qty"
+                                                       value={return_cyl_qty}
                                                        required
-                                                       onChange={(e) => setReturnCylQty(e.target.value)}
+                                                       onChange={(e) => {
+                                                            console.log(e.target.value, qty, "changing")
+                                                            console.log(Number(e.target.value), Number(qty))
+                                                            if (Number(qty) < Number(e.target.value)) {
+                                                                 alert("Return Qty can't be more than Qty")
+                                                                 return
+                                                            }
+                                                            setReturnCylQty(e.target.value)
+                                                            console.log(e.target.value, "setting")
+                                                       }}
                                                   />
                                              </td>
                                              <td>

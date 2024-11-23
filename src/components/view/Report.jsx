@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { Box, Button, Divider, Input, LinearProgress, Option, Select, Stack } from "@mui/joy";
+import { Box, Button, Divider, Input, LinearProgress, Option, Select, Stack, Table } from "@mui/joy";
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCustomers } from "../../redux/actions/customerActions";
 import { fetchReport } from "../../redux/actions/reportActions";
@@ -15,10 +15,8 @@ export const Report = () => {
      const url = new URL(hashPart, window.location.origin);
      const searchParams = new URLSearchParams(url.search);
 
-
      const contentRef = useRef();
      const reactToPrintFn = useReactToPrint({ contentRef })
-
 
      const [selected, setSelected] = React.useState(CUSTOMER);
 
@@ -68,7 +66,7 @@ export const Report = () => {
           });
 
           const handleSubmit = () => {
-               console.log(selectedCustomer, startDate, endDate);
+               //console.log(selectedCustomer, startDate, endDate);
                if (
                     selectedCustomer === undefined ||
                     selectedCustomer === null ||
@@ -116,7 +114,7 @@ export const Report = () => {
                                         defaultValue={selectedCustomer}
                                    >
                                         {customers.map((customer, index) => (
-                                             <Option key={index} value={customer.id}>
+                                             <Option key={index + "payment_option"} value={customer.id}>
                                                   {customer.user.name} : <span> {customer.user.address}</span>
                                              </Option>
                                         ))}
@@ -209,7 +207,52 @@ export const Report = () => {
                                                        "Delivered Gas List"
                                                   }
                                              </span>
-                                             <Stack sx={{ color: "black", backgroundColor: "#e3e3e3", p: 1, borderRadius: "sm" }}>
+                                             <Table
+                                                  borderAxis="both"
+                                                  size="sm"
+                                                  variant="outlined"
+                                                  sx={{ width: "100%", mt: 1, tableLayout: "auto", }}
+                                             >
+                                                  <thead>
+                                                       <tr>
+                                                            <th>Delivery Date</th>
+                                                            <th>Delivery By</th>
+                                                            <th>Gas</th>
+                                                            <th>Quantity</th>
+                                                            <th>Rate</th>
+                                                            <th>Total</th>
+                                                       </tr>
+                                                  </thead>
+                                                  <tbody>
+                                                       {
+                                                            report.deliveries.map((delivery, index1) => {
+                                                                 if (delivery.cleared) {
+                                                                      return
+                                                                 }
+                                                                 let subTotal = 0;
+                                                                 grandTotalPaid += delivery.received_amount;
+                                                                 return delivery.gas_deliveries.map((gasDelivery, index) => {
+                                                                      let tempTotal = gasDelivery.price * gasDelivery.quantity;
+                                                                      subTotal += tempTotal;
+                                                                      grandTotal += tempTotal;
+                                                                      return <tr key={index + "report_td" + gasDelivery.id}>
+                                                                           <td className="b">{formatDateTime(delivery.created_at)}</td>
+                                                                           <td className="b">{report.courierBoy.find((boy) => boy.id === delivery.courier_boy_id).user.name
+                                                                           }</td>
+                                                                           <td className="b">{gasDelivery.gas_cylinder.company_name} : {gasDelivery.gas_cylinder.kg}KG <span style={{
+                                                                                color: gasDelivery.is_empty ? "#AF1740" : "green"
+                                                                           }} >{gasDelivery.is_empty ? "Recived" : `Delivered`}</span></td>
+                                                                           <td className="b">{gasDelivery.quantity}</td>
+                                                                           <td className="b">{gasDelivery.is_empty ? "-" : `₹${gasDelivery.price}`}</td>
+                                                                           <td className="b">{gasDelivery.is_empty ? "-" : `₹${tempTotal}`}</td>
+                                                                      </tr>
+                                                                 })
+
+                                                            })
+                                                       }
+                                                  </tbody>
+                                             </Table>
+                                             {/* <Stack sx={{ color: "black", backgroundColor: "#e3e3e3", p: 1, borderRadius: "sm" }}>
                                                   {
                                                        report.deliveries.map((delivery, index1) => {
                                                             let subTotal = 0;
@@ -270,7 +313,7 @@ export const Report = () => {
                                                             </Stack>
                                                        })
                                                   }
-                                             </Stack>
+                                             </Stack> */}
                                              <span style={{ fontWeight: "bold", color: "black", marginTop: 8 }}>
                                                   {
                                                        `Grand Total : ${grandTotal}₹`

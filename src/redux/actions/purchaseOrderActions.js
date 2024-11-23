@@ -1,4 +1,5 @@
-import axios from "axios";
+import { axiosInstance as axios } from "../../services/Api";
+import { loginInial } from "../authSlice";
 
 export const FETCH_ORDERS_REQUEST = "FETCH_ORDERS_REQUEST";
 export const FETCH_ORDERS_SUCCESS = "FETCH_ORDERS_SUCCESS";
@@ -16,7 +17,7 @@ export const fetchOrders = (options) => async (dispatch) => {
      dispatch({ type: FETCH_ORDERS_REQUEST });
      console.log("params", options);
      try {
-          const response = await axios.get(
+          const response = await axios().get(
                "https://adminsr.life/public/api/purchase-orders",
                { params: options },
           );
@@ -26,6 +27,10 @@ export const fetchOrders = (options) => async (dispatch) => {
           //console.log(response.data);
           dispatch({ type: FETCH_ORDERS_SUCCESS, payload: response.data });
      } catch (error) {
+          //401
+          if (error.response.status === 401) {
+               dispatch(loginInial());
+          }
           dispatch({ type: FETCH_ORDERS_FAILURE, error });
      }
 };
@@ -33,13 +38,16 @@ export const fetchOrders = (options) => async (dispatch) => {
 export const createOrder = (orderData) => async (dispatch) => {
      dispatch({ type: FETCH_ORDERS_REQUEST });
      try {
-          const response = await axios.post(
+          const response = await axios().post(
                "https://adminsr.life/public/api/purchase-orders",
                orderData,
           );
           //console.log(response);
           dispatch({ type: CREATE_ORDER_SUCCESS, payload: response.data });
      } catch (error) {
+          if (error.response.status === 401) {
+               dispatch(loginInial());
+          }
           dispatch({ type: FETCH_ORDERS_FAILURE, error });
      }
 };
@@ -47,13 +55,16 @@ export const createOrder = (orderData) => async (dispatch) => {
 export const updateOrder = (id, orderData) => async (dispatch) => {
      dispatch({ type: FETCH_ORDERS_REQUEST });
      try {
-          const response = await axios.put(
+          const response = await axios().put(
                `https://adminsr.life/public/api/purchase-orders/${id}`,
                orderData,
           );
           console.log(response.data);
           dispatch({ type: UPDATE_ORDER_SUCCESS, payload: response.data });
      } catch (error) {
+          if (error.response.status === 401) {
+               dispatch(loginInial());
+          }
           dispatch({ type: FETCH_ORDERS_FAILURE, error });
      }
 };
@@ -61,11 +72,14 @@ export const updateOrder = (id, orderData) => async (dispatch) => {
 export const deleteOrder = (id) => async (dispatch) => {
      dispatch({ type: FETCH_ORDERS_REQUEST });
      try {
-          await axios.delete(
+          await axios().delete(
                `https://adminsr.life/public/api/purchase-orders/${id}`,
           );
           dispatch({ type: DELETE_ORDER_SUCCESS, payload: id });
      } catch (error) {
+          if (error.response.status === 401) {
+               dispatch(loginInial());
+          }
           dispatch({ type: FETCH_ORDERS_FAILURE, error });
      }
 };

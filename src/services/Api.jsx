@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 export const URL = "https://adminsr.life/public/";
 export const LOGIN = URL + "api/token";
 export const CHECK_LOGIN = URL + "api/check";
@@ -41,3 +43,45 @@ export const getUserDataFromCookie = () => {
      }
      return data;
 };
+
+export const getLoginData = () => {
+     const userData = localStorage.getItem("userData");
+     let localData = null;
+     if (userData) {
+          const data = JSON.parse(userData);
+          const timeStamps = new Date(data.timeStamps);
+          const currentTime = new Date();
+          if (currentTime.getDate() !== timeStamps.getDate()) {
+               localStorage.removeItem("userData");
+          } else {
+               localData = data.data;
+          }
+     }
+     return localData;
+}
+
+
+const axiosInstance_ = axios.create({
+     baseURL: URL + 'api/',
+});
+
+export const axiosInstance = () => {
+
+     // Add a request interceptor to attach the token
+     axiosInstance_.interceptors.request.use(
+          (config) => {
+               const token = getLoginData()?.token;
+               if (token) {
+                    config.headers['Authorization'] = `Bearer ${token}`;
+               }
+               return config;
+          },
+          (error) => {
+               return Promise.reject(error);
+          }
+     );
+
+     return axiosInstance_;
+}
+
+export default axiosInstance();

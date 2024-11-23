@@ -24,10 +24,12 @@ import expencesReducer from "../redux/reducers/expencesReducer.js";
 import newGasReducer from "../redux/reducers/gasReducer.js";
 import customersReducer from "../redux/reducers/customerReducers.js";
 import reportReducer from "../redux/reducers/reportReducers.js";
+import authReducer from "../redux/authSlice.js";
 
 export const store = configureStore({
      reducer: {
           login: loginReducer,
+          loginV2: authReducer,
 
           checkLogin: checkLoginReducer,
 

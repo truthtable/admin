@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchExpences } from '../../redux/actions/expencesActions';
+import { fetchExpences, updateExpence } from '../../redux/actions/expencesActions';
 import { Box, Button, Divider, Input, LinearProgress, Stack, Table, Typography } from '@mui/joy';
 import { FcDown } from 'react-icons/fc';
+import gasServices from '../../services/gas-services';
 export default function Expences() {
      //get user_id from url
      //
@@ -60,6 +61,9 @@ export default function Expences() {
 
      console.log({ expenses, expenceLoading, expenceError });
 
+     const totalExpences = expenses.reduce((acc, expence) => acc + expence.amount, 0);
+     console.log(totalExpences);
+
      const get = () => {
           dispatch(fetchExpences({
                user_id: USER_ID,
@@ -72,6 +76,18 @@ export default function Expences() {
           get()
      }, [startDate,
           endDate]);
+
+
+     useEffect(() => {
+          gasServices.listenDataChange(() => {
+               if (
+                    !expenceLoading
+               ) {
+                    console.log("fetching...");
+                    get();
+               }
+          });
+     }, []);
 
      return (
           <Box
@@ -113,7 +129,7 @@ export default function Expences() {
                          color: "black",
                          padding: "16px",
                     }}>
-                         Expences of {USER_NAME}
+                         Expences of {USER_NAME} : <i>₹{totalExpences}</i>
                     </span>
                     <Divider sx={{ flexGrow: 1 }} />
                     <Stack gap={1} direction={"row"} alignContent={"center"} alignItems={"center"} >
@@ -157,8 +173,52 @@ export default function Expences() {
                          {expenses.map((expence) => (
                               <tr key={expence.id}>
                                    <td style={{ fontWeight: "bold" }}>{formatDate(expence.created_at)}</td>
-                                   <td style={{ fontWeight: "bold" }}>{expence.reason}</td>
-                                   <td style={{ fontWeight: "bold" }}>{expence.amount}</td>
+                                   <td style={{ fontWeight: "bold" }}>
+                                        <Box
+                                             sx={{
+                                                  transition: 'all 0.3s',
+                                                  borderRadius: 'md',
+                                                  '&:hover': {
+                                                       backgroundColor: '#FFF4B7',
+                                                       p: 1
+                                                  }
+                                             }}
+                                             onClick={() => {
+                                                  const value = prompt("Enter reason", expence.reason);
+                                                  if (value) {
+                                                       dispatch(
+                                                            updateExpence({
+                                                                 id: expence.id,
+                                                                 reason: value
+                                                            })
+                                                       );
+                                                  }
+                                             }}
+                                        ><span className='b'>{expence.reason}</span></Box>
+                                   </td>
+                                   <td style={{ fontWeight: "bold" }}>
+                                        <Box
+                                             sx={{
+                                                  transition: 'all 0.3s',
+                                                  borderRadius: 'md',
+                                                  '&:hover': {
+                                                       backgroundColor: '#FFF4B7',
+                                                       p: 1
+                                                  }
+                                             }}
+                                             onClick={() => {
+                                                  const value = prompt("Enter new amount", expence.amount);
+                                                  if (value) {
+                                                       dispatch(
+                                                            updateExpence({
+                                                                 id: expence.id,
+                                                                 amount: value
+                                                            })
+                                                       );
+                                                  }
+                                             }}
+                                        ><span className='b'>₹{expence.amount}</span></Box>
+                                   </td>
                               </tr>
                          ))}
                     </tbody>
@@ -166,7 +226,6 @@ export default function Expences() {
           </Box>
      )
 }
-
 function formatDate(date) {
      const dateObj = new Date(date);
      const month = dateObj.getMonth() + 1;

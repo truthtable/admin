@@ -604,7 +604,14 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
                                                                                                }}
                                                                                                required
                                                                                                value={item.return_cyl_qty}
-                                                                                               onChange={(e) => handleItemChange(index, 'return_cyl_qty', e.target.value)}
+                                                                                               onChange={(e) => {
+                                                                                                    console.log(item)
+                                                                                                    if (item.qty <= e.target.value) {
+                                                                                                         alert("Return qty should be less than qty")
+                                                                                                         return
+                                                                                                    }
+                                                                                                    handleItemChange(index, 'return_cyl_qty', e.target.value)
+                                                                                               }}
                                                                                                endDecorator={
                                                                                                     <Chip
                                                                                                          style={{
@@ -622,7 +629,12 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
                                                                                                variant="outlined"
                                                                                                color="danger"
 
-                                                                                               onClick={() => removeItem(index)}
+                                                                                               onClick={() => {
+                                                                                                    const confirm = window.confirm("Are you sure you want to delete this item?");
+                                                                                                    if (confirm) {
+                                                                                                         removeItem(index);
+                                                                                                    }
+                                                                                               }}
                                                                                           >
                                                                                                <CgTrash />
                                                                                           </Button>

@@ -18,6 +18,7 @@ import { TbHomePlus } from "react-icons/tb";
 import { fetchGas } from "../../redux/actions/gasAction.js";
 import { CgClose, CgCross } from "react-icons/cg";
 import { IoMdClose } from "react-icons/io";
+import gasServices from "../../services/gas-services.jsx";
 
 const ViewCustomer = () => {
 
@@ -49,7 +50,7 @@ const ViewCustomer = () => {
      }
 
      useEffect(() => {
-          if (customerData.data == null) {
+          if (customerData.data == null && !customerData.isLoading && !customerData.isError) {
                dispatch(fetchCustomerData());
           }
           if (gasList.length == 0 && !gasLoading) {
@@ -62,6 +63,17 @@ const ViewCustomer = () => {
                dispatch(fetchCustomerData());
           }
      });
+     useEffect(() => {
+          gasServices.listenDataChange(() => {
+               if (
+                    !customerData.isLoading
+               ) {
+                    console.log("fetchCustomerData...");
+                    dispatch(fetchCustomerData());
+
+               }
+          });
+     }, []);
 
      const [openNewConnection, setOpenNewConnection] = useState(false);
 
@@ -380,17 +392,7 @@ function makeRow(data) {
                value={data.user.phone_no}
                table={UPDATE_USER}
           />,
-          <UpdateCustomerCell
-               userId={data.user_id}
-               custId={data.id}
-               updateUser={false}
-               key="Balance"
-               name="Balance"
-               type={NUMBER}
-               text={`${data.Balance}₹`}
-               value={data.Balance}
-               table={UPDATE_CUSTOMER}
-          />,
+          <span key="tb" className="b ps1">{`₹${data.totalBalance}`}</span>,
           <Box
                key="chb"
                sx={{

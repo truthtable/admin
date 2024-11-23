@@ -62,15 +62,20 @@ export const fetchDeliveries = (params) => {
                     params: params,
                });
 
-               let logs = response.headers["x-log-data"];
-               //conver url encoded string to json
-               logs = decodeURIComponent(logs);
-               logs = JSON.parse(logs);
-               console.log(logs);
+               try {
+                    let logs = response.headers["x-log-data"];
+                    //conver url encoded string to json
+                    logs = decodeURIComponent(logs);
+                    logs = JSON.parse(logs);
+                    console.log(logs);
+               } catch (e) {
+                    //console.log(e);
+               }
 
                const deliveries = response.data;
                dispatch(fetchDeliveriesSuccess(deliveries));
           } catch (error) {
+               console.log("error", error);
                dispatch(fetchDeliveriesFailure(error.message));
           }
      };
@@ -107,6 +112,7 @@ export const updateDelivery = (delivery) => {
                     dispatch(updateDeliverySuccess(deliveries));
                }
           } catch (error) {
+               console.log("error", error);
                dispatch(fetchDeliveriesFailure(error.message));
           }
      };
