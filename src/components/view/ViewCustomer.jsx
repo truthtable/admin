@@ -260,6 +260,14 @@ const ViewCustomer = () => {
                                              }}
                                         >Add Gas</Button>
                                    </Stack>
+                                   <List>
+                                        <ListItem>
+                                             <ListItemContent sx={{ fontWeight: "bold" }}>Accessories</ListItemContent>
+                                        </ListItem>
+                                        <ListItem>
+                                             <ListItemContent sx={{ fontWeight: "bold" }}>Price</ListItemContent>
+                                        </ListItem>
+                                   </List>
                                    <Stack direction={"row"} gap={1}>
                                         <Input placeholder="Accessory" />
                                         <Input placeholder="Price" type="number" />
