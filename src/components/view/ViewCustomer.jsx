@@ -273,7 +273,7 @@ const ViewCustomer = () => {
                                         <Input placeholder="Price" type="number" />
                                    </Stack>
                                    <Button type="submit"
-                                   >Add Customer</Button>
+                                   >Add</Button>
                               </Stack>
                          </form>
                     </Sheet>
