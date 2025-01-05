@@ -188,6 +188,8 @@ const ViewCustomer = () => {
                                    <Input placeholder="Name" name="name" required />
                                    <Input placeholder="Phone" name="phone" required type="number" />
                                    <Input placeholder="Address" name="address" required />
+                                   <Input placeholder="Aadhar Card No." name="aadhar_card_no" required />
+                                   <Input placeholder="Diary No." name="diary_no" required />
                                    <List >
                                         {gasIdList.map((item, index) => {
                                              const gas = gasList.find((gas) => gas.id === item.id);
@@ -227,22 +229,6 @@ const ViewCustomer = () => {
                                         })
                                         }
                                    </List>
-                                   {/* <List>
-                                        <ListItem
-                                             sx={{
-                                                  // border stroke
-                                                  borderWidth: 2,
-                                                  borderRadius: "lg"
-                                             }}
-                                        >
-                                             <ListItemContent
-                                                  sx={{
-                                                       fontWeight: "bold"
-                                                  }}
-                                             >Home</ListItemContent>
-                                             <IoMdClose />
-                                        </ListItem>
-                                   </List> */}
                                    <Stack
                                         direction={"row"}
                                         gap={1}
@@ -273,6 +259,10 @@ const ViewCustomer = () => {
                                                   addGasIdList(tempSelectedId, tempQty)
                                              }}
                                         >Add Gas</Button>
+                                   </Stack>
+                                   <Stack direction={"row"} gap={1}>
+                                        <Input placeholder="Accessory" />
+                                        <Input placeholder="Price" type="number" />
                                    </Stack>
                                    <Button type="submit"
                                    >Add</Button>

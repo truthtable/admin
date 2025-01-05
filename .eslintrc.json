@@ -15,5 +15,16 @@
         "vue"
     ],
     "rules": {
+        "no-unused-vars": [
+            "warn",
+            {
+                "vars": "all",
+                "args": "none",
+                "ignoreRestSiblings": true,
+                "varsIgnorePattern": "^_",
+                "argsIgnorePattern": "^_"
+            }
+        ],
+        "vue/no-unused-components": "warn"
     }
 }
