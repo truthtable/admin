@@ -804,24 +804,7 @@ function OrderRow({orders, allGas, plants}) {
                 const orderNumber = order.order_no;
                 const orderDate = order.date;
                 const orderSchemeType = order.scheme_type;
-                const orderTtotalPayAmt = Number(order.pay_amt);
-                const orderTCS = Number(order.tcs);
-                const orderFOR = Number(order.for_charges);
                 const orderSchemeRate = Number(order.scheme);
-                const orderPlant = plants.filter(plant => plant.id === order.plant_id)[0]
-                const orderTotalDefectiveAmount = Number(order.defective_amount);
-
-                let orderTotalQty = 0;
-                let orderTotalKg = 0;
-                let orderTotalAmt = 0;
-                let orderTotalTCS = 0;
-                let orderTotalFOR = 0;
-                let orderTotalScheme = 0;
-                let orderTotalRemainingAmt = 0;
-                let orderTotalReturnQty = 0;
-                let orderTotalReturnKg = 0;
-
-                let orderCleared = order.cleared;
 
                 if (order.items.length === 0) {
                     return <Card key={`order-row-empty-${order.id}`}
@@ -890,17 +873,15 @@ function OrderRow({orders, allGas, plants}) {
 function Heading() {
     return (
         <>
-                              <span style={{
-                                  fontWeight: "bold",
-                                  color: "black",
-                                  fontSize: "xx-large",
-                                  textAlign: "center"
-                              }}>
-                                   SHREE RAM DISTRIBUTORS
-                              </span>
-            <span style={{color: "black", textAlign: "center"}}><i>
-                                   Address:SHREE RAM DISTRIBUTOR SHOP NO. 3 OPP ESSAR PUMP , NEAR DADRA GARDEN VAPI SILVASSA ROAD DADRA , DADRA NAGAR HAVELI (U.T.), <br/> Phone: +917984240723, Email : jitenrpande@gmail.com
-                              </i> </span>
+         <span style={{
+             fontWeight: "bold",
+             color: "black",
+             fontSize: "xx-large",
+             textAlign: "center"
+         }}>SHREE RAM DISTRIBUTORS
+         </span>
+            <span style={{color: "black", textAlign: "center"}}><i>Address:SHREE RAM DISTRIBUTOR SHOP NO. 3 OPP ESSAR PUMP , NEAR DADRA GARDEN VAPI SILVASSA ROAD DADRA , DADRA NAGAR HAVELI (U.T.), <br/> Phone: +917984240723, Email : jitenrpande@gmail.com
+            </i></span>
             <Divider sx={{backgroundColor: "#979797", m: 1}}/>
         </>
     )
