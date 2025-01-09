@@ -188,7 +188,7 @@ export default function UpdateCustomerCell({userId, custId, text, type, name, va
                               (type === TEXT && (name == NAME || name == ADDRESS || name == PHONE)) && ( */}
                     <Input
                         variant="soft"
-                        placeholder={text}
+                        placeholder={text + ""}
                         type={type}
                         //only allow numbers not e
                         defaultValue={disp}

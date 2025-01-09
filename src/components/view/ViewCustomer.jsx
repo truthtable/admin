@@ -37,6 +37,8 @@ import {fetchGas} from "../../redux/actions/gasAction.js";
 import {CgClose, CgCross} from "react-icons/cg";
 import {IoMdClose} from "react-icons/io";
 import gasServices from "../../services/gas-services.jsx";
+import {urlDecodeAndParseJson} from "../../Tools.jsx";
+import {FaInfoCircle} from "react-icons/fa";
 
 const ViewCustomer = () => {
 
@@ -418,12 +420,12 @@ const ViewCustomer = () => {
             </Stack>
             <DataTable
                 thead={[
+                    <TableHead key={"all_data"}><FaInfoCircle/></TableHead>,
                     <TableHead key={"diary_no"}>Diary No.</TableHead>,
                     <TableHead key={"name"}>Name</TableHead>,
                     <TableHead key={"address"}>Address</TableHead>,
                     <TableHead key={"phone_no"}>Phone No.</TableHead>,
                     <TableHead key={"balance"}>Balance</TableHead>,
-                    // <TableHead key={"all_data"}>All Data</TableHead>,
                     <TableHead key={"history"}>History</TableHead>,
                 ]}
                 tbody={data}
@@ -448,6 +450,7 @@ function combineData(data, userdata) {
 function makeRow(data) {
     //console.log(data);
     return [
+        <AllData key="all_data" data={data}/>,
         <UpdateCustomerCell
             userId={data.user_id}
             custId={data.id}
@@ -493,7 +496,6 @@ function makeRow(data) {
             table={UPDATE_USER}
         />,
         <span key="tb" className="b ps1">{`₹${data.totalBalance}`}</span>,
-        // <AllData key="all_data" data={data}/>,
         <Box
             key="chb"
             sx={{
@@ -553,17 +555,8 @@ function AllData({data}) {
             "phone_no": "245"
         }
     } */
-    let gas = null;
-    try {
-        //urldecode
-        const urldecode = decodeURIComponent(data.gas);
-        //parse
-        gas = JSON.parse(urldecode);
-
-    } catch (e) {
-        console.log(e);
-    }
-    //const accessories = JSON.parse(data.accessories);
+    const gas = urlDecodeAndParseJson(data.gas) ?? [];          // Will decode to [{id: 11, qty: 1}]
+    const accessories = urlDecodeAndParseJson(data.accessories) ?? null;  // Will decode to [{accessory: "stove", price: "574"}]
     return <>
         <Modal
             open={open}
@@ -593,21 +586,80 @@ function AllData({data}) {
                         opacity: 0,
                     }}/>
                     <List>
+                        {/*<ListItem>*/}
+                        {/*    <ListItemContent>*/}
+                        {/*        <Stack direction={"row"} spacing={1}>*/}
+                        {/*            <pre>{JSON.stringify(data, null, 2)}</pre>*/}
+                        {/*        </Stack>*/}
+                        {/*    </ListItemContent>*/}
+                        {/*</ListItem>*/}
                         <ListItem>
                             <ListItemContent>
-                                <Stack direction={"row"} spacing={1}>
-                                    <pre>Diary Number</pre>
+                                <Stack direction={"row"} spacing={1} alignItems="center" justifyContent="flex-start">
+                                    <pre>Name</pre>
                                     :
-                                    <pre>{data.diaryNumber}</pre>
+                                    <pre>{data.user.name}</pre>
                                 </Stack>
                             </ListItemContent>
                         </ListItem>
+                        <Divider/>
                         <ListItem>
                             <ListItemContent>
-                                <Stack direction={"row"} spacing={1}>
+                                <Stack direction={"row"} spacing={1} alignItems="center" justifyContent="flex-start">
+                                    <pre>Address</pre>
+                                    :
+                                    <pre>{data.user.address}</pre>
+                                </Stack>
+                            </ListItemContent>
+                        </ListItem>
+                        <Divider/>
+                        <ListItem>
+                            <ListItemContent>
+                                <Stack direction={"row"} spacing={1} alignItems="center" justifyContent="flex-start">
+                                    <pre>Phone Number</pre>
+                                    :
+                                    <pre>{data.user.phone_no}</pre>
+                                </Stack>
+                            </ListItemContent>
+                        </ListItem>
+                        <Divider/>
+                        <ListItem>
+                            <ListItemContent>
+                                <Stack direction={"row"} spacing={1} alignItems="center" justifyContent="flex-start">
+                                    <pre>Aadhar Card Number</pre>
+                                    <UpdateCustomerCell
+                                        userId={data.user_id}
+                                        custId={data.id}
+                                        updateUser={false}
+                                        key="aadhar_card_no"
+                                        name="aadhar_card_no"
+                                        type={NUMBER}
+                                        text={data.aadhar_card_no ? data.aadhar_card_no : 0}
+                                        value={data.aadhar_card_no ? data.aadhar_card_no : 0}
+                                        table={UPDATE_CUSTOMER}
+                                    />
+                                </Stack>
+                            </ListItemContent>
+                        </ListItem>
+                        <Divider/>
+                        <ListItem>
+                            <ListItemContent>
+                                <Stack direction={"row"} spacing={1} alignItems="center" justifyContent="flex-start">
                                     <pre>Diary Number</pre>
                                     :
-                                    <pre>{gas}</pre>
+                                    <pre>{data.diaryNumber ? data.diaryNumber : "-"}</pre>
+                                </Stack>
+                            </ListItemContent>
+                        </ListItem>
+                        <Divider/>
+                        <ListItem>
+                            <ListItemContent>
+                                <Stack direction={"row"} spacing={1} alignItems="center" justifyContent="flex-start">
+                                    <pre>Accessories</pre>
+                                    :
+                                    <pre>{accessories ? accessories.map((accessorie) => {
+                                        return "[ " + accessorie.accessory + " - " + accessorie.price + " ]"
+                                    }) : "-"}</pre>
                                 </Stack>
                             </ListItemContent>
                         </ListItem>
@@ -626,7 +678,6 @@ function AllData({data}) {
                 "&:hover": {
                     backgroundColor: "rgb(75 112 245 / 25%)",
                 },
-                pl: 1
 
             }}>
 
@@ -643,15 +694,18 @@ function AllData({data}) {
                 disabled: true,
                 justifyContent: "flex-start",
                 color: "#377e3a",
-
-
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
             }}
                     onClick={() => {
                         //window.location.href = `/admin/#/admin/deliveryHistory/?customer_id=${data.id}`;
                         setOpen(true);
                     }}
 
-            >All Data</Button>
+            >
+                <FaInfoCircle/>
+            </Button>
         </Box>
     </>
 }
