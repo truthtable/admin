@@ -25,6 +25,7 @@ import newGasReducer from "../redux/reducers/gasReducer.js";
 import customersReducer from "../redux/reducers/customerReducers.js";
 import reportReducer from "../redux/reducers/reportReducers.js";
 import authReducer from "../redux/authSlice.js";
+import connectionReducer from "../redux/connectionSlice.js";
 
 export const store = configureStore({
      reducer: {
@@ -75,6 +76,8 @@ export const store = configureStore({
           user: userReducer,
 
           expence: expencesReducer,
+
+          connections: connectionReducer,
      },
      devTools: process.env.NODE_ENV !== "production",
 });
