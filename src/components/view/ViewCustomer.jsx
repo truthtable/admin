@@ -53,6 +53,12 @@ const ViewCustomer = () => {
 
      const [searchText, setSearchText] = useState("");
 
+     const connection = useSelector((state) => state.connections);
+     const loadConnection = (id) => {
+          dispatch(fetchConnectionByCustomerId(id));
+     };
+     console.log(connection);
+
      const data = [];
      if (notNull(customerData.data)) {
           if (customerData.data.data.length > 0) {
@@ -65,7 +71,7 @@ const ViewCustomer = () => {
                }
 
                temp.forEach((item) => {
-                    data.push(makeRow(item));
+                    data.push(makeRow(item, loadConnection));
                });
 
           }
@@ -152,6 +158,9 @@ const ViewCustomer = () => {
                     return temp;
                })
           };
+
+          ///
+
 
           return <Modal
                open={openNewConnection}
@@ -449,10 +458,14 @@ function combineData(data, userdata) {
      });
 }
 
-function makeRow(data) {
+function makeRow(data, onAllDataClick) {
      //console.log(data);
      return [
-          <AllData key="all_data" data={data} />,
+          <AllData
+               key="all_data"
+               data={data}
+               onClick={onAllDataClick}
+          />,
           <UpdateCustomerCell
                userId={data.user_id}
                custId={data.id}
@@ -543,19 +556,15 @@ import {
      fetchConnectionByCustomerId
 } from '../../redux/connectionSlice.js'
 
-function AllData({ data }) {
+function AllData({ data, onClick }) {
+     const dispatch = useDispatch();
      const [open, setOpen] = useState(false);
      const gas = urlDecodeAndParseJson(data.gas) ?? [];          // Will decode to [{id: 11, qty: 1}]
      const accessories = urlDecodeAndParseJson(data.accessories) ?? null;  // Will decode to [{accessory: "stove", price: "574"}]
-     useEffect(() => {
-          if (open) {
-               fetchConnectionByCustomerId(data.id);
-          }
-     });
      if (open) {
           //get customer connections
-          const connection = useSelector((state) => state.connections);
-          console.log(connection);
+          //const connection = useSelector((state) => state.connections);
+          //console.log(connection);
           return <>
                <Modal
                     open={open}
@@ -700,6 +709,7 @@ function AllData({ data }) {
           }}
                onClick={() => {
                     //window.location.href = `/admin/#/admin/deliveryHistory/?customer_id=${data.id}`;
+                    onClick(data.id);
                     setOpen(true);
                }}
 
