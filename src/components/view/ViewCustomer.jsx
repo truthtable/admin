@@ -41,6 +41,10 @@ import gasServices from "../../services/gas-services.jsx";
 import { urlDecodeAndParseJson } from "../../Tools.jsx";
 import { FaInfoCircle } from "react-icons/fa";
 import { use } from "react";
+import {
+     fetchConnectionByCustomerId,
+     resetConnection
+} from '../../redux/connectionSlice.js'
 
 const ViewCustomer = () => {
 
@@ -55,9 +59,10 @@ const ViewCustomer = () => {
 
      const connection = useSelector((state) => state.connections);
      const loadConnection = (id) => {
+          dispatch(resetConnection());
           dispatch(fetchConnectionByCustomerId(id));
      };
-     console.log(connection);
+     //console.log(connection);
 
      const data = [];
      if (notNull(customerData.data)) {
@@ -539,8 +544,6 @@ function makeRow(data, onAllDataClick) {
                     disabled: true,
                     justifyContent: "flex-start",
                     color: "#185ea5",
-
-
                }}
 
                     onClick={() => {
@@ -552,15 +555,8 @@ function makeRow(data, onAllDataClick) {
      ];
 }
 
-import {
-     fetchConnectionByCustomerId
-} from '../../redux/connectionSlice.js'
-
 function AllData({ data, onClick }) {
-     const dispatch = useDispatch();
      const [open, setOpen] = useState(false);
-     const gas = urlDecodeAndParseJson(data.gas) ?? [];          // Will decode to [{id: 11, qty: 1}]
-     const accessories = urlDecodeAndParseJson(data.accessories) ?? null;  // Will decode to [{accessory: "stove", price: "574"}]
      if (open) {
           //get customer connections
           //const connection = useSelector((state) => state.connections);

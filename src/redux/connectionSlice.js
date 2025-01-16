@@ -20,21 +20,39 @@ const connectionSlice = createSlice({
                state.isError = true;
                state.errorMessage = action.payload;
           },
+          connectionReset: (state) => {
+               state.data = null;
+               state.isLoading = false;
+               state.isError = false;
+               state.errorMessage = "";
+          },
+          connectionLoading: (state) => {
+               state.isLoading = true;
+               state.isError = false;
+          },
      },
 });
 
 export const fetchConnectionByCustomerId = (id) => async (dispatch) => {
+     dispatch(connectionLoading());
      try {
           const response = await axios().get(`new-connections/${id}`);
-          console.log(response.data);
+          //console.log(response.data);
           dispatch(connectionByCustomerId(response.data));
      } catch (error) {
           console.log(error);
           dispatch(connectionError(id));
      }
 };
+export const resetConnection = () => async (dispatch) => {
+     dispatch(connectionReset());
+};
 
-export const { connectionByCustomerId, connectionError } =
-     connectionSlice.actions;
+export const {
+     connectionByCustomerId,
+     connectionError,
+     connectionReset,
+     connectionLoading,
+} = connectionSlice.actions;
 
 export default connectionSlice.reducer;
