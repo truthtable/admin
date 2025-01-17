@@ -35,7 +35,7 @@ const connectionSlice = createSlice({
 
 export const fetchConnectionByCustomerId = (id) => async (dispatch) => {
      dispatch(connectionLoading());
-     try {
+     try {     
           const response = await axios().get(`new-connections/${id}`);
           //console.log(response.data);
           dispatch(connectionByCustomerId(response.data));
