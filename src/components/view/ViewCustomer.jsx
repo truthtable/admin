@@ -1,4 +1,3 @@
-//DeliveryHistory.jsx
 import React, { useEffect, useState } from "react";
 import "../../crud/crud-css/read.css";
 import { BsSearch, } from "react-icons/bs";
@@ -38,7 +37,7 @@ import { fetchGas } from "../../redux/actions/gasAction.js";
 import { CgClose, CgCross } from "react-icons/cg";
 import { IoMdClose } from "react-icons/io";
 import gasServices from "../../services/gas-services.jsx";
-import { urlDecodeAndParseJson } from "../../Tools.jsx";
+import { formatDateTDDMMYY, urlDecodeAndParseJson } from "../../Tools.jsx";
 import { FaInfoCircle } from "react-icons/fa";
 import { use } from "react";
 import {
@@ -60,19 +59,24 @@ const ViewCustomer = () => {
 
      const [customerDetailsModel, setCustomerDetailsModel] = useState(false);
 
+     let [selectedCustomer, setSelectedCustomer] = useState(null);
      const connection = useSelector((state) => state.connections);
+     let xcombineData = null
      const loadConnection = (id) => {
+          //console.log(id)
+          const customer = xcombineData.find((user) => user.id == id)
+          setSelectedCustomer(customer)
           setCustomerDetailsModel(true);
           dispatch(resetConnection());
           dispatch(fetchConnectionByCustomerId(id));
      };
      //console.log(connection);
-
+     //console.log(selectedCustomer)
      const data = [];
      if (notNull(customerData.data)) {
           if (customerData.data.data.length > 0) {
                let temp = combineData(customerData.data.data, customerData.data.userdata);
-
+               xcombineData = temp
                if (searchText.length > 0) {
                     temp = temp.filter((item) => {
                          return item.user.name.toLowerCase().includes(searchText.toLowerCase());
@@ -85,7 +89,6 @@ const ViewCustomer = () => {
 
           }
      }
-
      useEffect(() => {
           if (customerData.data == null && !customerData.isLoading && !customerData.isError) {
                dispatch(fetchCustomerData());
@@ -94,7 +97,6 @@ const ViewCustomer = () => {
                dispatch(fetchGas())
           }
      });
-
      useEffect(() => {
           if (updateCustomer.isSuccessful) {
                dispatch(fetchCustomerData());
@@ -111,12 +113,9 @@ const ViewCustomer = () => {
                }
           });
      }, []);
-
      const [openNewConnection, setOpenNewConnection] = useState(false);
-
      const NewConnectionForm = () => {
           const [gasIdList, setGasIdList] = useState(new Array());
-
           const addGasIdList = (id, qty) => {
                if (qty < 1) {
                     alert("Quantity should be greater than 0");
@@ -135,7 +134,6 @@ const ViewCustomer = () => {
                //console.log(id, qty);
                setGasIdList((prevList) => [...prevList, { id: id, qty: qty }]);
           };
-
           const removeGasItem = (index) => {
                setGasIdList((prevList) => {
                     let temp = [...prevList];
@@ -143,7 +141,6 @@ const ViewCustomer = () => {
                     return temp;
                })
           };
-
           const [accessory, setAccessory] = useState("");
           const [price, setPrice] = useState("");
           const [accessoryList, setAccessoryList] = useState(new Array());
@@ -167,10 +164,7 @@ const ViewCustomer = () => {
                     return temp;
                })
           };
-
           ///
-
-
           return <Modal
                open={openNewConnection}
                onClose={() => setOpenNewConnection(false)}
@@ -226,7 +220,7 @@ const ViewCustomer = () => {
                                              "aadhar_card_no": t.aadhar_card_no,
                                              "accessories": accessoryList
                                         });
-                                        console.log(data)
+                                        //console.log(data)
                                         let config = {
                                              method: 'post',
                                              maxBodyLength: Infinity,
@@ -406,6 +400,41 @@ const ViewCustomer = () => {
      }
      let tempQty = 1
      let tempSelectedId = gasList[0].id
+     let new_connection = null
+     try {
+          //console.log(connection.data.new_connection)
+          if (connection.data.new_connection) {
+               new_connection = connection.data.new_connection
+          }
+     } catch (e) {
+          //console.log(e)
+     }
+     /*new_connection =
+     [
+    {
+        "id": 3,
+        "custome_id": 120,
+        "gas_id": 2,
+        "gas_qty": 2,
+        "gas_price": 100.5,
+        "accessorie": "Regulator",
+        "accessorie_price": 25,
+        "created_at": "2025-01-09T14:09:26.000000Z"
+    },
+    {
+        "id": 4,
+        "custome_id": 120,
+        "gas_id": 2,
+        "gas_qty": 2,
+        "gas_price": 100.5,
+        "accessorie": "Regulator",
+        "accessorie_price": 25,
+        "created_at": "2025-01-09T14:09:34.000000Z"
+    }
+]
+     */
+     new_connection = new_connection ? new_connection : []
+     console.log(new_connection)
      return (
           <div style={{
                width: "100%",
@@ -451,13 +480,16 @@ const ViewCustomer = () => {
                               gap: "10px",
                          }}
                     >
-                         <Container>
+                         <Container
+                         >
                               <Sheet
                                    sx={{
                                         padding: "20px",
                                         borderRadius: "10px",
                                         backgroundColor: "#fff",
                                         boxShadow: "0px 0px 10px 0px #0000001a",
+                                        overflow: "auto",
+                                        height: "80vh",
                                    }}
                               >
                                    <ModalClose variant="outlined" />
@@ -467,82 +499,94 @@ const ViewCustomer = () => {
                                         opacity: 0,
                                    }} />
                                    <List>
-                                        {/*<ListItem>*/}
-                                        {/*    <ListItemContent>*/}
-                                        {/*        <Stack direction={"row"} spacing={1}>*/}
-                                        {/*            <pre>{JSON.stringify(data, null, 2)}</pre>*/}
-                                        {/*        </Stack>*/}
-                                        {/*    </ListItemContent>*/}
-                                        {/*</ListItem>*/}
-                                        <ListItem>
-                                             <ListItemContent>
-                                                  <Stack direction={"row"} spacing={1} alignItems="center" justifyContent="flex-start">
-                                                       <pre>Name</pre>
-                                                       :
-                                                       <pre>{"data.user.name"}</pre>
-                                                  </Stack>
-                                             </ListItemContent>
-                                        </ListItem>
-                                        <Divider />
-                                        <ListItem>
-                                             <ListItemContent>
-                                                  <Stack direction={"row"} spacing={1} alignItems="center" justifyContent="flex-start">
-                                                       <pre>Address</pre>
-                                                       :
-                                                       <pre>{"data.user.address"}</pre>
-                                                  </Stack>
-                                             </ListItemContent>
-                                        </ListItem>
-                                        <Divider />
-                                        <ListItem>
-                                             <ListItemContent>
-                                                  <Stack direction={"row"} spacing={1} alignItems="center" justifyContent="flex-start">
-                                                       <pre>Phone Number</pre>
-                                                       :
-                                                       <pre>{"data.user.phone_no"}</pre>
-                                                  </Stack>
-                                             </ListItemContent>
-                                        </ListItem>
-                                        <Divider />
-                                        <ListItem>
-                                             <ListItemContent>
-                                                  <Stack direction={"row"} spacing={1} alignItems="center" justifyContent="flex-start">
-                                                       <pre>Aadhar Card Number</pre>
-                                                       {/* <UpdateCustomerCell
-                                                            userId={data.user_id}
-                                                            custId={data.id}
-                                                            updateUser={false}
-                                                            key="aadhar_card_no"
-                                                            name="aadhar_card_no"
-                                                            type={NUMBER}
-                                                            text={data.aadhar_card_no ? data.aadhar_card_no : 0}
-                                                            value={data.aadhar_card_no ? data.aadhar_card_no : 0}
-                                                            table={UPDATE_CUSTOMER}
-                                                       /> */}
-                                                  </Stack>
-                                             </ListItemContent>
-                                        </ListItem>
-                                        <Divider />
-                                        <ListItem>
-                                             <ListItemContent>
-                                                  <Stack direction={"row"} spacing={1} alignItems="center" justifyContent="flex-start">
-                                                       <pre>Diary Number</pre>
-                                                       :
-                                                       {/* <pre>{data.diaryNumber ? data.diaryNumber : "-"}</pre> */}
-                                                  </Stack>
-                                             </ListItemContent>
-                                        </ListItem>
-                                        <Divider />
-                                        <ListItem>
-                                             <ListItemContent>
-                                                  <Stack direction={"column"} spacing={1} >
-                                                       <pre>New Connections</pre>
-                                                       {/* <pre>{
-                                                  JSON.stringify(data.new_connection, null, 2)
-                                             }</pre> */}
-                                                  </Stack>
-                                             </ListItemContent>
-                                        </ListItem>
+                                        {
+                                             connection.isLoading ? <LinearProgress /> : <>
+                                                  <ListItem>
+                                                       <ListItemContent>
+                                                            <Stack direction={"row"} spacing={1} alignItems="center" justifyContent="flex-start">
+                                                                 <pre>Name</pre>
+                                                                 :
+                                                                 <pre>{selectedCustomer ? selectedCustomer.user.name : ''}</pre>
+                                                            </Stack>
+                                                       </ListItemContent>
+                                                  </ListItem>
+                                                  <Divider />
+                                                  <ListItem>
+                                                       <ListItemContent>
+                                                            <Stack direction={"row"} spacing={1} alignItems="center" justifyContent="flex-start">
+                                                                 <pre>Address</pre>
+                                                                 :
+                                                                 <pre>{selectedCustomer ? selectedCustomer.user.address : ""}</pre>
+                                                            </Stack>
+                                                       </ListItemContent>
+                                                  </ListItem>
+                                                  <Divider />
+                                                  <ListItem>
+                                                       <ListItemContent>
+                                                            <Stack direction={"row"} spacing={1} alignItems="center" justifyContent="flex-start">
+                                                                 <pre>Phone Number</pre>
+                                                                 :
+                                                                 <pre>{selectedCustomer ? selectedCustomer.user.phone_no : ""}</pre>
+                                                            </Stack>
+                                                       </ListItemContent>
+                                                  </ListItem>
+                                                  <Divider />
+                                                  <ListItem>
+                                                       <ListItemContent>
+                                                            <Stack direction={"row"} spacing={1} alignItems="center" justifyContent="flex-start">
+                                                                 <pre>Aadhar Card Number</pre>
+                                                                 <UpdateCustomerCell
+                                                                      userId={(selectedCustomer != null) ? selectedCustomer.user_id : null}
+                                                                      custId={(selectedCustomer != null) ? selectedCustomer.user_id : null}
+                                                                      updateUser={false}
+                                                                      key="aadhar_card_no"
+                                                                      name="aadhar_card_no"
+                                                                      type={NUMBER}
+                                                                      text={(selectedCustomer != null) ? (selectedCustomer.aadhar_card_no ? selectedCustomer.aadhar_card_no : 0) : 0}
+                                                                      value={(selectedCustomer != null) ? (selectedCustomer.aadhar_card_no ? selectedCustomer.aadhar_card_no : 0) : 0}
+                                                                      table={UPDATE_CUSTOMER}
+                                                                 />
+                                                            </Stack>
+                                                       </ListItemContent>
+                                                  </ListItem>
+                                                  <Divider />
+                                                  <ListItem>
+                                                       <ListItemContent>
+                                                            <Stack direction={"row"} spacing={1} alignItems="center" justifyContent="flex-start">
+                                                                 <pre>Diary Number</pre>
+                                                                 :
+                                                                 <pre>{selectedCustomer ? selectedCustomer.diaryNumber : ""}</pre>
+                                                            </Stack>
+                                                       </ListItemContent>
+                                                  </ListItem>
+                                                  <Divider />
+                                                  <ListItem>
+                                                       <ListItemContent>
+                                                            <Stack direction={"row"} spacing={1} >
+                                                                 <pre>New Connections</pre>
+                                                                 <List>
+                                                                      {
+                                                                           new_connection.map((item, index) => {
+                                                                                return <ListItem key={"new_connection_" + index}>
+                                                                                     <ListItemContent>
+                                                                                          <Stack direction={"row"} spacing={1} alignItems="center" justifyContent="flex-start">
+                                                                                               <pre>{
+                                                                                                    formatDateTDDMMYY(new Date(item.created_at))
+                                                                                               }</pre>
+                                                                                               <pre>Gas</pre>
+                                                                                               <pre>Price</pre>
+                                                                                               <pre>Qty</pre>
+                                                                                          </Stack>
+                                                                                     </ListItemContent>
+                                                                                </ListItem>
+                                                                           })
+                                                                      }
+                                                                 </List>
+                                                            </Stack>
+                                                       </ListItemContent>
+                                                  </ListItem>
+                                             </>
+                                        }
                                    </List>
                               </Sheet>
                          </Container>
@@ -644,7 +688,6 @@ function makeRow(data, onAllDataClick) {
                     pl: 1
 
                }}>
-
                <Button style={{
                     flexGrow: 1,
                     width: "100%",
@@ -683,7 +726,6 @@ function AllData({ data, onClick }) {
                },
 
           }}>
-
           <Button style={{
                flexGrow: 1,
                width: "100%",
@@ -703,9 +745,9 @@ function AllData({ data, onClick }) {
           }}
                onClick={() => {
                     //window.location.href = `/admin/#/admin/deliveryHistory/?customer_id=${data.id}`;
+                    //console.log(data)
                     onClick(data.id);
                }}
-
           >
                <FaInfoCircle />
           </Button>
