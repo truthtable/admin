@@ -68,7 +68,7 @@ const ViewCustomer = () => {
           setSelectedCustomer(customer)
           setCustomerDetailsModel(true);
           dispatch(resetConnection());
-          dispatch(fetchConnectionByCustomerId(id));
+          //dispatch(fetchConnectionByCustomerId(id));
      };
      //console.log(connection);
      //console.log(selectedCustomer)
@@ -434,7 +434,7 @@ const ViewCustomer = () => {
 ]
      */
      new_connection = new_connection ? new_connection : []
-     console.log(new_connection)
+     //console.log(new_connection)
      return (
           <div style={{
                width: "100%",
@@ -560,7 +560,7 @@ const ViewCustomer = () => {
                                                        </ListItemContent>
                                                   </ListItem>
                                                   <Divider />
-                                                  <ListItem>
+                                                  {/* <ListItem>
                                                        <ListItemContent>
                                                             <Stack direction={"row"} spacing={1} >
                                                                  <pre>New Connections</pre>
@@ -584,7 +584,8 @@ const ViewCustomer = () => {
                                                                  </List>
                                                             </Stack>
                                                        </ListItemContent>
-                                                  </ListItem>
+                                                  </ListItem>*/
+                                                  }
                                              </>
                                         }
                                    </List>
