@@ -33,7 +33,7 @@ export default function DeliveryBoyDetails() {
           const formattedDate = `${year}-${month}-${day}`;
           return formattedDate;
      });
-     //console.log(startDate)
+
      const [endDate, setEndDate] = React.useState(() => {
           const lastDateOfCurrentMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
 
@@ -44,10 +44,16 @@ export default function DeliveryBoyDetails() {
           const formattedDate = `${year}-${month}-${day}`;
           return formattedDate;
      });
+     console.log(startDate, endDate)
+     let GET_COURIER_BOY_DATA_URL = "";
+     GET_COURIER_BOY_DATA_URL = GET_COURIER_BOY_DATA + "?" + new URLSearchParams({
+          startDate: startDate,
+          endDate: endDate,
+     }).toString();
      //
 
      if (data.data !== null) {
-          if (data.data.data.length > 0 && data.url == GET_COURIER_BOY_DATA) {
+          if (data.data.data.length > 0 && data.url == GET_COURIER_BOY_DATA_URL) {
                data.data.data.forEach((item) => {
                     let expenses = 0;
                     try {
@@ -71,16 +77,22 @@ export default function DeliveryBoyDetails() {
 
      //console.log(data);
 
+     const get = () => {
+          //console.log(GET_COURIER_BOY_DATA_URL);
+          dispatch(fetchGetData(GET_COURIER_BOY_DATA_URL))
+     }
+
      useEffect(() => {
-          if (data.data == null || data.url != GET_COURIER_BOY_DATA) {
+
+          if (data.data == null || new URL(data.url).pathname != new URL(GET_COURIER_BOY_DATA_URL).pathname) {
                //console.log("fetch");
-               dispatch(fetchGetData(GET_COURIER_BOY_DATA))
+               dispatch(fetchGetData(GET_COURIER_BOY_DATA_URL))
           }
 
           //console.log("useEffect");
           if (update.isSuccessful) {
                //console.log("update");
-               dispatch(fetchGetData(GET_COURIER_BOY_DATA));
+               dispatch(fetchGetData(GET_COURIER_BOY_DATA_URL));
           }
           //dispatch(fetchGetData(GET_COURIER_BOY_DATA));
 
@@ -165,7 +177,7 @@ export default function DeliveryBoyDetails() {
                                              axios.request(config)
                                                   .then((response) => {
                                                        console.log(response.data);
-                                                       dispatch(fetchGetData(GET_COURIER_BOY_DATA))
+                                                       dispatch(fetchGetData(GET_COURIER_BOY_DATA_URL))
                                                   })
                                                   .catch((error) => {
                                                        console.log(error);
@@ -227,6 +239,33 @@ export default function DeliveryBoyDetails() {
                          //onClick={get}
                          >OK</Button>
                     </Stack> */}
+                    <Stack gap={1} direction={"row"} alignContent={"center"} alignItems={"center"} >
+                         <span style={{ fontWeight: "bold", color: "black" }}>Date&nbsp;Start&nbsp;:&nbsp;</span>
+                         <Input type="date" sx={{ width: "100%" }}
+                              onChange={(event) => {
+                                   setStartDate(event.target.value)
+                              }}
+                              defaultValue={startDate}
+                         />
+                    </Stack>
+                    <Stack gap={1} direction={"row"} alignContent={"center"} alignItems={"center"} mr={2}>
+                         <span style={{ fontWeight: "bold", color: "black" }}>Date&nbsp;End&nbsp;:&nbsp;</span>
+                         <Input type="date" sx={{ width: "100%" }}
+                              onChange={(event) => {
+                                   setEndDate(event.target.value)
+                              }}
+                              defaultValue={endDate}
+                         />
+                    </Stack>
+                    <Stack gap={1} direction={"row"} alignContent={"center"} alignItems={"center"} mr={2}>
+                         <Button
+                              onClick={
+                                   () => {
+                                        get()
+                                   }
+                              }
+                         >OK</Button>
+                    </Stack>
                     <Divider sx={{ flexGrow: 1, opacity: 0 }} />
                     <NewBoy />
                </Stack>
@@ -288,7 +327,7 @@ export default function DeliveryBoyDetails() {
 
                                         <td>
                                              <Link
-                                                  to={"/admin/expence?user_id=" + deliveryBoyData[index].id + "&user_name=" + deliveryBoyData[index].username}
+                                                  to={"/admin/expence?user_id=" + deliveryBoyData[index].id + "&user_name=" + deliveryBoyData[index].username + "&start_date=" + startDate + "&end_date=" + endDate}
                                              ><Button
                                                   variant="soft"
                                                   color="success"

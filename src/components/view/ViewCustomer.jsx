@@ -738,7 +738,7 @@ function AllData({ data, onClick }) {
                whiteSpace: "nowrap",
                textAlign: "center",
                disabled: true,
-               justifyContent: "flex-start",
+               //justifyContent: "flex-start",
                color: "#377e3a",
                display: "flex",
                alignItems: "center",

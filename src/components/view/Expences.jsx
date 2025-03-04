@@ -14,30 +14,42 @@ export default function Expences() {
      const searchParams = new URLSearchParams(url.search);
      const USER_ID = searchParams.get('user_id');
      const USER_NAME = searchParams.get('user_name');
-     console.log(USER_ID);
+     const START_DATE = searchParams.get('start_date');
+     const END_DATE = searchParams.get('end_date');
+     //console.log(USER_ID);
      //
 
      //
      const [startDate, setStartDate] = React.useState(() => {
-          const firstDateOfCurrentMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+          if (START_DATE) {
+               return START_DATE;
+          }
+          else {
+               const firstDateOfCurrentMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 
-          const year = firstDateOfCurrentMonth.getFullYear();
-          const month = String(firstDateOfCurrentMonth.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
-          const day = String(firstDateOfCurrentMonth.getDate()).padStart(2, '0');
+               const year = firstDateOfCurrentMonth.getFullYear();
+               const month = String(firstDateOfCurrentMonth.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+               const day = String(firstDateOfCurrentMonth.getDate()).padStart(2, '0');
 
-          const formattedDate = `${year}-${month}-${day}`;
-          return formattedDate;
+               const formattedDate = `${year}-${month}-${day}`;
+               return formattedDate;
+          }
      });
      console.log(startDate)
      const [endDate, setEndDate] = React.useState(() => {
-          const lastDateOfCurrentMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+          if (END_DATE) {
+               return END_DATE;
+          }
+          else {
+               const lastDateOfCurrentMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
 
-          const year = lastDateOfCurrentMonth.getFullYear();
-          const month = String(lastDateOfCurrentMonth.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
-          const day = String(lastDateOfCurrentMonth.getDate()).padStart(2, '0');
+               const year = lastDateOfCurrentMonth.getFullYear();
+               const month = String(lastDateOfCurrentMonth.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+               const day = String(lastDateOfCurrentMonth.getDate()).padStart(2, '0');
 
-          const formattedDate = `${year}-${month}-${day}`;
-          return formattedDate;
+               const formattedDate = `${year}-${month}-${day}`;
+               return formattedDate;
+          }
      });
      //
 
@@ -142,7 +154,7 @@ export default function Expences() {
                          />
                     </Stack>
                     <Stack gap={1} direction={"row"} alignContent={"center"} alignItems={"center"} mr={2}>
-                         <span style={{ fontWeight: "bold", color: "black" }}>End&nbsp;Start&nbsp;:&nbsp;</span>
+                         <span style={{ fontWeight: "bold", color: "black" }}>Date&nbsp;End&nbsp;:&nbsp;</span>
                          <Input type="date" sx={{ width: "100%" }}
                               onChange={(event) => {
                                    setEndDate(event.target.value)
