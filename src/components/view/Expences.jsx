@@ -74,7 +74,9 @@ export default function Expences() {
      console.log({ expenses, expenceLoading, expenceError });
 
      const totalExpences = expenses.reduce((acc, expence) => acc + expence.amount, 0);
-     console.log(totalExpences);
+     //console.log(totalExpences);
+     console.log(expenses, USER_ID);
+     let onlySelectedDeliveryBoy = expenses.filter((expence) => expence.user_id == USER_ID);
 
      const get = () => {
           dispatch(fetchExpences({
@@ -182,7 +184,7 @@ export default function Expences() {
                          </tr>
                     </thead>
                     <tbody>
-                         {expenses.map((expence) => (
+                         {onlySelectedDeliveryBoy.map((expence) => (
                               <tr key={expence.id}>
                                    <td style={{ fontWeight: "bold" }}>{formatDate(expence.created_at)}</td>
                                    <td style={{ fontWeight: "bold" }}>

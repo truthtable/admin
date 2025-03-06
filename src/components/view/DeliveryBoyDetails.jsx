@@ -12,6 +12,7 @@ import { GET_COURIER_BOY_DATA, UPDATE_COURIER_BOY, UPDATE_USER, } from "../../se
 import UpdateCustomerCell, { NUMBER, TEXT } from "../edit/UpdateCustomerCell.jsx";
 import DeliveryBoyCard from "./DeliveryBoyCard.jsx";
 import { Link } from "react-router-dom";
+import { updateUrlParams } from "../../Tools.jsx";
 
 export default function DeliveryBoyDetails() {
      const dispatch = useDispatch();
@@ -33,6 +34,10 @@ export default function DeliveryBoyDetails() {
           const formattedDate = `${year}-${month}-${day}`;
           return formattedDate;
      });
+     //update url params
+     updateUrlParams({
+          "startDate": startDate
+     });
 
      const [endDate, setEndDate] = React.useState(() => {
           const lastDateOfCurrentMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
@@ -44,7 +49,10 @@ export default function DeliveryBoyDetails() {
           const formattedDate = `${year}-${month}-${day}`;
           return formattedDate;
      });
-     console.log(startDate, endDate)
+     updateUrlParams({
+          "endDate": endDate
+     });
+     //console.log(startDate, endDate)
      let GET_COURIER_BOY_DATA_URL = "";
      GET_COURIER_BOY_DATA_URL = GET_COURIER_BOY_DATA + "?" + new URLSearchParams({
           startDate: startDate,
@@ -52,8 +60,9 @@ export default function DeliveryBoyDetails() {
      }).toString();
      //
 
+
      if (data.data !== null) {
-          if (data.data.data.length > 0 && data.url == GET_COURIER_BOY_DATA_URL) {
+          if (data.data.data.length > 0 && stripUrlParams(data.url) == stripUrlParams(GET_COURIER_BOY_DATA_URL)) {
                data.data.data.forEach((item) => {
                     let expenses = 0;
                     try {
@@ -243,7 +252,11 @@ export default function DeliveryBoyDetails() {
                          <span style={{ fontWeight: "bold", color: "black" }}>Date&nbsp;Start&nbsp;:&nbsp;</span>
                          <Input type="date" sx={{ width: "100%" }}
                               onChange={(event) => {
-                                   setStartDate(event.target.value)
+                                   //update url params
+                                   updateUrlParams({
+                                        "startDate": event.target.value
+                                   });
+                                   setStartDate(event.target.value);
                               }}
                               defaultValue={startDate}
                          />
@@ -252,6 +265,10 @@ export default function DeliveryBoyDetails() {
                          <span style={{ fontWeight: "bold", color: "black" }}>Date&nbsp;End&nbsp;:&nbsp;</span>
                          <Input type="date" sx={{ width: "100%" }}
                               onChange={(event) => {
+                                   //update url params
+                                   updateUrlParams({
+                                        "endDate": event.target.value
+                                   });
                                    setEndDate(event.target.value)
                               }}
                               defaultValue={endDate}
@@ -466,4 +483,11 @@ function getCurrentMonthString() {
                break;
      }
      return monthString;
+}
+
+function stripUrlParams(url) {
+     let urlObj = new URL(url);
+     //remove all params
+     urlObj.search = "";
+     return urlObj.toString();
 }
