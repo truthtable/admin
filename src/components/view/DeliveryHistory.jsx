@@ -7,7 +7,7 @@ import { fetchGasData } from "../../state/GasList";
 import { fetchUser, fetchUserRequest } from "../../redux/actions/userActions";
 import { RxFontStyle } from "react-icons/rx";
 import { FcHighPriority } from "react-icons/fc";
-import { CgUser } from "react-icons/cg";
+import { CgClose, CgUser } from "react-icons/cg";
 import { MdDone, MdEdit, MdKeyboardArrowRight } from "react-icons/md";
 import { IoMdClose, IoMdDoneAll } from "react-icons/io";
 import { TbCylinder } from "react-icons/tb";
@@ -16,6 +16,7 @@ import { addGasDelivery, deleteGasDelivery, gasDeliveriesIniState, updateGasDeli
 import { set } from "firebase/database";
 import { RiDeleteBinFill } from "react-icons/ri";
 import gasServices from "../../services/gas-services.jsx";
+import { Paper } from "@mui/material";
 const headColor = "white";
 export default function deliveryHistory() {
      const dispatch = useDispatch();
@@ -799,7 +800,8 @@ export default function deliveryHistory() {
                                    </Box>
                                    <Divider orientation="vertical" />
                                    <Box >
-                                        {`${delivery.payment_method == 0 ? "Cash" : "Online"}`}
+                                        {/* {`${delivery.payment_method == 0 ? "Cash" : "Online"}`} */}
+                                        <PaymetsModal />
                                    </Box>
                                    <Divider orientation="vertical" />
                                    <Box >
@@ -993,4 +995,58 @@ function formatDateTime(dateString) {
      minutes = minutes < 10 ? "0" + minutes : minutes;
      var strTime = hours + ":" + minutes + " " + ampm;
      return date.getDate() + "/" + (date.getMonth() + 1) + "/" + date.getFullYear() + " " + strTime;
+}
+
+const PaymetsModal = () => {
+     const [open, setOpen] = useState(false);
+     const handleOpen = () => setOpen(true);
+     const handleClose = () => setOpen(false);
+     return (
+          <>
+               <Button
+                    variant="soft"
+                    size="sm"
+                    color="success"
+                    onClick={handleOpen}
+               >Payments</Button>
+               <Modal
+                    open={open}
+                    onClose={handleClose}
+                    aria-labelledby="modal-modal-title"
+                    aria-describedby="modal-modal-description"
+                    sx={{
+                         display: 'flex',
+                         justifyContent: 'center',
+                         alignItems: 'center',
+                         flexDirection: 'column',
+                    }}
+               >
+                    <Sheet
+                         sx={{
+                              borderRadius: 'md',
+                              p: 3,
+                              boxShadow: 'lg',
+                              maxHeight: '90vh',
+                         }}
+                    >
+                         <Stack direction="column" spacing={1} alignItems="center" sx={{ m: .6 }}>
+                              <Stack direction="row" spacing={1} alignItems="center" sx={{ m: .6 }}>
+                                   <span
+                                        style={{ fontWeight: "bold" }}
+                                   >Customer Paymets</span>
+                                   <Button
+                                        variant="soft"
+                                        size="sm"
+                                        color="danger"
+                                        onClick={handleClose}
+                                   >
+                                        <CgClose />
+                                   </Button>
+                              </Stack>
+
+                         </Stack>
+                    </Sheet>
+               </Modal>
+          </>
+     )
 }
