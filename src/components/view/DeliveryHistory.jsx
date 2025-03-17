@@ -623,7 +623,8 @@ export default function deliveryHistory() {
           deliveries.forEach(delivery => {
                let totalPrice = 0;
                const receivedAmount = delivery.received_amount;
-
+               let totalRecievedQTY = 0;
+               let totalPendingQTY = 0;
                const correction = (delivery.correction == 1)
                const user = usersList.get(delivery.customer.user_id)
                //console.log(delivery.id, delivery.gas_deliveries)
@@ -673,6 +674,9 @@ export default function deliveryHistory() {
                     const delevered = gasDeliverie.is_empty == 0
                     if (delevered) {
                          totalPrice += gasDeliverie.quantity * gasDeliverie.price
+                         totalRecievedQTY += gasDeliverie.quantity
+                    } else {
+                         totalPendingQTY += gasDeliverie.quantity
                     }
                     const gasStyle = delevered ? sentGasCell : receivedGasCell;
                     const tdsx = correction ? { ...tdStyle, ...correctionCell, } : { ...tdStyle, };
@@ -784,7 +788,11 @@ export default function deliveryHistory() {
                                         }
                                    </Box>
                                    <Divider orientation="horizontal" sx={{ flexGrow: 1, opacity: 0 }} />
-                                   <Box>{`Total : ₹${totalPrice.toFixed(2)}`}</Box>
+                                   <Box>{`Total Received QTY : ${totalPendingQTY}`}</Box>
+                                   <Divider orientation="vertical" />
+                                   <Box>{`Total Pending QTY : ${totalRecievedQTY - totalPendingQTY}`}</Box>
+                                   <Divider orientation="vertical" />
+                                   <Box>{`Total : ${totalPrice}`}</Box>
                                    <Divider orientation="vertical" />
                                    <Box >
                                         {`Received : ₹${receivedAmount.toFixed(2)}`}

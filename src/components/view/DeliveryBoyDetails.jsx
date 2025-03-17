@@ -58,11 +58,13 @@ export default function DeliveryBoyDetails() {
           startDate: startDate,
           endDate: endDate,
      }).toString();
+     //replace the url with the new one in browser
+
      //
 
 
      if (data.data !== null) {
-          if (data.data.data.length > 0 && stripUrlParams(data.url) == stripUrlParams(GET_COURIER_BOY_DATA_URL)) {
+          if (data.data.data.length > 0 && stripUrlParams(data.url) == stripUrlParams(GET_COURIER_BOY_DATA)) {
                data.data.data.forEach((item) => {
                     let expenses = 0;
                     try {

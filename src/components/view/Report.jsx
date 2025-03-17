@@ -107,6 +107,7 @@ export const Report = () => {
           let grandTotal = 0;
           let grandTotalPaid = 0;
           let grandGasQuantity = 0;
+          let grandPendingQuantity = 0;
           return (
                <Stack sx={{ padding: 1, flexGrow: 1 }} direction={"row"} gap={1}>
                     <Stack gap={1}>
@@ -258,7 +259,10 @@ export const Report = () => {
                                                                       let tempTotal = gasDelivery.price * gasDelivery.quantity;
                                                                       subTotal += tempTotal;
                                                                       grandTotal += tempTotal;
-                                                                      grandGasQuantity += gasDelivery.quantity;
+                                                                      if (!gasDelivery.is_empty)
+                                                                           grandGasQuantity += gasDelivery.quantity;
+                                                                      else
+                                                                           grandPendingQuantity += gasDelivery.quantity;
                                                                       return <tr key={index + "report_td" + gasDelivery.id}>
                                                                            <td className="b">{formatDate(delivery.created_at)}</td>
                                                                            <td className="b">{report.courierBoy.find((boy) => boy.id === delivery.courier_boy_id).username
@@ -342,7 +346,12 @@ export const Report = () => {
                                              </Stack> */}
                                              <span style={{ fontWeight: "bold", color: "black", marginTop: 8 }}>
                                                   {
-                                                       `Total Gas Quantity : ${grandGasQuantity}`
+                                                       `Total Received Gas Quantity : ${grandGasQuantity}`
+                                                  }
+                                             </span>
+                                             <span style={{ fontWeight: "bold", color: "black" }}>
+                                                  {
+                                                       `Total Pending Gas Quantity : ${grandPendingQuantity}`
                                                   }
                                              </span>
                                              <span style={{ fontWeight: "bold", color: "black", marginTop: 8 }}>

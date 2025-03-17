@@ -27,14 +27,14 @@ export const formatDateTDDMMYY = (date) => {
 };
 //just add param to end of url
 export const updateUrlParams = (params) => {
-     let url = new URL(window.location.href);
-     let hash = url.hash;
-     url.hash = ''; // Temporarily remove the hash to avoid duplication
+     // let url = new URL(window.location.href);
+     // let hash = url.hash;
+     // url.hash = ''; // Temporarily remove the hash to avoid duplication
 
-     for (const [key, value] of Object.entries(params)) {
-          url.searchParams.set(key, value);
-     }
+     // for (const [key, value] of Object.entries(params)) {
+     //      url.searchParams.set(key, value);
+     // }
 
-     url.hash = hash; // Reapply the hash
-     window.history.replaceState(null, null, url.toString());
+     // url.hash = hash; // Reapply the hash
+     // window.history.replaceState(null, null, url.toString());
 }
