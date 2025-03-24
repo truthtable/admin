@@ -11,6 +11,7 @@ import { FaArrowTurnDown } from "react-icons/fa6";
 import { IoClose } from "react-icons/io5";
 import { BsBack } from "react-icons/bs";
 import { FaArrowLeft } from "react-icons/fa";
+import { useLocation } from "react-router";
 
 const CUSTOMER = "customer";
 const DELIVERY = "delivery";
@@ -23,10 +24,17 @@ export const Report = () => {
      const url = new URL(hashPart, window.location.origin);
      const searchParams = new URLSearchParams(url.search);
 
+     const location = useLocation();
+     const orderData = location.state;
+
      const contentRef = useRef();
      const reactToPrintFn = useReactToPrint({ contentRef })
 
-     const [selected, setSelected] = React.useState(CUSTOMER);
+     console.log(orderData);
+
+     const [selected, setSelected] = React.useState(() => (
+          orderData.orderId ? PURCHASE : CUSTOMER
+     ));
 
      const dispatch = useDispatch();
 
@@ -42,11 +50,11 @@ export const Report = () => {
           reportError
      } = useSelector((state) => state.reports);
 
-     console.log({
-          reportLoading,
-          report,
-          reportError
-     });
+     // console.log({
+     //      reportLoading,
+     //      report,
+     //      reportError
+     // });
 
      const Customer = () => {
           const [selectedCustomer, setSelectedCustomer] = React.useState(Number(searchParams.get('customer')) || null);
@@ -103,7 +111,7 @@ export const Report = () => {
                }
           }, []);
 
-          console.log(report)
+          //     console.log(report)
           let grandTotal = 0;
           let grandTotalPaid = 0;
           let grandGasQuantity = 0;
@@ -415,6 +423,12 @@ export const Report = () => {
           const { plants, plantsLoading, plantsError, plantsUpdateSuccess } = useSelector(state => state.plants);
           const { orders, loading, error } = useSelector(state => state.purchaseOrders);
           const [startDate, setStartDate] = useState(() => {
+
+
+               if (orderData.date) {
+                    console.log(orderData.date)
+               }
+
                const now = new Date();
                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
                const formattedDate = startOfMonth.toLocaleDateString('en-GB').split('/').reverse().join('-');
@@ -441,7 +455,7 @@ export const Report = () => {
           const handleSubmit = () => {
                dispatch(fetchOrders({ startDate, endDate }));
           }
-          console.log(orders,);
+          // console.log(orders,);
           return (
                <Stack sx={{ width: "100%", height: "100%" }} direction={"row"} gap={1}>
                     <Sheet>
@@ -604,9 +618,9 @@ function OrderRow({ orders, allGas, plants }) {
      const contentRef = useRef();
      const reactToPrintFn = useReactToPrint({ contentRef })
      const [selected, setSelected] = React.useState(null);
-     console.log(plants)
+     //console.log(plants)
      if (selected != null) {
-          console.log(selected)
+          //console.log(selected)
           return <Stack direction={"column"} gap={1}>
                <Stack direction={"row"} gap={1}>
                     <Card
@@ -686,7 +700,7 @@ function OrderRow({ orders, allGas, plants }) {
                                              return
                                         }
 
-                                        console.log(order)
+                                        //console.log(order)
 
                                         const orderNumber = order.order_no;
                                         const orderDate = order.date;
