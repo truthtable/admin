@@ -12,6 +12,7 @@ import { IoClose } from "react-icons/io5";
 import { BsBack } from "react-icons/bs";
 import { FaArrowLeft } from "react-icons/fa";
 import { useLocation } from "react-router";
+import { formatDateYYMMDD } from "../../Tools.jsx";
 
 const CUSTOMER = "customer";
 const DELIVERY = "delivery";
@@ -425,17 +426,33 @@ export const Report = () => {
           const [startDate, setStartDate] = useState(() => {
 
 
-               if (orderData.date) {
-                    console.log(orderData.date)
+               if (orderData.orderDate) {
+                    const [day, month, year] = orderData.orderDate.split('-');
+                    const formattedDate = new Date(Date.UTC(year, month - 1, day));
+                    const dateString = formattedDate.toISOString().slice(0, 10); // Gets YYYY-MM-DD
+                    console.log(dateString)
+                    return dateString;
                }
 
                const now = new Date();
                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
                const formattedDate = startOfMonth.toLocaleDateString('en-GB').split('/').reverse().join('-');
+               console.log(formattedDate)
                return formattedDate;
           }
           );
           const [endDate, setEndDate] = useState(() => {
+
+               if (orderData.orderDate) {
+                    //end date of orderDate month
+                    const [day, month, year] = orderData.orderDate.split('-');
+                    // Create date for the last day of the given month
+                    const endOfMonth = new Date(Date.UTC(year, month, 0)); // month is not decremented here
+                    const formattedDate = endOfMonth.toISOString().slice(0, 10);
+                    console.log(formattedDate);
+                    return formattedDate;
+               }
+
                const now = new Date();
                const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
                const formattedDate = endOfMonth.toLocaleDateString('en-GB').split('/').reverse().join('-');
@@ -753,7 +770,9 @@ function OrderRow({ orders, allGas, plants }) {
 
                                                        orderTotalRemainingAmt = grandTotal - orderTtotalPayAmt;
 
-                                                       return <tr>
+                                                       return <tr
+                                                            key={index + "order_item"}
+                                                       >
                                                             <td className="b">{orderNumber}</td>
                                                             <td className="b">{orderDate}</td>
                                                             <td className="b">{orderPlant}</td>
