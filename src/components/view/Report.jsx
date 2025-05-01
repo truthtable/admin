@@ -34,7 +34,7 @@ export const Report = () => {
      console.log(orderData);
 
      const [selected, setSelected] = React.useState(() => (
-          orderData.orderId ? PURCHASE : CUSTOMER
+          orderData?.orderId ? PURCHASE : CUSTOMER
      ));
 
      const dispatch = useDispatch();

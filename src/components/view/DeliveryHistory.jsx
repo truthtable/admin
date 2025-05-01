@@ -793,19 +793,20 @@ export default function deliveryHistory() {
                                    <Divider orientation="vertical" />
                                    <Box>{`Total Pending QTY : ${totalRecievedQTY - totalPendingQTY}`}</Box>
                                    <Divider orientation="vertical" />
-                                   <Box>{`Total : ${totalPrice}`}</Box>
+                                   <Box>{`Total : ₹${totalPrice}`}</Box>
                                    <Divider orientation="vertical" />
                                    <Box >
                                         {`Received : ₹${receivedAmount.toFixed(2)}`}
+                                   </Box>
+
+                                   <Divider orientation="vertical" />
+                                   <Box >
+                                        {`Remaining : ₹${(totalPrice - receivedAmount).toFixed(2)}`}
                                    </Box>
                                    <Divider orientation="vertical" />
                                    <Box >
                                         {/* {`${delivery.payment_method == 0 ? "Cash" : "Online"}`} */}
                                         <PaymetsModal />
-                                   </Box>
-                                   <Divider orientation="vertical" />
-                                   <Box >
-                                        {`Remaining : ₹${(totalPrice - receivedAmount).toFixed(2)}`}
                                    </Box>
                               </Stack>
                          </td>

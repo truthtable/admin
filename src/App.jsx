@@ -54,7 +54,16 @@ function App() {
      //let isLogoded = false;
      let isLogoded = loginData?.data?.loginStatus || false;
 
-     console.log(loginData);
+     //console.log(loginData);
+
+     //get url from window.location
+     const url = new URL(window.location.href);
+     const urlString = url.toString();
+     const isReportPath = (path) => {
+          return path.toLowerCase().includes('/report');
+     };
+     const isReportPathValid = isReportPath(urlString);
+     console.log(isReportPathValid);
 
      const [openSidebarToggle, setOpenSidebarToggle] = useState(false);
 
@@ -255,7 +264,7 @@ function App() {
                          </Typography>
                     </Stack>
                     {
-                         isLogoded ? <HashRouter>
+                         (isLogoded) ? <HashRouter>
                               <Stack
                                    sx={{ flexGrow: 1, overflow: "hidden" }}
                                    direction="row"
@@ -360,7 +369,37 @@ function App() {
                                         </Routes>
                                    </Box>
                               </Stack>
-                         </HashRouter> : <LoginUI />
+                         </HashRouter> : (
+                              (isReportPathValid) ? <HashRouter>
+                                   <Stack
+                                        sx={{ flexGrow: 1, overflow: "hidden" }}
+                                        direction="row"
+                                   >
+                                        <Box
+                                             sx={{ height: "100%", }}
+                                        >
+                                             <Sidebar
+                                                  openSidebarToggle={openSidebarToggle}
+                                                  OpenSidebar={OpenSidebar}
+                                             />
+                                        </Box>
+                                        <Box
+                                             sx={{
+                                                  flexGrow: 1,
+                                                  width: "100%",
+                                                  height: "100%",
+                                             }}
+                                        >
+                                             <Routes>
+                                                  <Route
+                                                       path="/admin/report"
+                                                       Component={Report}
+                                                  />
+                                             </Routes>
+                                        </Box>
+                                   </Stack>
+                              </HashRouter> : <LoginUI />
+                         )
                     }
                </Stack>
           </CssVarsProvider>
