@@ -18,7 +18,9 @@ const CUSTOMER = "customer";
 const DELIVERY = "delivery";
 const PURCHASE = "purchase";
 
-export const Report = () => {
+export const Report = ({ isLogged }) => {
+
+
      const currentUrl = window.location.href;
      const hashIndex = currentUrl.indexOf('#');
      const hashPart = currentUrl.substring(hashIndex + 1);
@@ -30,6 +32,7 @@ export const Report = () => {
 
      const contentRef = useRef();
      const reactToPrintFn = useReactToPrint({ contentRef })
+
 
      console.log(orderData);
 
