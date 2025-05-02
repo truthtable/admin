@@ -311,68 +311,6 @@ export const Report = ({ isLogged }) => {
                                                        }
                                                   </tbody>
                                              </Table>
-                                             {/* <Stack sx={{ color: "black", backgroundColor: "#e3e3e3", p: 1, borderRadius: "sm" }}>
-                                                  {
-                                                       report.deliveries.map((delivery, index1) => {
-                                                            let subTotal = 0;
-                                                            grandTotalPaid += delivery.received_amount;
-                                                            return <Stack key={index1}>
-                                                                 <span
-                                                                      style={{
-                                                                           textDecoration: "underline",
-                                                                           fontWeight: "bold",
-                                                                      }}
-                                                                 >{`${formatDateTime(delivery.created_at)} : ${report.courierBoy.find((boy) => boy.id === delivery.courier_boy_id).user.name
-                                                                      }`}</span>{delivery.id}
-                                                                 {
-                                                                      delivery.gas_deliveries.map((gasDelivery, index) => {
-                                                                           if (gasDelivery.is_empty == 1) {
-                                                                                return
-                                                                           }
-                                                                           let tempTotal = gasDelivery.price * gasDelivery.quantity;
-                                                                           subTotal += tempTotal;
-                                                                           grandTotal += tempTotal;
-                                                                           return (<span key={index} > {
-                                                                                `
-                                                                      ${gasDelivery.gas_cylinder.company_name} :  ${gasDelivery.gas_cylinder.kg}KG
-                                                                      : ${gasDelivery.quantity} QTY
-                                                                      : Rate ${gasDelivery.price}₹
-                                                                      : Total ${tempTotal}₹
-                                                                      `
-                                                                           }</span>)
-                                                                      })}
-                                                                 {
-                                                                      delivery.gas_deliveries.map((gasDelivery, index) => {
-                                                                           if (gasDelivery.is_empty == 0) {
-                                                                                return
-                                                                           }
-                                                                           return (<span key={index} > {
-                                                                                `
-                                                                      ${gasDelivery.gas_cylinder.company_name} :  ${gasDelivery.gas_cylinder.kg}KG
-                                                                      : ${gasDelivery.quantity} QTY
-                                                                      `
-                                                                           }</span>)
-                                                                      })}
-                                                                 <span style={{ fontWeight: "bold", color: "black" }}>
-                                                                      {
-                                                                           `Sub Total : ${subTotal}₹`
-                                                                      }
-                                                                 </span>
-                                                                 <span style={{ fontWeight: "bold", color: "black" }}>
-                                                                      {
-                                                                           `Paid Amount : ${delivery.received_amount}₹`
-                                                                      }
-                                                                 </span>
-                                                                 <span style={{ fontWeight: "bold", color: "black" }}>
-                                                                      {
-                                                                           `Remaining Amount : ${subTotal - delivery.received_amount}₹`
-                                                                      }
-                                                                 </span>
-                                                                 <Divider sx={{ backgroundColor: "#979797", m: 1, opacity: 0.5 }} />
-                                                            </Stack>
-                                                       })
-                                                  }
-                                             </Stack> */}
                                              <span style={{ fontWeight: "bold", color: "black", marginTop: 8 }}>
                                                   {
                                                        `Total Received Gas Quantity : ${grandGasQuantity}`
@@ -635,14 +573,6 @@ export const Report = ({ isLogged }) => {
 
 function checkValidDate(date) {
      return date.match(/^\d{4}-\d{2}-\d{2}$/);
-}
-
-//2024-11-11T11:31:05.000000Z format to 2024-11-11 : 11:31:PM
-function formatDateTime(dateTime) {
-     const date = new Date(dateTime);
-     const formattedDate = date.toLocaleDateString('en-GB').split('/').reverse().join('-');
-     const formattedTime = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-     return `${formattedDate} : ${formattedTime}`;
 }
 
 function formatDate(d) {
