@@ -85,8 +85,11 @@ export const Report = ({ isLogged }) => {
                }
           });
 
+
+          //console.log('selectedCustomer', selectedCustomer);
+
           const handleSubmit = () => {
-               //console.log(selectedCustomer, startDate, endDate);
+               console.log(selectedCustomer, startDate, endDate);
                if (
                     selectedCustomer === undefined ||
                     selectedCustomer === null ||
@@ -102,18 +105,30 @@ export const Report = ({ isLogged }) => {
                }
                let url = window.location.href;
                url = url.split("?")[0];
-               url = url + `?customer=${selectedCustomer}&start_date=${startDate}&end_date=${endDate}`;
+               url = url + `?customer=${selectedCustomer}&start_date=${startDate}&end_date=${endDate}&p=1`;
                window.location.href = url;
 
                // Fetch report data
                dispatch(fetchReport({ customer: selectedCustomer, startDate: startDate, endDate: endDate }));
           };
 
+
+
           useEffect(() => {
                if (customers.length === 0 && !customersLoading) {
                     dispatch(fetchCustomers());
                }
-          }, []);
+               try {
+                    const p = Number(searchParams.get('p'));
+                    console.log(report === null);
+                    if (p === 0) {
+                         console.log('p is 0', report);
+                         handleSubmit();
+                    }
+               } catch (e) {
+                    console.log(e);
+               }
+          }, [report]);
 
           //     console.log(report)
           let grandTotal = 0;
@@ -122,7 +137,9 @@ export const Report = ({ isLogged }) => {
           let grandPendingQuantity = 0;
           return (
                <Stack sx={{ padding: 1, flexGrow: 1 }} direction={"row"} gap={1}>
-                    <Stack gap={1}>
+                    <Stack gap={1} sx={{
+                         display: isLogged ? "block" : "none",
+                    }}>
                          <Stack>
                               <Stack gap={1} direction={"row"} alignContent={"center"} alignItems={"center"}>
                                    <span style={{ fontWeight: "bold", color: "black" }}>Customer&nbsp;:&nbsp;</span>
@@ -179,7 +196,7 @@ export const Report = ({ isLogged }) => {
                               OK
                          </Button>
                     </Stack>
-                    <Divider orientation={"vertical"} sx={{ m: 1, backgroundColor: "#979797" }} />
+                    <Divider orientation={"vertical"} sx={{ m: 1, backgroundColor: "#979797", display: isLogged ? "block" : "none", }} />
                     <Stack
                          sx={{
                               overflow: "auto",
@@ -404,9 +421,9 @@ export const Report = ({ isLogged }) => {
                          </Stack>
 
                          <div
-                              style={{ display: "flex", justifyContent: "end" }}
+                              style={{ display: "flex", justifyContent: isLogged ? "end" : "center" }}
                          >
-                              <Button onClick={reactToPrintFn}>Print Bill</Button>
+                              <Button onClick={reactToPrintFn}>{isLogged ? "Print Bill" : "Download"}</Button>
                          </div>
                     </Stack>
                </Stack>
@@ -597,7 +614,7 @@ export const Report = ({ isLogged }) => {
                <Box>
                     <LinearProgress sx={{ display: (reportLoading || customersLoading) ? "block" : "none" }} />
                </Box>
-               <Stack sx={{ display: "flex", flexDirection: "row", gap: 1 }}>
+               <Stack sx={{ display: isLogged ? "flex" : "none", flexDirection: "row", gap: 1, }}>
                     <Button variant="soft" onClick={() => setSelected(CUSTOMER)}>
                          Customer
                     </Button>
@@ -608,7 +625,7 @@ export const Report = ({ isLogged }) => {
                          Purchase
                     </Button>
                </Stack>
-               <Divider sx={{ m: 1, backgroundColor: "#979797" }} />
+               <Divider sx={{ m: 1, backgroundColor: "#979797", display: isLogged ? "block" : "none", }} />
                {selected === CUSTOMER && <Customer />}
                {selected === DELIVERY && <DeliveryBoy />}
                {selected === PURCHASE && <Purchase />}

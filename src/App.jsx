@@ -376,14 +376,6 @@ function App() {
                                         direction="row"
                                    >
                                         <Box
-                                             sx={{ height: "100%", }}
-                                        >
-                                             <Sidebar
-                                                  openSidebarToggle={openSidebarToggle}
-                                                  OpenSidebar={OpenSidebar}
-                                             />
-                                        </Box>
-                                        <Box
                                              sx={{
                                                   flexGrow: 1,
                                                   width: "100%",
