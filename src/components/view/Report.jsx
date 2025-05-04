@@ -105,14 +105,12 @@ export const Report = ({ isLogged }) => {
                }
                let url = window.location.href;
                url = url.split("?")[0];
-               url = url + `?customer=${selectedCustomer}&start_date=${startDate}&end_date=${endDate}&p=1`;
+               url = url + `?customer=${selectedCustomer}&start_date=${startDate}&end_date=${endDate}&p=2`;
                window.location.href = url;
 
                // Fetch report data
                dispatch(fetchReport({ customer: selectedCustomer, startDate: startDate, endDate: endDate }));
           };
-
-
 
           useEffect(() => {
                if (customers.length === 0 && !customersLoading) {
@@ -121,14 +119,13 @@ export const Report = ({ isLogged }) => {
                try {
                     const p = Number(searchParams.get('p'));
                     console.log(report === null);
-                    if (p === 0) {
-                         console.log('p is 0', report);
+                    if (p === 1) {
                          handleSubmit();
                     }
                } catch (e) {
                     console.log(e);
                }
-          }, [report]);
+          }, []);
 
           //     console.log(report)
           let grandTotal = 0;
@@ -136,17 +133,48 @@ export const Report = ({ isLogged }) => {
           let grandGasQuantity = 0;
           let grandPendingQuantity = 0;
           return (
-               <Stack sx={{ padding: 1, flexGrow: 1 }} direction={"row"} gap={1}>
-                    <Stack gap={1} sx={{
-                         display: isLogged ? "block" : "none",
-                    }}>
+               <Stack
+                    sx={{
+                         padding: 1,
+                         flexGrow: 1,
+                         flexDirection: { xs: 'column', md: 'row' } // Stack direction changes on mobile
+                    }}
+                    gap={1}
+               >
+                    {/* Left Panel */}
+                    <Stack
+                         gap={1}
+                         sx={{
+                              display: isLogged ? "block" : "none",
+                              width: { xs: '100%', md: 'auto' }, // Full width on mobile
+                              minWidth: { xs: '100%', md: '350px' }, // Control minimum width
+                         }}
+                    >
                          <Stack>
-                              <Stack gap={1} direction={"row"} alignContent={"center"} alignItems={"center"}>
-                                   <span style={{ fontWeight: "bold", color: "black" }}>Customer&nbsp;:&nbsp;</span>
+                              <Stack
+                                   gap={1}
+                                   direction={"row"}
+                                   alignContent={"center"}
+                                   alignItems={"center"}
+                                   sx={{
+                                        flexDirection: { xs: 'column', md: 'row' }, // Stack vertically on mobile
+                                        width: '100%'
+                                   }}
+                              >
+                                   <span style={{
+                                        fontWeight: "bold",
+                                        color: "black",
+                                        width: { xs: '100%', md: 'auto' }
+                                   }}>
+                                        Customer&nbsp;:&nbsp;
+                                   </span>
                                    <Select
                                         placeholder="Select User"
                                         variant="outlined"
-                                        sx={{ width: "100%" }}
+                                        sx={{
+                                             width: "100%",
+                                             minWidth: { xs: '100%', md: '200px' }
+                                        }}
                                         onChange={(event, value) => {
                                              setSelectedCustomer(value);
                                         }}
@@ -160,10 +188,27 @@ export const Report = ({ isLogged }) => {
                                    </Select>
                               </Stack>
                          </Stack>
-                         <Divider sx={{ backgroundColor: "#979797" }} />
-                         <Stack>
-                              <Stack gap={1} direction={"row"} alignContent={"center"} alignItems={"center"}>
-                                   <span style={{ fontWeight: "bold", color: "black" }}>Date&nbsp;Start&nbsp;:&nbsp;</span>
+
+                         <Divider sx={{ backgroundColor: "#979797", m: 1 }} />
+
+                         {/* Date inputs with responsive layout */}
+                         <Stack gap={2}>
+                              <Stack
+                                   gap={1}
+                                   sx={{
+                                        flexDirection: { xs: 'column', md: 'row' },
+                                        alignItems: { xs: 'flex-start', md: 'center' }
+                                   }}
+                              >
+                                   <span style={{
+                                        fontWeight: "bold",
+                                        color: "black",
+                                        minWidth: { xs: '100%', md: 'auto' },
+                                        wordBreak: 'keep-all',
+                                        whiteSpace: 'nowrap'
+                                   }}>
+                                        <span>Date</span><span> </span><span>Start</span><span>:</span>
+                                   </span>
                                    <Input
                                         type="date"
                                         sx={{ width: "100%" }}
@@ -173,10 +218,22 @@ export const Report = ({ isLogged }) => {
                                         defaultValue={startDate}
                                    />
                               </Stack>
-                         </Stack>
-                         <Stack>
-                              <Stack gap={1} direction={"row"} alignContent={"center"} alignItems={"center"}>
-                                   <span style={{ fontWeight: "bold", color: "black" }}>End&nbsp;Start&nbsp;:&nbsp;</span>
+
+                              <Stack
+                                   gap={1}
+                                   sx={{
+                                        flexDirection: { xs: 'column', md: 'row' },
+                                        alignItems: { xs: 'flex-start', md: 'center' }
+                                   }}
+                              >
+                                   <span style={{
+                                        fontWeight: "bold",
+                                        color: "black",
+                                        minWidth: { xs: '100%', md: 'auto' },
+                                        whiteSpace: 'nowrap'
+                                   }}>
+                                        End Date :
+                                   </span>
                                    <Input
                                         type="date"
                                         sx={{ width: "100%" }}
@@ -187,7 +244,9 @@ export const Report = ({ isLogged }) => {
                                    />
                               </Stack>
                          </Stack>
-                         <Divider sx={{ backgroundColor: "#979797" }} />
+
+                         <Divider sx={{ backgroundColor: "#979797", m: 1 }} />
+
                          <Button
                               variant="contained"
                               sx={{ backgroundColor: "#263043", color: "white", width: "100%" }}
@@ -196,16 +255,42 @@ export const Report = ({ isLogged }) => {
                               OK
                          </Button>
                     </Stack>
-                    <Divider orientation={"vertical"} sx={{ m: 1, backgroundColor: "#979797", display: isLogged ? "block" : "none", }} />
+
+                    {/* Vertical Divider - Hide on mobile */}
+                    <Divider
+                         orientation={"vertical"}
+                         sx={{
+                              m: 1,
+                              backgroundColor: "#979797",
+                              display: {
+                                   xs: 'none',
+                                   md: isLogged ? "block" : "none"
+                              }
+                         }}
+                    />
+
+                    {/* Right Panel - Report Content */}
                     <Stack
                          sx={{
                               overflow: "auto",
+                              width: { xs: '100%', md: 'auto' },
+                              flexGrow: 1
                          }}
                     >
                          <Stack
                               sx={{
-                                   padding: 4, m: 2, overflow: "auto", flexGrow: 1, height: "100%", alignItems: "stretch",
+                                   padding: { xs: 1, md: 4 },
+                                   m: { xs: 0, md: 2 },
+                                   overflow: "auto",
+                                   flexGrow: 1,
+                                   height: "100%",
+                                   alignItems: "stretch",
                                    border: "1px solid #979797",
+                                   '@media print': {
+                                        overflow: "visible", // Hide scrollbars when printing
+                                        height: "auto",     // Allow content to expand fully
+                                        border: "none"      // Optionally remove border when printing
+                                   }
                               }}
                               direction={"column"}
                               ref={contentRef}
@@ -344,7 +429,11 @@ export const Report = ({ isLogged }) => {
                                              </span>
                                              <Ending />
                                         </>
-                                   ) : ("Select customer and date range to view report")
+                                   ) : (<>
+                                        {
+                                             isLogged ? ("Select customer and date range to view report") : (<Button>Refresh</Button>)
+                                        }
+                                   </>)
                               }
                               <Box
                                    sx={
@@ -359,9 +448,29 @@ export const Report = ({ isLogged }) => {
                          </Stack>
 
                          <div
-                              style={{ display: "flex", justifyContent: isLogged ? "end" : "center" }}
+                              style={{
+                                   display: "flex",
+                                   justifyContent: isLogged ? "end" : "center",
+                                   padding: '8px'
+                              }}
                          >
-                              <Button onClick={reactToPrintFn}>{isLogged ? "Print Bill" : "Download"}</Button>
+                              <Button
+                                   onClick={() => { }}
+                                   sx={{
+                                        width: { xs: '100%', md: 'auto' }
+                                   }}
+                              >
+                                   Send Bill To Customer
+                              </Button>
+                              <Divider sx={{ backgroundColor: "#979797", m: 1, opacity: 0.5 }} />
+                              <Button
+                                   onClick={() => reactToPrintFn()}
+                                   sx={{
+                                        width: { xs: '100%', md: 'auto' }
+                                   }}
+                              >
+                                   {isLogged ? "Print Bill" : "Download"}
+                              </Button>
                          </div>
                     </Stack>
                </Stack>
