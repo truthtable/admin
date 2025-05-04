@@ -26,6 +26,7 @@ import customersReducer from "../redux/reducers/customerReducers.js";
 import reportReducer from "../redux/reducers/reportReducers.js";
 import authReducer from "../redux/authSlice.js";
 import connectionReducer from "../redux/connectionSlice.js";
+import billReducer from "../redux/billSlice.js";
 
 export const store = configureStore({
      reducer: {
@@ -78,6 +79,8 @@ export const store = configureStore({
           expence: expencesReducer,
 
           connections: connectionReducer,
+
+          bill: billReducer,
      },
      devTools: process.env.NODE_ENV !== "production",
 });

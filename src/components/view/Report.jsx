@@ -13,6 +13,10 @@ import { BsBack } from "react-icons/bs";
 import { FaArrowLeft } from "react-icons/fa";
 import { useLocation } from "react-router";
 import { formatDateYYMMDD } from "../../Tools.jsx";
+import { sendBillToCustomer } from "../../redux/billSlice.js";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+import html2pdf from 'html2pdf.js';
 
 const CUSTOMER = "customer";
 const DELIVERY = "delivery";
@@ -32,6 +36,48 @@ export const Report = ({ isLogged }) => {
 
      const contentRef = useRef();
      const reactToPrintFn = useReactToPrint({ contentRef })
+
+     const downloadPDFContent = async (contentRef) => {
+          if (!contentRef?.current) {
+               alert('No content to download');
+               return;
+          }
+
+          try {
+               const element = contentRef.current;
+
+               // Ensure the element is visible
+               if (!element.offsetParent) {
+                    throw new Error('Element is not visible or not in DOM');
+               }
+
+               const dateString = new Date().toISOString().slice(0, 10).replace(/-/g, '-');
+               const fileName = `bill_${dateString}.pdf`;
+
+               const opt = {
+                    margin: 10, // Add 10mm padding (all sides)
+                    filename: fileName,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: {
+                         scale: window.devicePixelRatio || 2,
+                         useCORS: true,
+                         scrollX: 0,
+                         scrollY: 0,
+                    },
+                    jsPDF: {
+                         unit: 'mm',
+                         format: 'a4',
+                         orientation: 'portrait',
+                    }
+               };
+
+               await html2pdf().set(opt).from(element).save();
+
+          } catch (error) {
+               console.error('Error generating PDF:', error);
+               alert('Error generating PDF. Please try again.');
+          }
+     };
 
 
      console.log(orderData);
@@ -53,6 +99,17 @@ export const Report = ({ isLogged }) => {
           report,
           reportError
      } = useSelector((state) => state.reports);
+
+     //bill
+     const {
+          isBillLoading,
+          isBillError,
+          isBillSuccess,
+          billErrorMessage
+     } = useSelector((state) => state.bill);
+
+     console.log("BILL", isBillLoading, isBillError, isBillSuccess, billErrorMessage);
+
 
      // console.log({
      //      reportLoading,
@@ -431,7 +488,16 @@ export const Report = ({ isLogged }) => {
                                         </>
                                    ) : (<>
                                         {
-                                             isLogged ? ("Select customer and date range to view report") : (<Button>Refresh</Button>)
+                                             isLogged ? ("Select customer and date range to view report") : (<Button
+
+                                                  onClick={() => {
+                                                       let url = window.location.href;
+                                                       // Change last character to 1
+                                                       url = url.slice(0, -1) + '1';
+                                                       window.location.href = url;
+                                                  }}
+
+                                             >Refresh</Button>)
                                         }
                                    </>)
                               }
@@ -454,22 +520,55 @@ export const Report = ({ isLogged }) => {
                                    padding: '8px'
                               }}
                          >
+                              {
+                                   isLogged ? <>
+                                        <Button
+                                             onClick={() => {
+                                                  if (!report || !report.customer) {
+                                                       alert('Please select a customer and generate report first');
+                                                       return;
+                                                  }
+
+                                                  const currentUrl = window.location.href;
+                                                  const amount = grandTotal - grandTotalPaid;
+                                                  //const customerNumber = report.customer.user.phone_no;
+                                                  const customerNumber = "917984847918";
+
+                                                  dispatch(sendBillToCustomer(
+                                                       currentUrl,
+                                                       customerNumber,
+                                                       amount.toString()
+                                                  ));
+                                             }}
+                                             sx={{
+                                                  width: { xs: '100%', md: 'auto' }
+                                             }}
+                                        >
+                                             Send Bill To Customer
+                                        </Button>
+                                   </> : <></>
+                              }
+                              <Divider sx={{ backgroundColor: "#979797", m: 1, opacity: 0.5 }} />
                               <Button
-                                   onClick={() => { }}
+                                   onClick={() => {
+                                        reactToPrintFn()
+                                   }}
                                    sx={{
                                         width: { xs: '100%', md: 'auto' }
                                    }}
                               >
-                                   Send Bill To Customer
+                                   {"Print Bill"}
                               </Button>
                               <Divider sx={{ backgroundColor: "#979797", m: 1, opacity: 0.5 }} />
                               <Button
-                                   onClick={() => reactToPrintFn()}
+                                   onClick={() => {
+                                        downloadPDFContent(contentRef)
+                                   }}
                                    sx={{
                                         width: { xs: '100%', md: 'auto' }
                                    }}
                               >
-                                   {isLogged ? "Print Bill" : "Download"}
+                                   {"Download Bill"}
                               </Button>
                          </div>
                     </Stack>
@@ -1020,10 +1119,12 @@ function Ending() {
                     }}
                >
                     <img style={{
+                         margin: "10px",
+                         zIndex: 99,
                          height: "100px",
                          width: "100px",
                          rotate: "-45deg",
-                    }} src="stamp.svg"></img>
+                    }} src="stamp.png"></img>
                </div>
           </>
      )
