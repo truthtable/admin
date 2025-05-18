@@ -18,7 +18,7 @@ export const fetchOrders = (options) => async (dispatch) => {
      console.log("params", options);
      try {
           const response = await axios().get(
-               "https://adminsr.life/public/api/purchase-orders",
+               "https://srdgas.online/public/api/purchase-orders",
                { params: options },
           );
           let logs = response.headers["x-log-data"];
@@ -39,7 +39,7 @@ export const createOrder = (orderData) => async (dispatch) => {
      dispatch({ type: FETCH_ORDERS_REQUEST });
      try {
           const response = await axios().post(
-               "https://adminsr.life/public/api/purchase-orders",
+               "https://srdgas.online/public/api/purchase-orders",
                orderData,
           );
           //console.log(response);
@@ -56,7 +56,7 @@ export const updateOrder = (id, orderData) => async (dispatch) => {
      dispatch({ type: FETCH_ORDERS_REQUEST });
      try {
           const response = await axios().put(
-               `https://adminsr.life/public/api/purchase-orders/${id}`,
+               `https://srdgas.online/public/api/purchase-orders/${id}`,
                orderData,
           );
           console.log(response.data);
@@ -73,7 +73,7 @@ export const deleteOrder = (id) => async (dispatch) => {
      dispatch({ type: FETCH_ORDERS_REQUEST });
      try {
           await axios().delete(
-               `https://adminsr.life/public/api/purchase-orders/${id}`,
+               `https://srdgas.online/public/api/purchase-orders/${id}`,
           );
           dispatch({ type: DELETE_ORDER_SUCCESS, payload: id });
      } catch (error) {

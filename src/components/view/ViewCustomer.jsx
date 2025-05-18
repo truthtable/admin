@@ -224,7 +224,7 @@ const ViewCustomer = () => {
                                         let config = {
                                              method: 'post',
                                              maxBodyLength: Infinity,
-                                             url: 'https://adminsr.life/public/api/createCustomer',
+                                             url: 'https://srdgas.online/public/api/createCustomer',
                                              headers: {
                                                   'Content-Type': 'application/json'
                                              },

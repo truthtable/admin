@@ -178,7 +178,7 @@ export default function DeliveryBoyDetails() {
                                              let config = {
                                                   method: 'post',
                                                   maxBodyLength: Infinity,
-                                                  url: 'https://adminsr.life/public/api/createDeliveryBoy',
+                                                  url: 'https://srdgas.online/public/api/createDeliveryBoy',
                                                   headers: {
                                                        'Content-Type': 'application/json'
                                                   },

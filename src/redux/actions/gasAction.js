@@ -22,7 +22,7 @@ export const fetchGasFailure = (error) => ({
      payload: error,
 });
 
-const API = "https://adminsr.life/public/api/gas";
+const API = "https://srdgas.online/public/api/gas";
 
 export const fetchGas = () => {
      return async (dispatch) => {

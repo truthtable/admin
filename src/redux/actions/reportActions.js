@@ -21,7 +21,7 @@ export const fetchFailure = (error) => ({
      type: FETCH_FAILURE,
      payload: error,
 });
-const API = "https://adminsr.life/public/api/report";
+const API = "https://srdgas.online/public/api/report";
 //initial state
 export const reportIniState = () => {
      return async (dispatch) => {

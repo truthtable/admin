@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API = "https://adminsr.life/public/api/expenses";
+const API = "https://srdgas.online/public/api/expenses";
 
 //Action Types
 export const INIT_STATE = "EXPENSES_INIT_STATE";

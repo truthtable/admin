@@ -42,8 +42,8 @@ export const deleteDelivery = (id) => ({
      payload: id,
 });
 
-const API = "https://adminsr.life/public/api/delivery";
-const GAS_API = "https://adminsr.life/public/api/gasDeliverys";
+const API = "https://srdgas.online/public/api/delivery";
+const GAS_API = "https://srdgas.online/public/api/gasDeliverys";
 
 //initial state
 export const deliveriesIniState = () => {

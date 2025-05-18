@@ -14,7 +14,7 @@ export const getPlants = () => async (dispatch) => {
      dispatch({ type: GET_PLANTS_REQUEST });
      try {
           const response = await axios.get(
-               "https://adminsr.life/public/api/plants",
+               "https://srdgas.online/public/api/plants",
           );
           dispatch({ type: GET_PLANTS_SUCCESS, payload: response.data });
      } catch (error) {

@@ -20,7 +20,7 @@ export const fetchUserFailure = (error) => ({
      payload: error,
 });
 
-const API = "https://adminsr.life/public/api/userData";
+const API = "https://srdgas.online/public/api/userData";
 
 // Async Action to Fetch User
 export const fetchUser = () => {

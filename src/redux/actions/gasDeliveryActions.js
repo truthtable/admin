@@ -20,7 +20,7 @@ export const gasDeliveriesIniState = () => async (dispatch) => {
 export const getGasDeliveries = () => async (dispatch) => {
      try {
           const res = await axios.get(
-               "https://adminsr.life/public/api/gasDeliverys",
+               "https://srdgas.online/public/api/gasDeliverys",
           );
 
           dispatch({
@@ -44,7 +44,7 @@ export const addGasDelivery = (deliveries) => async (dispatch) => {
      });
      try {
           const res = await axios.post(
-               "https://adminsr.life/public/api/gasDeliverys",
+               "https://srdgas.online/public/api/gasDeliverys",
                {
                     deliveries,
                },
@@ -70,7 +70,7 @@ export const updateGasDelivery = (deliveries) => async (dispatch) => {
      });
      try {
           const res = await axios.put(
-               `https://adminsr.life/public/api/gasDeliverys/0`,
+               `https://srdgas.online/public/api/gasDeliverys/0`,
                {
                     deliveries,
                },
@@ -98,7 +98,7 @@ export const deleteGasDelivery = (ids) => async (dispatch) => {
      });
      try {
           const res = await axios.delete(
-               `https://adminsr.life/public/api/gasDeliverys/0`,
+               `https://srdgas.online/public/api/gasDeliverys/0`,
                {
                     headers: {
                          "Content-Type": "application/json",

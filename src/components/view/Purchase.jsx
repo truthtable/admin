@@ -833,7 +833,7 @@ export const Cell = ({ id, data, tableName, column, editable = true }) => {
                     >
                          {
                               gasList.map(gas => {
-                                   if (gas.company_name === "GO GASS")
+                                   if (gas.company_name === "GO GAS")
                                         return (<Option key={gas.id} value={gas.id}>{gas.company_name} : {gas.kg} KG</Option>)
                               })
                          }
@@ -1319,7 +1319,7 @@ const AddGas = ({ order }) => {
                                                   >
                                                        {gasList.map(gas => {
                                                             if (
-                                                                 gas.company_name === "GO GASS"
+                                                                 gas.company_name === "GO GAS"
 
                                                             ) return (<Option
                                                                  key={gas.id}
