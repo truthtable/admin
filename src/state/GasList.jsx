@@ -1,15 +1,17 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { GAS_DATA } from "../services/Api";
+import { GAS_DATA, getLoginData } from "../services/Api";
 
 export const fetchGasData = createAsyncThunk("gas/fetchGasData", async () => {
      let error = true;
      let data = null;
      let errorMessage = false;
      try {
+          const token = getLoginData()?.token;
           const response = await fetch(GAS_DATA, {
                method: "get",
                headers: new Headers({
                     "ngrok-skip-browser-warning": "69420",
+                    Authorization: `Bearer ${token}`,
                }),
           });
           data = await response.json();

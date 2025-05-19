@@ -1,4 +1,4 @@
-import axios from "axios";
+import { axiosInstance as axios } from "../../services/Api";
 
 export const GET_PLANTS = "GET_PLANTS";
 export const GET_PLANTS_SUCCESS = "GET_PLANTS_SUCCESS";
@@ -13,7 +13,7 @@ export const getPlantsInit = () => async (dispatch) => {
 export const getPlants = () => async (dispatch) => {
      dispatch({ type: GET_PLANTS_REQUEST });
      try {
-          const response = await axios.get(
+          const response = await axios().get(
                "https://srdgas.online/public/api/plants",
           );
           dispatch({ type: GET_PLANTS_SUCCESS, payload: response.data });

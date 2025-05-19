@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { CUSTOMER_DATA } from "../services/Api";
+import { CUSTOMER_DATA, getLoginData } from "../services/Api";
 
 export const fetchCustomerData = createAsyncThunk(
      "customer/fetchCustomerData",
@@ -8,10 +8,12 @@ export const fetchCustomerData = createAsyncThunk(
           let data = null;
           let errorMessage = "";
           try {
+               const token = getLoginData()?.token;
                const response = await fetch(CUSTOMER_DATA, {
                     method: "get",
                     headers: new Headers({
                          "ngrok-skip-browser-warning": "69420",
+                         Authorization: `Bearer ${token}`,
                     }),
                });
                data = await response.json();

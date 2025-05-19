@@ -1,4 +1,4 @@
-import axios from "axios";
+import { axiosInstance as axios } from "../../services/Api";
 
 //actions
 export const FETCH_GAS_REQUEST = "FETCH_GAS_REQUEST";
@@ -28,7 +28,7 @@ export const fetchGas = () => {
      return async (dispatch) => {
           dispatch(fetchGasRequest());
           try {
-               const response = await axios.get(API);
+               const response = await axios().get(API);
                dispatch(fetchGasSuccess(response.data));
           } catch (error) {
                dispatch(fetchGasFailure(error));

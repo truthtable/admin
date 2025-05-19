@@ -1,4 +1,4 @@
-import axios from "axios";
+import { axiosInstance as axios } from "../../services/Api";
 
 const API = "https://srdgas.online/public/api/expenses";
 
@@ -37,7 +37,7 @@ export const fetchExpences = (params) => {
           dispatch(expenceRequest());
           console.log("params : ", params);
           try {
-               const response = await axios.get(API, {
+               const response = await axios().get(API, {
                     params: params,
                });
 
@@ -56,7 +56,7 @@ export const updateExpence = (data) => {
      return async (dispatch) => {
           dispatch(expenceRequest());
           try {
-               const response = await axios.put(API + "/" + data.id, data);
+               const response = await axios().put(API + "/" + data.id, data);
                dispatch(fetchExpences());
           } catch (error) {
                dispatch(expenceFailure(error.message));
@@ -68,7 +68,7 @@ export const addExpence = (data) => {
      return async (dispatch) => {
           dispatch(expenceRequest());
           try {
-               const response = await axios.post(API, data);
+               const response = await axios().post(API, data);
                dispatch(fetchExpences());
           } catch (error) {
                dispatch(expenceFailure(error.message));
@@ -80,7 +80,7 @@ export const deleteExpence = (id) => {
      return async (dispatch) => {
           dispatch(expenceRequest());
           try {
-               const response = await axios.delete(API + "/" + id);
+               const response = await axios().delete(API + "/" + id);
                dispatch(fetchExpences());
           } catch (error) {
                dispatch(expenceFailure(error.message));

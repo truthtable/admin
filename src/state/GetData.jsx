@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { getLoginData } from "../services/Api";
 
 export const fetchGetData = createAsyncThunk(
      "data/fetchGetData",
@@ -12,8 +13,13 @@ export const fetchGetData = createAsyncThunk(
           }).toString();
           console.log(turl);
           try {
+               const token = getLoginData()?.token;
                const response = await fetch(turl, {
                     method: "get",
+                    headers: new Headers({
+                         "ngrok-skip-browser-warning": "69420",
+                         Authorization: `Bearer ${token}`,
+                    }),
                });
                data = await response.json();
                //get X-Log-Data

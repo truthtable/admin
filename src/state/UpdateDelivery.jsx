@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { UPDATE_DELIVERY } from "../services/Api";
+import { getLoginData, UPDATE_DELIVERY } from "../services/Api";
 import { json_to_x_www_form_urlencoded } from "./UpdateGas";
 
 export const updateDelivery = createAsyncThunk(
@@ -15,10 +15,12 @@ export const updateDelivery = createAsyncThunk(
           }
 
           try {
+               const token = getLoginData()?.token;
                const response = await fetch(UPDATE_DELIVERY + data.id, {
                     method: "put",
                     headers: new Headers({
                          "Content-Type": "application/x-www-form-urlencoded",
+                         Authorization: `Bearer ${token}`,
                     }),
                     body: json_to_x_www_form_urlencoded(data.data),
                });

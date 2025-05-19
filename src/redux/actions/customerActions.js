@@ -1,4 +1,4 @@
-import axios from "axios";
+import { axiosInstance as axios } from "../../services/Api";
 
 // Action Types
 
@@ -35,7 +35,7 @@ export const fetchCustomers = () => {
      return async (dispatch) => {
           dispatch(fetchRequest());
           try {
-               const response = await axios.get(API);
+               const response = await axios().get(API);
                const customers = response.data;
                dispatch(fetchSuccess(customers));
           } catch (error) {

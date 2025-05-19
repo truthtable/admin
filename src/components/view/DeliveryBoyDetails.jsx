@@ -8,7 +8,7 @@ import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchGetData } from "../../state/GetData.jsx";
 import React, { useEffect, useState } from "react";
-import { GET_COURIER_BOY_DATA, UPDATE_COURIER_BOY, UPDATE_USER, } from "../../services/Api.jsx";
+import { GET_COURIER_BOY_DATA, getLoginData, UPDATE_COURIER_BOY, UPDATE_USER, } from "../../services/Api.jsx";
 import UpdateCustomerCell, { NUMBER, TEXT } from "../edit/UpdateCustomerCell.jsx";
 import DeliveryBoyCard from "./DeliveryBoyCard.jsx";
 import { Link } from "react-router-dom";
@@ -175,12 +175,15 @@ export default function DeliveryBoyDetails() {
 
                                              // return;
 
+                                             const token = getLoginData()?.token;
+
                                              let config = {
                                                   method: 'post',
                                                   maxBodyLength: Infinity,
                                                   url: 'https://srdgas.online/public/api/createDeliveryBoy',
                                                   headers: {
-                                                       'Content-Type': 'application/json'
+                                                       'Content-Type': 'application/json',
+                                                       'Authorization': `Bearer ${token}`,
                                                   },
                                                   data: data
                                              };

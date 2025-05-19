@@ -16,14 +16,14 @@ export const DELETE_WAREHOUSE_REQUEST = "DELETE_WAREHOUSE_REQUEST";
 export const DELETE_WAREHOUSE_SUCCESS = "DELETE_WAREHOUSE_SUCCESS";
 export const DELETE_WAREHOUSE_FAILURE = "DELETE_WAREHOUSE_FAILURE";
 
-import axios from "axios";
+import { axiosInstance as axios } from "../../services/Api";
 
 const API_URL = "https://srdgas.online/public/api/warehouses";
 
 export const fetchWarehouses = () => async (dispatch) => {
      dispatch({ type: FETCH_WAREHOUSES_REQUEST });
      try {
-          const response = await axios.get(API_URL);
+          const response = await axios().get(API_URL);
           dispatch({ type: FETCH_WAREHOUSES_SUCCESS, payload: response.data });
      } catch (error) {
           dispatch({ type: FETCH_WAREHOUSES_FAILURE, error: error.message });
@@ -33,7 +33,7 @@ export const fetchWarehouses = () => async (dispatch) => {
 export const createWarehouse = (warehouse) => async (dispatch) => {
      dispatch({ type: CREATE_WAREHOUSE_REQUEST });
      try {
-          const response = await axios.post(API_URL, warehouse);
+          const response = await axios().post(API_URL, warehouse);
           dispatch({ type: CREATE_WAREHOUSE_SUCCESS, payload: response.data });
      } catch (error) {
           dispatch({ type: CREATE_WAREHOUSE_FAILURE, error: error.message });
@@ -43,7 +43,7 @@ export const createWarehouse = (warehouse) => async (dispatch) => {
 export const updateWarehouse = (id, warehouse) => async (dispatch) => {
      dispatch({ type: UPDATE_WAREHOUSE_REQUEST });
      try {
-          const response = await axios.put(`${API_URL}/${id}`, warehouse);
+          const response = await axios().put(`${API_URL}/${id}`, warehouse);
           dispatch({ type: UPDATE_WAREHOUSE_SUCCESS, payload: response.data });
      } catch (error) {
           dispatch({ type: UPDATE_WAREHOUSE_FAILURE, error: error.message });
@@ -53,7 +53,7 @@ export const updateWarehouse = (id, warehouse) => async (dispatch) => {
 export const deleteWarehouse = (id) => async (dispatch) => {
      dispatch({ type: DELETE_WAREHOUSE_REQUEST });
      try {
-          await axios.delete(`${API_URL}/${id}`);
+          await axios().delete(`${API_URL}/${id}`);
           dispatch({ type: DELETE_WAREHOUSE_SUCCESS, payload: id });
      } catch (error) {
           dispatch({ type: DELETE_WAREHOUSE_FAILURE, error: error.message });

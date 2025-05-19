@@ -1,5 +1,5 @@
 // src/redux/actions/gasDeliveryActions.js
-import axios from "axios";
+import { axiosInstance as axios } from "../../services/Api";
 
 export const INI_GAS_DELIVERIES = "INI_GAS_DELIVERIES";
 export const GET_GAS_DELIVERIES = "GET_GAS_DELIVERIES";
@@ -19,7 +19,7 @@ export const gasDeliveriesIniState = () => async (dispatch) => {
 // Fetch all gas deliveries
 export const getGasDeliveries = () => async (dispatch) => {
      try {
-          const res = await axios.get(
+          const res = await axios().get(
                "https://srdgas.online/public/api/gasDeliverys",
           );
 
@@ -43,7 +43,7 @@ export const addGasDelivery = (deliveries) => async (dispatch) => {
           type: LOADING,
      });
      try {
-          const res = await axios.post(
+          const res = await axios().post(
                "https://srdgas.online/public/api/gasDeliverys",
                {
                     deliveries,
@@ -69,7 +69,7 @@ export const updateGasDelivery = (deliveries) => async (dispatch) => {
           type: LOADING,
      });
      try {
-          const res = await axios.put(
+          const res = await axios().put(
                `https://srdgas.online/public/api/gasDeliverys/0`,
                {
                     deliveries,
@@ -97,7 +97,7 @@ export const deleteGasDelivery = (ids) => async (dispatch) => {
           type: LOADING,
      });
      try {
-          const res = await axios.delete(
+          const res = await axios().delete(
                `https://srdgas.online/public/api/gasDeliverys/0`,
                {
                     headers: {

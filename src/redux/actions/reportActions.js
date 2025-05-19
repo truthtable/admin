@@ -1,4 +1,4 @@
-import axios from "axios";
+import { axiosInstance as axios } from "../../services/Api";
 
 // Action Types
 export const INIT_STATE = "REPORT_INIT_STATE";
@@ -34,7 +34,7 @@ export const fetchReport = (params) => {
      return async (dispatch) => {
           dispatch(fetchRequest());
           try {
-               const response = await axios.get(API, {
+               const response = await axios().get(API, {
                     params: params,
                });
                const report = response.data;

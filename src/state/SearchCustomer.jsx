@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { SEARCH_CUSTOMER } from "../services/Api";
+import { getLoginData, SEARCH_CUSTOMER } from "../services/Api";
 
 export const fetchCustomerSearchData = createAsyncThunk(
      "customer/fetchCustomerSearchData",
@@ -13,12 +13,14 @@ export const fetchCustomerSearchData = createAsyncThunk(
                return { data, error, errorMessage };
           }
           try {
+               const token = getLoginData()?.token;
                const response = await fetch(
                     SEARCH_CUSTOMER + "?name=" + search,
                     {
                          method: "get",
                          headers: new Headers({
                               "ngrok-skip-browser-warning": "69420",
+                              Authorization: `Bearer ${token}`,
                          }),
                     },
                );

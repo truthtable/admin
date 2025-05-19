@@ -10,7 +10,7 @@ import {
      BsPlus,
      BsPlusSquare,
 } from "react-icons/bs";
-import { URL } from "../../services/Api";
+import { getLoginData, URL } from "../../services/Api";
 import DataTable from "../../components/table/DataTable";
 import { Alert, Button } from "@mui/joy";
 import EditGasPrice from "../../components/edit/EditGasPrice";
@@ -36,10 +36,14 @@ const GasList = () => {
           const api = URL + "api/gas_cylinder_data";
           setLoading(true);
           try {
+
+               const token = getLoginData()?.token;
+
                const res = await fetch(api, {
                     method: "get",
                     headers: new Headers({
                          "ngrok-skip-browser-warning": "69420",
+                         Authorization: `Bearer ${token}`,
                     }),
                });
                const apiData = await res.json();

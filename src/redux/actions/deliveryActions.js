@@ -1,5 +1,5 @@
 // src/redux/actions/deliveryActions.js
-import axios from "axios";
+import { axiosInstance as axios } from "../../services/Api";
 
 // Action Types
 export const INIT_STATE = "DELIVERIES_INIT_STATE";
@@ -58,7 +58,7 @@ export const fetchDeliveries = (params) => {
           dispatch(fetchDeliveriesRequest());
           console.log(params);
           try {
-               const response = await axios.get(API, {
+               const response = await axios().get(API, {
                     params: params,
                });
 
@@ -93,12 +93,12 @@ export const updateDelivery = (delivery) => {
                     (delivery.columnName == "quantity" ||
                          delivery.columnName == "price")
                ) {
-                    response = await axios.put(
+                    response = await axios().put(
                          `${GAS_API}/${delivery.id}`,
                          delivery,
                     );
                } else {
-                    response = await axios.put(
+                    response = await axios().put(
                          `${API}/${delivery.id}`,
                          delivery,
                     );
@@ -125,7 +125,7 @@ export const deleteDeliveryById = (id) => {
      }
      return async (dispatch) => {
           try {
-               let response = await axios.delete(`${API}/${id}`);
+               let response = await axios().delete(`${API}/${id}`);
                console.log("res", response.data);
                const deliveries = response.data;
                if (deliveries.success == false) {

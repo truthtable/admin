@@ -1,4 +1,4 @@
-import axios from "axios";
+import { axiosInstance as axios } from "../../services/Api";
 
 // Action Types
 export const FETCH_USER_REQUEST = "FETCH_USER_REQUEST";
@@ -27,7 +27,7 @@ export const fetchUser = () => {
      return async (dispatch) => {
           dispatch(fetchUserRequest());
           try {
-               const response = await axios.get(API);
+               const response = await axios().get(API);
                const user = response.data;
                dispatch(fetchUserSuccess(user));
           } catch (error) {
