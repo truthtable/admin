@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import React, { useEffect, useState } from "react";
-import { Box, Chip, Divider, LinearProgress, Select, Stack, Tab, Table, TabList, TabPanel, Tabs, Option, Button, Modal, Sheet, ModalClose, Typography, Input, List, ListItem, ListItemButton, ListItemDecorator, ListItemContent, FormControl, FormLabel, RadioGroup, Radio } from "@mui/joy";
+import { Box, Chip, Divider, LinearProgress, Select, Stack, Tab, Table, TabList, TabPanel, Tabs, Option, Button, Modal, Sheet, ModalClose, Typography, Input, List, ListItem, ListItemButton, ListItemDecorator, ListItemContent, FormControl, FormLabel, RadioGroup, Radio, Card } from "@mui/joy";
 import { useDispatch, useSelector } from "react-redux";
 import { deleteDeliveryById, deliveriesIniState, fetchDeliveries, updateDelivery } from "../../redux/actions/deliveryActions";
 import { fetchGasData } from "../../state/GasList";
@@ -622,8 +622,28 @@ export default function deliveryHistory() {
      const colspan = tableHead.length;
      try {
           deliveries.forEach(delivery => {
+               /*
+               [
+    {
+        "id": 12,
+        "amount": 566,
+        "method": 1,
+        "payment_for": "delivery"
+    },
+    {
+        "id": 13,
+        "amount": 6767,
+        "method": 0,
+        "payment_for": "delivery"
+    }
+]
+               */
+               const payments = delivery.payments
+               let receivedAmount = 0
+               payments.forEach(payment => {
+                    receivedAmount += payment.amount
+               })
                let totalPrice = 0;
-               const receivedAmount = delivery.received_amount;
                let totalRecievedQTY = 0;
                let totalPendingQTY = 0;
                const correction = (delivery.correction == 1)
@@ -806,7 +826,9 @@ export default function deliveryHistory() {
                                    <Divider orientation="vertical" />
                                    <Box >
                                         {/* {`${delivery.payment_method == 0 ? "Cash" : "Online"}`} */}
-                                        <PaymetsModal />
+                                        <PaymetsModal
+                                             payments={payments}
+                                        />
                                    </Box>
                               </Stack>
                          </td>
@@ -998,7 +1020,7 @@ function formatDateTime(dateString) {
      return date.getDate() + "/" + (date.getMonth() + 1) + "/" + date.getFullYear() + " " + strTime;
 }
 
-const PaymetsModal = () => {
+const PaymetsModal = ({ payments }) => {
      const [open, setOpen] = useState(false);
      const handleOpen = () => setOpen(true);
      const handleClose = () => setOpen(false);
@@ -1044,7 +1066,55 @@ const PaymetsModal = () => {
                                         <CgClose />
                                    </Button>
                               </Stack>
-
+                              <Stack
+                                   direction="column"
+                                   spacing={1}
+                                   alignItems="center"
+                                   sx={{
+                                        width: "100%",
+                                   }}
+                              >
+                                   {
+                                        payments.map((payment) => {
+                                             return <Stack
+                                                  key={payment.id}
+                                                  direction="row"
+                                                  spacing={1}
+                                                  sx={{
+                                                       width: "100%"
+                                                  }}
+                                             >
+                                                  <Card
+                                                       sx={{
+                                                            width: "100%",
+                                                            flexDirection: "row",
+                                                            backgroundColor: payment.method == 0 ? "#FFE99A" : "#CAE8BD",
+                                                            alignContent: "center",
+                                                            alignItems: "center"
+                                                       }}
+                                                  >
+                                                       <span
+                                                            style={{
+                                                                 width: "50px",
+                                                                 fontWeight: "bold",
+                                                                 color: "black"
+                                                            }}
+                                                       >{
+                                                                 payment.method == 0 ? "Cash" : "Online"
+                                                            }</span>
+                                                       <Divider orientation="vertical" />
+                                                       <span
+                                                            style={{
+                                                                 fontWeight: "bold",
+                                                                 color: "black",
+                                                                 fontSize: "1.5rem"
+                                                            }}
+                                                       >₹{payment.amount}</span>
+                                                  </Card>
+                                             </Stack>
+                                        })
+                                   }
+                              </Stack>
                          </Stack>
                     </Sheet>
                </Modal>
