@@ -21,7 +21,7 @@ import EditGasList from "../edit/EditGasList.jsx";
 //key value pair of gas id and gas data
 let allGasDataMap = {}
 
-const deliveryHistory = () => {
+const old_deliveryHistory = () => {
      const dispatch = useDispatch();
      const deliveryData = useSelector((state) => state.delivery);
      const allGasData = useSelector((state) => state.gas);

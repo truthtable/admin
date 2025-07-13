@@ -17,7 +17,7 @@ import UpdateReport from "./report/UpdateReport";
 import PrintReport from "./report/PrintReport";
 
 import add_delivery_history from "./DeliveryHistory/add_delivery_history";
-import deliveryHistory from "../components/view/DeliveryHistory.jsx";
+import deliveryHistory from "../components/view/__DeliveryHistory.jsx";
 import edit_delivery_history from "./DeliveryHistory/edit_delivery_history";
 
 //import InsertCustomer from "./customer/insertcustomer";

@@ -591,13 +591,16 @@ export const Report = ({ isLogged }) => {
           const { orders, loading, error } = useSelector(state => state.purchaseOrders);
           const [startDate, setStartDate] = useState(() => {
 
-
-               if (orderData.orderDate) {
-                    const [day, month, year] = orderData.orderDate.split('-');
-                    const formattedDate = new Date(Date.UTC(year, month - 1, day));
-                    const dateString = formattedDate.toISOString().slice(0, 10); // Gets YYYY-MM-DD
-                    console.log(dateString)
-                    return dateString;
+               try {
+                    if (orderData.orderDate) {
+                         const [day, month, year] = orderData.orderDate.split('-');
+                         const formattedDate = new Date(Date.UTC(year, month - 1, day));
+                         const dateString = formattedDate.toISOString().slice(0, 10); // Gets YYYY-MM-DD
+                         console.log(dateString)
+                         return dateString;
+                    }
+               } catch (e) {
+                    console.warn(e)
                }
 
                const now = new Date();
@@ -608,17 +611,19 @@ export const Report = ({ isLogged }) => {
           }
           );
           const [endDate, setEndDate] = useState(() => {
-
-               if (orderData.orderDate) {
-                    //end date of orderDate month
-                    const [day, month, year] = orderData.orderDate.split('-');
-                    // Create date for the last day of the given month
-                    const endOfMonth = new Date(Date.UTC(year, month, 0)); // month is not decremented here
-                    const formattedDate = endOfMonth.toISOString().slice(0, 10);
-                    console.log(formattedDate);
-                    return formattedDate;
+               try {
+                    if (orderData.orderDate) {
+                         //end date of orderDate month
+                         const [day, month, year] = orderData.orderDate.split('-');
+                         // Create date for the last day of the given month
+                         const endOfMonth = new Date(Date.UTC(year, month, 0)); // month is not decremented here
+                         const formattedDate = endOfMonth.toISOString().slice(0, 10);
+                         console.log(formattedDate);
+                         return formattedDate;
+                    }
+               } catch (e) {
+                    console.warn(e)
                }
-
                const now = new Date();
                const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
                const formattedDate = endOfMonth.toLocaleDateString('en-GB').split('/').reverse().join('-');
@@ -638,7 +643,7 @@ export const Report = ({ isLogged }) => {
           const handleSubmit = () => {
                dispatch(fetchOrders({ startDate, endDate }));
           }
-          // console.log(orders,);
+          //console.log(orders,);
           return (
                <Stack sx={{ width: "100%", height: "100%" }} direction={"row"} gap={1}>
                     <Sheet>
@@ -979,12 +984,12 @@ function OrderRow({ orders, allGas, plants }) {
                                                   <td className="b" colSpan={10}>{"₹" + orderTotalScheme}</td>
                                              </tr>
                                              <tr>
-                                                  <td className="b" colSpan={2}>Total TCS (<i>{"₹" + orderTCS}</i>):</td>
-                                                  <td className="b" colSpan={10}>{"₹" + orderTotalTCS}</td>
+                                                  <td className="b" colSpan={2}>Total TCS ( <i>{"₹" + orderTCS}</i> ):</td>
+                                                  <td className="b" colSpan={10}>{"₹" + orderTotalTCS.toFixed(2)}</td>
                                              </tr>
                                              <tr>
-                                                  <td className="b" colSpan={2}>Total FOR (<i>{"₹" + orderFOR}</i>):</td>
-                                                  <td className="b" colSpan={10}>{"₹" + orderTotalFOR}</td>
+                                                  <td className="b" colSpan={2}>Total FOR ( <i>{"₹" + orderFOR}</i> ):</td>
+                                                  <td className="b" colSpan={10}>{"₹" + orderTotalFOR.toFixed(2)}</td>
                                              </tr>
                                              <tr>
                                                   <td className="b" colSpan={12}></td>
@@ -993,21 +998,21 @@ function OrderRow({ orders, allGas, plants }) {
                                                   <td className="b" style={{ color: "#305499", fontSize: "1rem" }} colSpan={2}>Total:
                                                   </td>
                                                   <td className="b" style={{ color: "#305499", fontSize: "1rem" }}
-                                                       colSpan={10}>{"₹" + grandTotal}</td>
+                                                       colSpan={10}>{"₹" + grandTotal.toFixed(2)}</td>
                                              </tr>
                                              <tr>
                                                   <td className="b" style={{ color: "#1d5d2e", fontSize: "1rem" }} colSpan={2}>Payed
                                                        Amount :
                                                   </td>
                                                   <td className="b" style={{ color: "#1d5d2e", fontSize: "1rem" }}
-                                                       colSpan={10}>{"₹" + orderTtotalPayAmt}</td>
+                                                       colSpan={10}>{"₹" + orderTtotalPayAmt.toFixed(2)}</td>
                                              </tr>
                                              <tr>
                                                   <td className="b" style={{ color: "#A0153E", fontSize: "1rem" }}
                                                        colSpan={2}>Remaining Amt :
                                                   </td>
                                                   <td className="b" style={{ color: "#A0153E", fontSize: "1rem" }}
-                                                       colSpan={10}>{"₹" + orderTotalRemainingAmt}</td>
+                                                       colSpan={10}>{"₹" + orderTotalRemainingAmt.toFixed(2)}</td>
                                              </tr>
                                         </>
                                    })

@@ -25,6 +25,7 @@ export const updateCustomer = createAsyncThunk(
           // }
 
           try {
+               //console.log(data.url);
                const token = getLoginData()?.token;
                const response = await fetch(data.url, {
                     method: "put",
