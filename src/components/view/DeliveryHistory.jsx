@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import React, { useEffect, useState } from "react";
-import { Box, Chip, Divider, LinearProgress, Select, Stack, Tab, Table, TabList, TabPanel, Tabs, Option, Button, Modal, Sheet, ModalClose, Typography, Input, List, ListItem, ListItemButton, ListItemDecorator, ListItemContent, FormControl, FormLabel, RadioGroup, Radio, Card, IconButton } from "@mui/joy";
+import { Box, Chip, Divider, LinearProgress, Select, Stack, Tab, Table, TabList, TabPanel, Tabs, Option, Button, Modal, Sheet, ModalClose, Typography, Input, List, ListItem, ListItemButton, ListItemDecorator, ListItemContent, FormControl, FormLabel, RadioGroup, Radio, Card, IconButton, CircularProgress } from "@mui/joy";
 import { useDispatch, useSelector } from "react-redux";
 import { deleteDeliveryById, deliveriesIniState, fetchDeliveries, updateDelivery } from "../../redux/actions/deliveryActions.js";
 import { fetchGasData } from "../../state/GasList.jsx";
@@ -18,50 +18,158 @@ import { RiDeleteBinFill } from "react-icons/ri";
 import gasServices from "../../services/gas-services.jsx";
 import { Paper } from "@mui/material";
 import PropTypes from 'prop-types';
+import { use } from "react";
+import { f } from "html2pdf.js";
+import { decimalFix, updateUrlParams } from "../../Tools.jsx";
+import { IoSend } from "react-icons/io5";
+
+const COLORS = {
+     WHITE: "#ffffff",
+     KG_12: "#e3f2fd",
+     KG_15: "#e8f5e9",
+     KG_17: "#fff3e0",
+     KG_21: "#f3e5f5"
+};
+
+const columns = [
+     //Info
+     { column: "Date", color: COLORS.WHITE },
+     { column: "Customer", color: COLORS.WHITE },
+
+     // 12KG Group 
+     { column: "12KG CYL", color: COLORS.KG_12 },
+     { column: "MT", color: COLORS.KG_12 },
+     { column: "Rate", color: COLORS.KG_12 },
+     { column: "Total", color: COLORS.KG_12 },
+
+     // 15KG Group
+     { column: "15KG CYL", color: COLORS.KG_15 },
+     { column: "MT", color: COLORS.KG_15 },
+     { column: "Rate", color: COLORS.KG_15 },
+     { column: "Total", color: COLORS.KG_15 },
+
+     // 17KG Group
+     { column: "17KG CYL", color: COLORS.KG_17 },
+     { column: "MT", color: COLORS.KG_17 },
+     { column: "Rate", color: COLORS.KG_17 },
+     { column: "Total", color: COLORS.KG_17 },
+
+     // 21KG Group
+     { column: "21KG CYL", color: COLORS.KG_21 },
+     { column: "MT", color: COLORS.KG_21 },
+     { column: "Rate", color: COLORS.KG_21 },
+     { column: "Total", color: COLORS.KG_21 },
+
+     // Summary rows  
+     { column: "Sub Total", color: COLORS.WHITE },
+     { column: "Recieved", color: COLORS.WHITE },
+     { column: "Balance", color: COLORS.WHITE }
+];
+
 export default function deliveryHistory() {
 
-     // Add these color constants at the top of the file
-     const COLORS = {
-          WHITE: "#ffffff",
-          KG_12: "#e3f2fd",
-          KG_15: "#e8f5e9",
-          KG_17: "#fff3e0",
-          KG_21: "#f3e5f5"
-     };
+     const dispatch = useDispatch();
+     const { deliveries, loading, updateSuccess, error } = useSelector((state) => state.deliverys);
 
-     const columns = [
-          //Info
-          { column: "Date", color: COLORS.WHITE },
-          { column: "Customer", color: COLORS.WHITE },
+     const currentUrl = window.location.href;
+     const hashIndex = currentUrl.indexOf('#');
+     const hashPart = currentUrl.substring(hashIndex + 1);
+     const url = new URL(hashPart, window.location.origin);
+     const searchParams = new URLSearchParams(url.search);
+     const urlCustomerId = searchParams.get('customerId');
+     const urlCourierBoyId = searchParams.get('deliverBoyId');
+     const date_start = searchParams.get('dateStart');
+     const date_end = searchParams.get('dateEnd');
 
-          // 12KG Group 
-          { column: "12KG CYL", color: COLORS.KG_12 },
-          { column: "MT", color: COLORS.KG_12 },
-          { column: "Rate", color: COLORS.KG_12 },
-          { column: "Total", color: COLORS.KG_12 },
+     console.log(deliveries);
 
-          // 15KG Group
-          { column: "15KG CYL", color: COLORS.KG_15 },
-          { column: "MT", color: COLORS.KG_15 },
-          { column: "Rate", color: COLORS.KG_15 },
-          { column: "Total", color: COLORS.KG_15 },
 
-          // 17KG Group
-          { column: "17KG CYL", color: COLORS.KG_17 },
-          { column: "MT", color: COLORS.KG_17 },
-          { column: "Rate", color: COLORS.KG_17 },
-          { column: "Total", color: COLORS.KG_17 },
+     let tempUrlCustomerId = urlCustomerId ? Number(urlCustomerId) : null;
+     let tempUrlCourierBoyId = urlCourierBoyId ? Number(urlCourierBoyId) : null;
 
-          // 21KG Group
-          { column: "21KG CYL", color: COLORS.KG_21 },
-          { column: "MT", color: COLORS.KG_21 },
-          { column: "Rate", color: COLORS.KG_21 },
-          { column: "Total", color: COLORS.KG_21 },
 
-          // Summary rows  
-          { column: "Sub Total", color: COLORS.WHITE },
-          { column: "Recieved", color: COLORS.WHITE }
-     ];
+     console.log([{ urlCustomerId, tempUrlCustomerId }, { urlCourierBoyId, tempUrlCourierBoyId }]);
+
+     const [customerId, setCustomerId] = useState(tempUrlCustomerId);
+     const [deliverBoyId, setDeliverBoyId] = useState(tempUrlCourierBoyId);
+
+
+     const [dateStart, setDateStart] = useState(
+          () => {
+               if (date_start) {
+                    return formatDate(new Date(date_start));
+               }
+               return formatDate(new Date(new Date().getFullYear(), new Date().getMonth(), 1))
+          }
+     );
+     const [dateEnd, setDateEnd] = useState(
+          () => {
+               if (date_end) {
+                    return formatDate(new Date(date_end));
+               }
+               //date of current month end date
+               let date = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)
+               return formatDate(date)
+          }
+     );
+
+
+     console.log({ customerId, deliverBoyId, dateStart, dateEnd });
+
+     //setUrlParams
+
+     const loadData = () => {
+          dispatch(fetchDeliveries({ dateStart: dateStart, dateEnd: dateEnd, customer_id: customerId, courier_boy_id: deliverBoyId }));
+     }
+
+     const updateUrlParams = (dateStart, dateEnd, customerId, deliverBoyId) => {
+          // Grab everything after the #
+          const fullHash = window.location.hash.substring(1);            // e.g. "/admin/deliveryHistory?foo=bar"
+          const [path, rawQuery = ''] = fullHash.split('?');             // separate path and query
+
+          const params = new URLSearchParams(rawQuery);
+
+          // Set or delete each filter
+          const updates = { dateStart, dateEnd, customerId, deliverBoyId };
+          Object.entries(updates).forEach(([key, val]) => {
+               if (val == null || val === '') {
+                    params.delete(key);
+               } else {
+                    params.set(key, val);
+               }
+          });
+
+          // Rebuild and replace the hash (no history entry)
+          const newHash = path + (params.toString() ? `?${params}` : '');
+          if (`#${newHash}` !== window.location.hash) {
+               window.location.replace(window.location.pathname + window.location.search + `#${newHash}`);
+          }
+     }
+
+     updateUrlParams(
+          dateStart,
+          dateEnd,
+          customerId,
+          deliverBoyId
+     )
+
+     //console.log(deliveries);
+     useEffect(() => {
+          if ((deliveries == null || deliveries == undefined) && loading == false) {
+               //dispatch(fetchDeliveries());
+          }
+     })
+
+     useEffect(() => {
+          gasServices.listenDataChange(() => {
+               if (
+                    loading === false
+               ) {
+                    console.log("fetchDeliveries...");
+                    loadData();
+               }
+          });
+     }, []);
 
      // First, let's add a helper function to calculate gas group totals
      function calculateGasGroup(cylinders, mt, rate) {
@@ -69,7 +177,7 @@ export default function deliveryHistory() {
                cylinders,
                mt,
                rate,
-               total: mt * rate
+               total: cylinders * rate
           };
      }
 
@@ -141,6 +249,13 @@ export default function deliveryHistory() {
      function Row({ row, initialOpen = false }) {
           const [open, setOpen] = React.useState(initialOpen);
 
+          let balance = row.subTotal - row.received
+          //o if nagative
+          if (balance < 0) {
+               balance = 0
+          }
+
+
           // Define the cell groups for easier mapping
           const cellGroups = [
                {
@@ -151,48 +266,60 @@ export default function deliveryHistory() {
                },
                {
                     key: 'kg12', cells: [
-                         { value: row.kg12.cylinders },
-                         { value: row.kg12.mt },
-                         { value: row.kg12.rate },
-                         { value: row.kg12.total }
+                         { value: decimalFix(row.kg12.cylinders) },
+                         { value: decimalFix(row.kg12.mt) },
+                         { value: decimalFix(row.kg12.rate, true) },
+                         { value: decimalFix(row.kg12.total, true) }
                     ], color: COLORS.KG_12
                },
                {
                     key: 'kg15', cells: [
-                         { value: row.kg15.cylinders },
-                         { value: row.kg15.mt },
-                         { value: row.kg15.rate },
-                         { value: row.kg15.total }
+                         { value: decimalFix(row.kg15.cylinders) },
+                         { value: decimalFix(row.kg15.mt) },
+                         { value: decimalFix(row.kg15.rate, true) },
+                         { value: decimalFix(row.kg15.total, true) }
                     ], color: COLORS.KG_15
                },
                {
                     key: 'kg17', cells: [
-                         { value: row.kg17.cylinders },
-                         { value: row.kg17.mt },
-                         { value: row.kg17.rate },
-                         { value: row.kg17.total }
+                         { value: decimalFix(row.kg17.cylinders) },
+                         { value: decimalFix(row.kg17.mt) },
+                         { value: decimalFix(row.kg17.rate, true) },
+                         { value: decimalFix(row.kg17.total, true) }
                     ], color: COLORS.KG_17
                },
                {
                     key: 'kg21', cells: [
-                         { value: row.kg21.cylinders },
-                         { value: row.kg21.mt },
-                         { value: row.kg21.rate },
-                         { value: row.kg21.total }
+                         { value: decimalFix(row.kg21.cylinders) },
+                         { value: decimalFix(row.kg21.mt) },
+                         { value: decimalFix(row.kg21.rate, true) },
+                         { value: decimalFix(row.kg21.total, true) }
                     ], color: COLORS.KG_21
                },
                {
                     key: 'summary', cells: [
-                         { value: row.subTotal },
-                         { value: row.received }
+                         { value: decimalFix(row.subTotal, true) },
+                         { value: decimalFix(row.received, true) },
+                         //balance
+                         {
+                              value: decimalFix(balance, true)
+                         }
                     ], color: COLORS.WHITE
                }
           ];
 
           return (
                <React.Fragment>
-                    <tr style={{ textAlign: "center" }}>
-                         <td style={{ textAlign: "center", backgroundColor: COLORS.WHITE }}>
+                    <tr style={{
+                         textAlign: "center",
+                         borderTopColor: (row.info.correction == true) ? "red" : "",
+                         borderBottomColor: (row.info.correction == true) ? "red" : ""
+                    }}>
+                         <td style={{
+                              textAlign: "center", backgroundColor: COLORS.WHITE,
+                              borderTopColor: (row.info.correction == true) ? "red" : "",
+                              borderBottomColor: (row.info.correction == true) ? "red" : ""
+                         }}>
                               <Box>
                                    <IconButton
                                         aria-label="expand row"
@@ -212,7 +339,9 @@ export default function deliveryHistory() {
                                         key={`${group.key}-${cellIndex}`}
                                         style={{
                                              backgroundColor: group.color,
-                                             textAlign: "center"
+                                             textAlign: "center",
+                                             borderTopColor: (row.info.correction == true) ? "red" : "",
+                                             borderBottomColor: (row.info.correction == true) ? "red" : ""
                                         }}
                                    >
                                         {cell.value}
@@ -225,7 +354,7 @@ export default function deliveryHistory() {
                               {open && (
                                    <Sheet
                                         variant="soft"
-                                        sx={{ p: 1, pl: 6, boxShadow: 'inset 0 3px 6px 0 rgba(0 0 0 / 0.08)' }}
+                                        sx={{ p: 1, pl: 6, boxShadow: 'inset 0 3px 6px 0 rgba(0 0 0 / 0.08)', m: 0 }}
                                    >
                                         <Typography level="body-lg" component="div">
                                              Details
@@ -238,37 +367,58 @@ export default function deliveryHistory() {
                                              <thead>
                                                   <tr>
                                                        <th>Date</th>
-                                                       <td>13</td>
+                                                       <td>
+                                                            {row.date}
+                                                       </td>
                                                   </tr>
                                                   <tr>
-                                                       <th>adress</th>
-                                                       <td>13</td>
+                                                       <th>Address</th>
+                                                       <td>
+                                                            {row.info.adress}
+                                                       </td>
                                                   </tr>
                                                   <tr>
                                                        <th>Delivered By</th>
-                                                       <td>13</td>
+                                                       <td>
+                                                            {row.info.deliveredBy}
+                                                       </td>
                                                   </tr>
-                                                  {
+                                                  {/* {
                                                        row.gasInfo.map((gasInfo, index) => (
                                                             <tr key={gasInfo.cylinder + "-" + index}>
-                                                                 <th>{gasInfo.cylinder}</th>
+                                                                 <th>
+                                                                      <span>{gasInfo.cylinder} </span>
+                                                                      <IoSend />
+                                                                 </th>
                                                                  <td>
-                                                                      {gasInfo.qty} : QTY, {gasInfo.kg} : KG
+                                                                      {decimalFix(gasInfo.qty)} : QTY, {decimalFix(gasInfo.kg)} : KG
                                                                  </td>
                                                             </tr>
                                                        ))
-                                                  }
+                                                  } */}
                                                   <tr>
                                                        <th>Cash</th>
-                                                       <td>13</td>
+                                                       <td>
+                                                            {decimalFix(row.info.cash)}
+                                                       </td>
                                                   </tr>
                                                   <tr>
                                                        <th>Online</th>
-                                                       <td>13</td>
+                                                       <td>
+                                                            {decimalFix(row.info.online)}
+                                                       </td>
                                                   </tr>
+                                                  {/* <tr>
+                                                       <th>Paid</th>
+                                                       <td>
+                                                            {row.info.paid ? "Yes" : "No"}
+                                                       </td>
+                                                  </tr> */}
                                                   <tr>
                                                        <th>Correction</th>
-                                                       <td>false</td>
+                                                       <td>
+                                                            {row.info.correction ? "Yes" : "No"}
+                                                       </td>
                                                   </tr>
                                              </thead>
                                              <tbody>
@@ -283,37 +433,107 @@ export default function deliveryHistory() {
           );
      }
      // Update the rows data with the new structure
-     const rows = [
-          createData(
-               // date
-               "24/01/25",
-               // info
-               {
-                    customer: "Customer",
-                    adress: "dadra",
-                    deliveredBy: "ME",
-                    cash: 1000,
-                    online: 1009,
-                    correction: false,
-                    paid: false,
-               },
-               //gasInfo
-               [
-                    { cylinder: "Go Gas", qty: 12, kg: 15 },
-                    { cylinder: "HP", qty: 12, kg: 15 },
-               ],
-               // 12KG Group
-               { cylinders: 10, mt: 120, rate: 100 },
-               // 15KG Group
-               { cylinders: 5, mt: 75, rate: 110 },
-               // 17KG Group
-               { cylinders: 8, mt: 136, rate: 120 },
-               // 21KG Group
-               { cylinders: 3, mt: 63, rate: 130 },
-               // received amount
-               447607
-          ),
-     ];
+     let rows = []
+
+     if (deliveries != null || deliveries != undefined) {
+          if (!deliveries.noData) {
+               rows = deliveries.map((delivery) => {
+                    let totalCash = 0
+                    let totalOnline = 0
+
+                    let cyl12KgQty = 0
+                    let cyl12KgMt = 0
+                    let cyl12KgRate = 0
+
+                    let cyl15KgQty = 0
+                    let cyl15KgMt = 0
+                    let cyl15KgRate = 0
+
+                    let cyl17KgQty = 0
+                    let cyl17KgMt = 0
+                    let cyl17KgRate = 0
+
+                    let cyl21KgQty = 0
+                    let cyl21KgMt = 0
+                    let cyl21KgRate = 0
+
+                    delivery.payments.forEach((payment) => {
+                         if (payment.method == 0) {
+                              totalCash += payment.amount
+                         } else {
+                              totalOnline += payment.amount
+                         }
+                    })
+                    const cylinder_list = delivery.gas_deliveries.map((gas) => {
+                         if (gas.kg == 12) {
+                              if (gas.is_empty == 0) {
+                                   cyl12KgQty = gas.quantity
+                                   cyl12KgRate = gas.gas_price
+                              } else {
+                                   cyl12KgMt += gas.quantity
+                              }
+                         }
+                         if (gas.kg == 15) {
+                              if (gas.is_empty == 0) {
+                                   cyl15KgQty = gas.quantity
+                                   cyl15KgRate = gas.gas_price
+                              } else {
+                                   cyl15KgMt += gas.quantity
+                              }
+                         }
+                         // 17KG Group
+                         if (gas.kg == 17) {
+                              if (gas.is_empty == 0) {
+                                   cyl17KgQty = gas.quantity
+                                   cyl17KgRate = gas.gas_price
+                              } else {
+                                   cyl17KgMt += gas.quantity
+                              }
+                         }
+                         //21KG Group
+                         if (gas.kg == 21) {
+                              if (gas.is_empty == 0) {
+                                   cyl21KgQty = gas.quantity
+                                   cyl21KgRate = gas.gas_price
+                              } else {
+                                   cyl21KgMt += gas.quantity
+                              }
+                         }
+                         return {
+                              cylinder: gas.brand,
+                              qty: gas.quantity,
+                              kg: 15
+                         }
+                    })
+                    return createData(
+                         // date
+                         formatDateToDDMMYY(delivery.created_at),
+                         // info
+                         {
+                              customer: delivery.customer.name,
+                              adress: delivery.customer.address,
+                              deliveredBy: delivery.courier_boy.name,
+                              cash: totalCash,
+                              online: totalOnline,
+                              correction: delivery.correction,
+                              paid: delivery.payments.length > 0,
+                         },
+                         //gasInfo
+                         cylinder_list,
+                         // 12KG Group
+                         { cylinders: cyl12KgQty, mt: cyl12KgMt, rate: cyl12KgRate },
+                         // 15KG Group
+                         { cylinders: cyl15KgQty, mt: cyl15KgMt, rate: cyl15KgRate },
+                         // 17KG Group
+                         { cylinders: cyl17KgQty, mt: cyl17KgMt, rate: cyl17KgRate },
+                         // 21KG Group
+                         { cylinders: cyl21KgQty, mt: cyl21KgMt, rate: cyl21KgRate },
+                         // received amount
+                         (totalCash + totalOnline)
+                    )
+               });
+          }
+     }
      return <Stack
           sx={{
                height: "100%",
@@ -327,10 +547,50 @@ export default function deliveryHistory() {
                color: "black",
           }}
      >
-          <Stack sx={{ backgroundColor: "lightgreen", width: "100%" }}>
-               1
+          <CircularProgress
+               sx={{
+                    backgroundColor: "transparent",
+                    display: loading ? "flex" : "none"
+               }}
+          />
+          <Stack
+               sx={{
+                    width: "100%",
+                    display: loading ? "none" : "flex"
+               }}
+               direction="row"
+               gap={.5}
+               mt={.5}
+               mb={.5}
+               pr={.5}
+               alignContent={"end"}
+               justifyContent={"flex-end"}
+          >
+               <Input
+                    type="date"
+                    defaultValue={dateStart}
+                    onChange={(event) => {
+                         // Handle date start change
+                         // setParamsUpdate(true);
+                         setDateStart(event.target.value);
+                    }}
+               />
+               <Input
+                    type="date"
+                    defaultValue={dateEnd}
+                    onChange={(event) => {
+                         // Handle date start change
+                         // setParamsUpdate(true);
+                         setDateEnd(event.target.value);
+                    }}
+               />
+               <Button
+                    sx={{
+                         borderRadius: "md",
+                    }}
+                    onClick={() => { loadData() }}>Force Load</Button>
           </Stack>
-          <Stack sx={{ backgroundColor: "lightblue", width: "100%", flexGrow: 1 }}>
+          <Stack sx={{ backgroundColor: "lightblue", width: "100%", flexGrow: 1, display: loading ? "none" : "flex" }}>
                <Sheet>
                     <Table
                          aria-label="collapsible table"
@@ -364,9 +624,32 @@ export default function deliveryHistory() {
                               {rows.map((row, index) => (
                                    <Row key={row.date + "_" + index} row={row} initialOpen={false} />
                               ))}
+                              {
+                                   ((rows.length == 0) ? <tr>
+                                        <td colSpan={columns.length + 1} style={{ textAlign: "center", fontWeight: "bold", fontSize: "1.8em" }}>No Data</td>
+                                   </tr> : null
+                                   )
+                              }
                          </tbody>
                     </Table>
                </Sheet>
           </Stack>
      </Stack>
 }
+
+function formatDateToDDMMYY(dateString) {
+     //convert to epoch
+     var date = new Date(dateString);
+     var dd = String(date.getDate()).padStart(2, '0');
+     var mm = String(date.getMonth() + 1).padStart(2, '0'); //January is 0!
+     var yy = date.getFullYear();
+     var yyyy = yy.toString().slice(2, 4);
+     return dd + "/" + mm + "/" + yyyy;
+}
+
+const formatDate = (date) => {
+     const year = date.getFullYear();
+     const month = String(date.getMonth() + 1).padStart(2, '0');
+     const day = String(date.getDate()).padStart(2, '0');
+     return `${year}-${month}-${day}`;
+};

@@ -10,7 +10,7 @@ import {
 
 const initialState = {
      loading: false,
-     deliveries: [],
+     deliveries: null,
      error: false,
      updateSuccess: false,
 };
@@ -20,7 +20,7 @@ const deliverysReducer = (state = initialState, action) => {
           case INIT_STATE:
                return {
                     loading: false,
-                    deliveries: [],
+                    deliveries: null,
                     error: false,
                     updateSuccess: false,
                };
@@ -41,7 +41,7 @@ const deliverysReducer = (state = initialState, action) => {
           case FETCH_DELIVERIES_FAILURE:
                return {
                     loading: false,
-                    deliveries: [],
+                    deliveries: null,
                     error: true,
                     updateSuccess: false,
                };

@@ -364,7 +364,7 @@ export default function DeliveryBoyDetails() {
                                    {
                                         <td>
                                              <Link
-                                                  to={`/admin/deliveryHistory?courier_boy_id=${deliveryBoyData[index].id}`}
+                                                  to={`/admin/deliveryHistory?deliverBoyId=${deliveryBoyData[index].id}`}
                                              >
                                                   <Button
                                                        variant="soft"

@@ -6,6 +6,7 @@ export const extractNumber = (str) => {
 export const percentage = (percentage, value) => {
      return (percentage / 100) * value;
 }
+
 export const urlDecodeAndParseJson = (encodedString) => {
      if (encodedString) {
           try {
@@ -19,28 +20,59 @@ export const urlDecodeAndParseJson = (encodedString) => {
      }
      return null;
 }
+
 export const formatDateTDDMMYY = (date) => {
      const year = date.getFullYear();
      const month = String(date.getMonth() + 1).padStart(2, '0');
      const day = String(date.getDate()).padStart(2, '0');
      return `${day}/${month}/${year}`;
 };
+
 export const formatDateYYMMDD = (date) => {
      const year = date.getFullYear();
      const month = String(date.getMonth() + 1).padStart(2, '0');
      const day = String(date.getDate()).padStart(2, '0');
      return `${year}/${month}/${day}`;
 };
+
 //just add param to end of url
-export const updateUrlParams = (params) => {
-     // let url = new URL(window.location.href);
-     // let hash = url.hash;
-     // url.hash = ''; // Temporarily remove the hash to avoid duplication
+export const updateUrlParams = (dateStart, dateEnd, customerId, deliverBoyId) => {
+     // Grab everything after the #
+     const fullHash = window.location.hash.substring(1);            // e.g. "/admin/deliveryHistory?foo=bar"
+     const [path, rawQuery = ''] = fullHash.split('?');             // separate path and query
 
-     // for (const [key, value] of Object.entries(params)) {
-     //      url.searchParams.set(key, value);
-     // }
+     const params = new URLSearchParams(rawQuery);
 
-     // url.hash = hash; // Reapply the hash
-     // window.history.replaceState(null, null, url.toString());
+     // Set or delete each filter
+     const updates = { dateStart, dateEnd, customerId, deliverBoyId };
+     Object.entries(updates).forEach(([key, val]) => {
+          if (val == null || val === '') {
+               params.delete(key);
+          } else {
+               params.set(key, val);
+          }
+     });
+
+     // Rebuild and replace the hash (no history entry)
+     const newHash = path + (params.toString() ? `?${params}` : '');
+     if (`#${newHash}` !== window.location.hash) {
+          window.location.replace(window.location.pathname + window.location.search + `#${newHash}`);
+     }
+}
+
+export const decimalFix = (value, money = false) => {
+     let num = value.toFixed(2);
+     //if end with .00 remove it
+     if (num.endsWith(".00")) {
+          num = num.slice(0, -3);
+     }
+     //if 0 then -
+     const temp = Number(num);
+     if (temp == 0) {
+          num = "-";
+     }
+     if (money && temp > 0) {
+          num = "₹" + num;
+     }
+     return num;
 }

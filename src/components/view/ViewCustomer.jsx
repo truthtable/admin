@@ -707,7 +707,7 @@ function makeRow(data, onAllDataClick) {
                }}
 
                     onClick={() => {
-                         window.location.href = `/admin/#/admin/deliveryHistory/?customer_id=${data.id}`;
+                         window.location.href = `/admin/#/admin/deliveryHistory/?customerId=${data.id}`;
                     }}
 
                >History</Button>
