@@ -16,13 +16,9 @@ import { addGasDelivery, deleteGasDelivery, gasDeliveriesIniState, updateGasDeli
 import { set } from "firebase/database";
 import { RiDeleteBinFill } from "react-icons/ri";
 import gasServices from "../../services/gas-services.jsx";
-import { Paper } from "@mui/material";
 import PropTypes from 'prop-types';
-import { use } from "react";
-import { f } from "html2pdf.js";
 import { decimalFix, updateUrlParams } from "../../Tools.jsx";
-import { IoSend } from "react-icons/io5";
-
+import ExportCSV from "../ExportCSV.jsx";
 const COLORS = {
      WHITE: "#ffffff",
      KG_12: "#e3f2fd",
@@ -62,10 +58,9 @@ const columns = [
 
      // Summary rows  
      { column: "Sub Total", color: COLORS.WHITE },
-     { column: "Recieved", color: COLORS.WHITE },
+     { column: "Received", color: COLORS.WHITE },
      { column: "Balance", color: COLORS.WHITE }
 ];
-
 export default function deliveryHistory() {
 
      const dispatch = useDispatch();
@@ -81,14 +76,14 @@ export default function deliveryHistory() {
      const date_start = searchParams.get('dateStart');
      const date_end = searchParams.get('dateEnd');
 
-     console.log(deliveries);
+     //console.log(deliveries);
 
 
      let tempUrlCustomerId = urlCustomerId ? Number(urlCustomerId) : null;
      let tempUrlCourierBoyId = urlCourierBoyId ? Number(urlCourierBoyId) : null;
 
 
-     console.log([{ urlCustomerId, tempUrlCustomerId }, { urlCourierBoyId, tempUrlCourierBoyId }]);
+     //console.log([{ urlCustomerId, tempUrlCustomerId }, { urlCourierBoyId, tempUrlCourierBoyId }]);
 
      const [customerId, setCustomerId] = useState(tempUrlCustomerId);
      const [deliverBoyId, setDeliverBoyId] = useState(tempUrlCourierBoyId);
@@ -114,7 +109,7 @@ export default function deliveryHistory() {
      );
 
 
-     console.log({ customerId, deliverBoyId, dateStart, dateEnd });
+     //console.log({ customerId, deliverBoyId, dateStart, dateEnd });
 
      //setUrlParams
 
@@ -255,7 +250,6 @@ export default function deliveryHistory() {
                balance = 0
           }
 
-
           // Define the cell groups for easier mapping
           const cellGroups = [
                {
@@ -383,19 +377,6 @@ export default function deliveryHistory() {
                                                             {row.info.deliveredBy}
                                                        </td>
                                                   </tr>
-                                                  {/* {
-                                                       row.gasInfo.map((gasInfo, index) => (
-                                                            <tr key={gasInfo.cylinder + "-" + index}>
-                                                                 <th>
-                                                                      <span>{gasInfo.cylinder} </span>
-                                                                      <IoSend />
-                                                                 </th>
-                                                                 <td>
-                                                                      {decimalFix(gasInfo.qty)} : QTY, {decimalFix(gasInfo.kg)} : KG
-                                                                 </td>
-                                                            </tr>
-                                                       ))
-                                                  } */}
                                                   <tr>
                                                        <th>Cash</th>
                                                        <td>
@@ -434,6 +415,7 @@ export default function deliveryHistory() {
      }
      // Update the rows data with the new structure
      let rows = []
+     let csvData = []
 
      if (deliveries != null || deliveries != undefined) {
           if (!deliveries.noData) {
@@ -505,9 +487,65 @@ export default function deliveryHistory() {
                               kg: 15
                          }
                     })
+                    const date = formatDateToDDMMYY(delivery.created_at)
+                    let total12Kg = cyl12KgQty * cyl12KgRate
+                    let total15Kg = cyl15KgQty * cyl15KgRate
+                    let total17Kg = cyl17KgQty * cyl17KgRate
+                    let total21Kg = cyl21KgQty * cyl21KgRate
+                    let totalTotal = total12Kg + total15Kg + total17Kg + total21Kg
+                    let received = totalCash + totalOnline
+                    let balance = totalTotal - received
+                    if (balance < 0) {
+                         balance = 0
+                    }
+                    csvData.push([
+                         //"Date",
+                         date,
+                         //"Customer",
+                         delivery.customer.name,
+                         //"12KG CYL",
+                         cyl12KgQty,
+                         //"MT",
+                         cyl12KgMt,
+                         //"Rate",
+                         cyl12KgRate,
+                         //"Total",
+                         total12Kg,
+                         //"15KG CYL",
+                         cyl15KgQty,
+                         //"MT",
+                         cyl15KgMt,
+                         //"Rate",
+                         cyl15KgRate,
+                         //"Total",
+                         total15Kg,
+                         //"17KG CYL",
+                         cyl17KgQty,
+                         //"MT",
+                         cyl17KgMt,
+                         //"Rate",
+                         cyl17KgRate,
+                         //"Total",
+                         total17Kg,
+                         //"21KG CYL",
+                         cyl21KgQty,
+                         //"MT",
+                         cyl21KgMt,
+                         //"Rate",
+                         cyl21KgRate,
+                         //"Total",
+                         total21Kg,
+                         //"Sub Total",
+                         totalTotal,
+                         //"Received",
+                         received,
+                         //"Balance"
+                         balance
+
+                    ])
                     return createData(
                          // date
-                         formatDateToDDMMYY(delivery.created_at),
+                         date,
                          // info
                          {
                               customer: delivery.customer.name,
@@ -534,6 +572,8 @@ export default function deliveryHistory() {
                });
           }
      }
+     const headers = columns.map((col) => col.column);
+
      return <Stack
           sx={{
                height: "100%",
@@ -566,6 +606,19 @@ export default function deliveryHistory() {
                alignContent={"end"}
                justifyContent={"flex-end"}
           >
+               <ExportCSV
+                    headers={headers}
+                    data={csvData}
+                    filename={
+                         "deliveries_" + formatDateToDDMMYY(dateStart) + "_TO_" + formatDateToDDMMYY(dateEnd) + ".csv"
+                    }
+               />
+               <Divider
+                    sx={{
+                         flexGrow: 1,
+                         opacity: 0,
+                    }}
+               />
                <Input
                     type="date"
                     defaultValue={dateStart}

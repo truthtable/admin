@@ -45,7 +45,6 @@ import {
      resetConnection
 } from '../../redux/connectionSlice.js'
 import { set } from "firebase/database";
-
 const ViewCustomer = () => {
 
      const dispatch = useDispatch();

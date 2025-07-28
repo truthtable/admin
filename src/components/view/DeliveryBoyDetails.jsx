@@ -496,3 +496,4 @@ function stripUrlParams(url) {
      urlObj.search = "";
      return urlObj.toString();
 }
+
