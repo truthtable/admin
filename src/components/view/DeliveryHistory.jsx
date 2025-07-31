@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import React, { useEffect, useState } from "react";
-import { Box, Chip, Divider, LinearProgress, Select, Stack, Tab, Table, TabList, TabPanel, Tabs, Option, Button, Modal, Sheet, ModalClose, Typography, Input, List, ListItem, ListItemButton, ListItemDecorator, ListItemContent, FormControl, FormLabel, RadioGroup, Radio, Card, IconButton, CircularProgress } from "@mui/joy";
+import { Box, Chip, Divider, LinearProgress, Select, Stack, Tab, Table, TabList, TabPanel, Tabs, Option, Button, Modal, Sheet, ModalClose, Typography, Input, List, ListItem, ListItemButton, ListItemDecorator, ListItemContent, FormControl, FormLabel, RadioGroup, Radio, Card, IconButton, CircularProgress, Autocomplete, TextField } from "@mui/joy";
 import { useDispatch, useSelector } from "react-redux";
 import { deleteDeliveryById, deliveriesIniState, fetchDeliveries, updateDelivery } from "../../redux/actions/deliveryActions.js";
 import { fetchGasData } from "../../state/GasList.jsx";
@@ -114,7 +114,78 @@ export default function deliveryHistory() {
      );
 
      //console.log({ customerId, deliverBoyId, dateStart, dateEnd });
+     const UpdateCell = ({ tableName, columnName, value, onChange }) => {
+          const [valueState, setValueState] = React.useState(value);
 
+          const options = [
+               { value: 'dog', label: 'Dog' },
+               { value: 'cat', label: 'Cat' },
+               { value: value, label: titleCase(value) }
+          ];
+
+          return (
+               <Autocomplete
+                    variant="outlined"
+                    placeholder={titleCase(valueState)}
+                    options={options}
+                    value={options.find((opt) => opt.value === valueState) || null}
+                    onChange={(_, newOption) => {
+                         //if (newOption) setValueState(newOption.value);
+                         const confirm = onChange(newOption);
+                         if (confirm) {
+                              setValueState(newOption.value);
+                         }
+                    }}
+                    getOptionLabel={(option) => option.label}
+                    isOptionEqualToValue={(option, val) => option.value === val.value}
+                    clearOnBlur={false}
+                    disableClearable
+                    sx={{
+                         fontWeight: 900,
+                         color: 'black',
+                         backgroundColor: 'white',
+                    }}
+                    renderInput={(params) => (
+                         <TextField
+                              {...params}
+                              placeholder={titleCase(valueState)}
+                              size="sm"
+                              variant="outlined"
+                              sx={{
+                                   fontWeight: 900,
+                                   color: 'black',
+                                   '& input': { fontWeight: "bold", color: 'black' }
+                              }
+                              }
+                         />
+                    )}
+               />
+          );
+     };
+
+     const UpdateCellValue = ({ tableName, columnName, value }) => {
+          const [valueState, setValueState] = React.useState(value);
+          return <>
+               {/* {value} */}
+               <input
+                    style={{
+                         width: "100%",
+                         padding: 0,
+                         margin: 0,
+                         border: "none",
+                         outline: "none",
+                         backgroundColor: "transparent",
+                    }}
+                    type="text"
+                    value={
+                         titleCase(valueState)
+                    }
+                    onChange={(event) => {
+                         setValueState(event.target.value);
+                    }}
+               />
+          </>
+     }
      //setUrlParams
 
      const loadData = () => {
@@ -171,14 +242,7 @@ export default function deliveryHistory() {
      }, []);
 
      // First, let's add a helper function to calculate gas group totals
-     function calculateGasGroup(cylinders, mt, rate) {
-          return {
-               cylinders,
-               mt,
-               rate,
-               total: cylinders * rate
-          };
-     }
+
 
      // Update the createData function to be more organized
      function createData(date, info, gasInfo, kg12Data, kg15Data, kg17Data, kg21Data, received) {
@@ -259,7 +323,18 @@ export default function deliveryHistory() {
                {
                     key: 'info', cells: [
                          { value: row.date },
-                         { value: titleCase(row.customer) }
+                         {
+                              value: <UpdateCell
+                                   value={row.customer}
+                                   tableName="deliveries"
+                                   columnName="customer"
+                                   onChange={(newOption) => {
+                                        console.log(newOption);
+                                        const ok = window.confirm("Are you sure?");
+                                        return ok;
+                                   }}
+                              />
+                         }
                     ], color: COLORS.WHITE
                },
                {
@@ -522,7 +597,7 @@ export default function deliveryHistory() {
                          //"Date",
                          date,
                          //"Customer",
-                         delivery.customer.name,
+                         titleCase(delivery.customer.name),
                          //"12KG CYL",
                          cyl12KgQty,
                          //"MT",
@@ -731,3 +806,12 @@ const formatDate = (date) => {
      const day = String(date.getDate()).padStart(2, '0');
      return `${year}-${month}-${day}`;
 };
+
+function calculateGasGroup(cylinders, mt, rate) {
+     return {
+          cylinders,
+          mt,
+          rate,
+          total: cylinders * rate
+     };
+}
