@@ -685,7 +685,13 @@ export default function old_deliveryHistory() {
                                    {`Delivery No : ${delivery.id}`}
                               </span>
                               <Divider orientation="horizontal" sx={{ opacity: 0, flexGrow: 1 }} />
-                              <GasEditUi selectedGasList={delivery.gas_deliveries} customer={delivery.courier_boy.username} deliveryBoy={user.name} deleveryId={delivery.id} receivedAmount={delivery.received_amount} paymentMethod={delivery.payment_method} />
+                              <GasEditUi
+                                   selectedGasList={delivery.gas_deliveries}
+                                   customer={delivery.courier_boy.username}
+                                   deliveryBoy={user.name}
+                                   deleveryId={delivery.id}
+                                   receivedAmount={delivery.received_amount}
+                                   paymentMethod={delivery.payment_method} />
                          </Stack>
 
                     </td>

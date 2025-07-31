@@ -102,10 +102,11 @@ export const login = (username, password) => async (dispatch) => {
 export const validateLogin = () => async (dispatch) => {
      try {
           const response = await axios().get("check");
-          //console.log(response.data);
      } catch (error) {
-          console.log("validateLogin : " + error);
-          console.log("validateLogin : " + getLoginData());
+          console.log("validateLogin : ", error);
+          let loginData = getLoginData();
+          loginData = JSON.stringify(loginData);
+          console.log("validateLogin : " + loginData);
           dispatch(
                loginFailure(error.response?.data?.message || "Login failed"),
           );

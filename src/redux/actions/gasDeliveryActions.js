@@ -8,6 +8,7 @@ export const UPDATE_GAS_DELIVERY = "UPDATE_GAS_DELIVERY";
 export const DELETE_GAS_DELIVERY = "DELETE_GAS_DELIVERY";
 export const GAS_DELIVERY_ERROR = "GAS_DELIVERY_ERROR";
 export const LOADING = "LOADING";
+export const UPDATE_CREATE_DELETE = "UPDATE_CREATE_DELETE";
 
 // Initial state
 export const gasDeliveriesIniState = () => async (dispatch) => {
@@ -111,6 +112,29 @@ export const deleteGasDelivery = (ids) => async (dispatch) => {
           console.log(res);
           dispatch({
                type: DELETE_GAS_DELIVERY,
+          });
+     } catch (error) {
+          dispatch({
+               type: GAS_DELIVERY_ERROR,
+          });
+     }
+};
+
+export const updateCreateDelete = (data) => async (dispatch) => {
+     console.log("updateCreateDelete : ", data);
+     dispatch({
+          type: LOADING,
+     });
+     try {
+          const res = await axios().post(
+               `https://srdgas.online/public/api/updateOrCreateOrDelete`,
+               {
+                    data,
+               },
+          );
+          console.log(res.data);
+          dispatch({
+               type: UPDATE_CREATE_DELETE,
           });
      } catch (error) {
           dispatch({

@@ -6,6 +6,8 @@ import {
      FETCH_DELIVERIES_SUCCESS,
      FETCH_DELIVERIES_FAILURE,
      UPDATE_DELIVERY_SUCCESS,
+     DELETE_DELIVERY_SUCCESS,
+     DELETE_DELIVERY,
 } from "../actions/deliveryActions";
 
 const initialState = {
@@ -52,6 +54,30 @@ const deliverysReducer = (state = initialState, action) => {
                     updateSuccess: true,
                     error: false,
                };
+          case DELETE_DELIVERY: {
+               return {
+                    ...state,
+                    loading: true,
+                    updateSuccess: false,
+                    error: false,
+               };
+          }
+          case DELETE_DELIVERY_SUCCESS: {
+               console.log("deleteDeliverySuccess : ", action.payload);
+               console.log("state : ", state);
+               const id = action.payload;
+               //remove this id delivery from state
+               return {
+                    deliveries: state.deliveries
+                         ? state.deliveries.filter(
+                                (delivery) => delivery.id !== id,
+                           )
+                         : null,
+                    loading: false,
+                    updateSuccess: true,
+                    error: false,
+               };
+          }
           default:
                return state;
      }

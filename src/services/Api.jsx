@@ -22,6 +22,8 @@ export const UPDATE_CUSTOMER = URL + "api/update_customer/";
 export const UPDATE_USER = URL + "api/update_user/";
 export const UPDATE_COURIER_BOY = URL + "api/update_courier_boy/";
 
+export const UPDATE_CREATE_DELETE = URL + "api/updateOrCreateOrDelete/";
+
 export const getUserDataFromCookie = () => {
      let data = null;
      try {
