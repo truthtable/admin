@@ -2332,6 +2332,7 @@ export const updateDelivery = (delivery) => {
      console.log("req", delivery);
      return async (dispatch) => {
           dispatch(updateDeliveryRequest());
+          //console.log("updateDelivery : ", delivery);
           try {
                let response;
                if (
@@ -2349,7 +2350,7 @@ export const updateDelivery = (delivery) => {
                          delivery,
                     );
                }
-               console.log("res", response.data);
+               //console.log("res", response.data);
                const deliveries = response.data;
                if (deliveries.success == false) {
                     //error

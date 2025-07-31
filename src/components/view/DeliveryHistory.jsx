@@ -61,10 +61,37 @@ const columns = [
      { column: "Received", color: COLORS.WHITE },
      { column: "Balance", color: COLORS.WHITE }
 ];
+const CUSTOMER_LIST = []
 export default function deliveryHistory() {
 
      const dispatch = useDispatch();
      const { deliveries, loading, updateSuccess, error } = useSelector((state) => state.deliverys);
+     const { userDataLoading, users, userDataError } = useSelector((state) => state.user);
+
+     //console.log(CUSTOMER_LIST);
+
+     //clear customer list
+     CUSTOMER_LIST.length = 0
+     if (users != null && users != undefined) {
+          const customerOptions = users.map((user) => {
+               if (user.customers.length == 0) {
+                    return null;
+               }
+               const customerId = user.customers[0]?.id;
+               const customerName = titleCase(user.name);
+               const address = titleCase(user.address);
+
+               return {
+                    id: customerId,
+                    label: `${customerName} (${address})`,
+                    // Or alternatively, just use the name but ensure React keys are unique
+                    // label: customerName
+               }
+          }).filter(Boolean); // Remove null entries
+
+          CUSTOMER_LIST.push(...customerOptions); // Spread the array instead of nesting
+     }
+     //console.log(CUSTOMER_LIST)
 
      const currentUrl = window.location.href;
      const hashIndex = currentUrl.indexOf('#');
@@ -113,81 +140,6 @@ export default function deliveryHistory() {
           }
      );
 
-     //console.log({ customerId, deliverBoyId, dateStart, dateEnd });
-     const UpdateCell = ({ tableName, columnName, value, onChange }) => {
-          const [valueState, setValueState] = React.useState(value);
-
-          const options = [
-               { value: 'dog', label: 'Dog' },
-               { value: 'cat', label: 'Cat' },
-               { value: value, label: titleCase(value) }
-          ];
-
-          return (
-               <Autocomplete
-                    variant="outlined"
-                    placeholder={titleCase(valueState)}
-                    options={options}
-                    value={options.find((opt) => opt.value === valueState) || null}
-                    onChange={(_, newOption) => {
-                         //if (newOption) setValueState(newOption.value);
-                         const confirm = onChange(newOption);
-                         if (confirm) {
-                              setValueState(newOption.value);
-                         }
-                    }}
-                    getOptionLabel={(option) => option.label}
-                    isOptionEqualToValue={(option, val) => option.value === val.value}
-                    clearOnBlur={false}
-                    disableClearable
-                    sx={{
-                         fontWeight: 900,
-                         color: 'black',
-                         backgroundColor: 'white',
-                    }}
-                    renderInput={(params) => (
-                         <TextField
-                              {...params}
-                              placeholder={titleCase(valueState)}
-                              size="sm"
-                              variant="outlined"
-                              sx={{
-                                   fontWeight: 900,
-                                   color: 'black',
-                                   '& input': { fontWeight: "bold", color: 'black' }
-                              }
-                              }
-                         />
-                    )}
-               />
-          );
-     };
-
-     const UpdateCellValue = ({ tableName, columnName, value }) => {
-          const [valueState, setValueState] = React.useState(value);
-          return <>
-               {/* {value} */}
-               <input
-                    style={{
-                         width: "100%",
-                         padding: 0,
-                         margin: 0,
-                         border: "none",
-                         outline: "none",
-                         backgroundColor: "transparent",
-                    }}
-                    type="text"
-                    value={
-                         titleCase(valueState)
-                    }
-                    onChange={(event) => {
-                         setValueState(event.target.value);
-                    }}
-               />
-          </>
-     }
-     //setUrlParams
-
      const loadData = () => {
           dispatch(fetchDeliveries({ dateStart: dateStart, dateEnd: dateEnd, customer_id: customerId, courier_boy_id: deliverBoyId }));
      }
@@ -226,7 +178,16 @@ export default function deliveryHistory() {
      //console.log(deliveries);
      useEffect(() => {
           if ((deliveries == null || deliveries == undefined) && loading == false) {
-               //dispatch(fetchDeliveries());
+               dispatch(fetchDeliveries());
+               console.log("fetchDeliveries...");
+          }
+          if (
+               userDataLoading === false
+               && (users == null || users == undefined)
+               && loading == false
+          ) {
+               console.log("fetchUser...");
+               dispatch(fetchUser());
           }
      })
 
@@ -235,7 +196,7 @@ export default function deliveryHistory() {
                if (
                     loading === false
                ) {
-                    console.log("fetchDeliveries...");
+                    console.log("fetchDeliveries...Fire");
                     loadData();
                }
           });
@@ -267,247 +228,6 @@ export default function deliveryHistory() {
           };
      }
 
-     Row.propTypes = {
-          row: PropTypes.shape({
-               date: PropTypes.string.isRequired,
-               customer: PropTypes.string.isRequired,
-               info: PropTypes.shape({
-                    customer: PropTypes.string.isRequired,
-                    adress: PropTypes.string.isRequired,
-                    deliveredBy: PropTypes.string.isRequired,
-                    cash: PropTypes.number.isRequired,
-                    online: PropTypes.number.isRequired,
-                    correction: PropTypes.bool.isRequired,
-                    paid: PropTypes.bool.isRequired
-               }),
-               kg12: PropTypes.shape({
-                    cylinders: PropTypes.number.isRequired,
-                    mt: PropTypes.number.isRequired,
-                    rate: PropTypes.number.isRequired,
-                    total: PropTypes.number.isRequired
-               }).isRequired,
-               kg15: PropTypes.shape({
-                    cylinders: PropTypes.number.isRequired,
-                    mt: PropTypes.number.isRequired,
-                    rate: PropTypes.number.isRequired,
-                    total: PropTypes.number.isRequired
-               }).isRequired,
-               kg17: PropTypes.shape({
-                    cylinders: PropTypes.number.isRequired,
-                    mt: PropTypes.number.isRequired,
-                    rate: PropTypes.number.isRequired,
-                    total: PropTypes.number.isRequired
-               }).isRequired,
-               kg21: PropTypes.shape({
-                    cylinders: PropTypes.number.isRequired,
-                    mt: PropTypes.number.isRequired,
-                    rate: PropTypes.number.isRequired,
-                    total: PropTypes.number.isRequired
-               }).isRequired,
-               subTotal: PropTypes.number.isRequired,
-               received: PropTypes.number.isRequired
-          }).isRequired,
-          initialOpen: PropTypes.bool
-     };
-     function Row({ row, initialOpen = false }) {
-          const [open, setOpen] = React.useState(initialOpen);
-
-          let balance = row.subTotal - row.received
-          //o if nagative
-          if (balance < 0) {
-               balance = 0
-          }
-
-          // Define the cell groups for easier mapping
-          const cellGroups = [
-               {
-                    key: 'info', cells: [
-                         { value: row.date },
-                         {
-                              value: <UpdateCell
-                                   value={row.customer}
-                                   tableName="deliveries"
-                                   columnName="customer"
-                                   onChange={(newOption) => {
-                                        console.log(newOption);
-                                        const ok = window.confirm("Are you sure?");
-                                        return ok;
-                                   }}
-                              />
-                         }
-                    ], color: COLORS.WHITE
-               },
-               {
-                    key: 'kg12', cells: [
-                         { value: decimalFix(row.kg12.cylinders) },
-                         { value: decimalFix(row.kg12.mt) },
-                         { value: decimalFix(row.kg12.rate, true) },
-                         { value: decimalFix(row.kg12.total, true) }
-                    ], color: COLORS.KG_12
-               },
-               {
-                    key: 'kg15', cells: [
-                         { value: decimalFix(row.kg15.cylinders) },
-                         { value: decimalFix(row.kg15.mt) },
-                         { value: decimalFix(row.kg15.rate, true) },
-                         { value: decimalFix(row.kg15.total, true) }
-                    ], color: COLORS.KG_15
-               },
-               {
-                    key: 'kg17', cells: [
-                         { value: decimalFix(row.kg17.cylinders) },
-                         { value: decimalFix(row.kg17.mt) },
-                         { value: decimalFix(row.kg17.rate, true) },
-                         { value: decimalFix(row.kg17.total, true) }
-                    ], color: COLORS.KG_17
-               },
-               {
-                    key: 'kg21', cells: [
-                         { value: decimalFix(row.kg21.cylinders) },
-                         { value: decimalFix(row.kg21.mt) },
-                         { value: decimalFix(row.kg21.rate, true) },
-                         { value: decimalFix(row.kg21.total, true) }
-                    ], color: COLORS.KG_21
-               },
-               {
-                    key: 'summary', cells: [
-                         { value: decimalFix(row.subTotal, true) },
-                         { value: decimalFix(row.received, true) },
-                         //balance
-                         {
-                              value: decimalFix(balance, true)
-                         }
-                    ], color: COLORS.WHITE
-               }
-          ];
-
-          return (
-               <React.Fragment>
-                    <tr style={{
-                         textAlign: "center",
-                         borderTopColor: (row.info.correction == true) ? "red" : "",
-                         borderBottomColor: (row.info.correction == true) ? "red" : ""
-                    }}>
-                         <td style={{
-                              textAlign: "center", backgroundColor: COLORS.WHITE,
-                              borderTopColor: (row.info.correction == true) ? "red" : "",
-                              borderBottomColor: (row.info.correction == true) ? "red" : ""
-                         }}>
-                              <Box>
-                                   <IconButton
-                                        aria-label="expand row"
-                                        variant="plain"
-                                        color="neutral"
-                                        size="sm"
-                                        onClick={() => setOpen(!open)}
-                                   >
-                                        {open ? <MdKeyboardArrowUp /> : <MdKeyboardArrowDown />}
-                                   </IconButton>
-                              </Box>
-                         </td>
-
-                         {cellGroups.map(group => (
-                              group.cells.map((cell, cellIndex) => (
-                                   <td
-                                        key={`${group.key}-${cellIndex}`}
-                                        style={{
-                                             backgroundColor: group.color,
-                                             textAlign: "center",
-                                             borderTopColor: (row.info.correction == true) ? "red" : "",
-                                             borderBottomColor: (row.info.correction == true) ? "red" : ""
-                                        }}
-                                   >
-                                        {cell.value}
-                                   </td>
-                              ))
-                         ))}
-                    </tr>
-                    <tr>
-                         <td style={{ height: 0, padding: 0 }} colSpan={columns.length + 1}>
-                              {open && (
-                                   <Sheet
-                                        variant="soft"
-                                        sx={{ p: 1, pl: 6, boxShadow: 'inset 0 3px 6px 0 rgba(0 0 0 / 0.08)', m: 0 }}
-                                   >
-                                        <Typography level="body-lg" component="div">
-                                             Details
-                                        </Typography>
-                                        <Table
-                                             borderAxis="bothBetween"
-                                             size="md"
-                                             stickyFooter={false}
-                                             stickyHeader={false}
-                                             stripe="even"
-                                             sx={{
-                                                  fontWeight: "bold",
-                                                  tableLayout: "auto",
-                                                  '& thead td:nth-child(1)': { width: '256px' },
-                                                  // '& thead td:nth-child(2)': { width: '80%' }
-                                             }}
-                                        >
-                                             <thead>
-                                                  <tr>
-                                                       <td>Diary Number</td>
-                                                       <td>
-                                                            {row.info.diaryNumber}
-                                                       </td>
-                                                  </tr>
-                                                  <tr>
-                                                       <td>Date</td>
-                                                       <td>
-                                                            {row.date}
-                                                       </td>
-                                                  </tr>
-                                                  <tr>
-                                                       <td>Address</td>
-                                                       <td>
-                                                            {titleCase(row.info.adress)}
-                                                       </td>
-                                                  </tr>
-                                                  <tr>
-                                                       <td>Delivered By</td>
-                                                       <td>
-                                                            {titleCase(row.info.deliveredBy)}
-                                                       </td>
-                                                  </tr>
-                                                  <tr>
-                                                       <td>Cash</td>
-                                                       <td>
-                                                            {decimalFix(row.info.cash)}
-                                                       </td>
-                                                  </tr>
-                                                  <tr>
-                                                       <td>Online</td>
-                                                       <td>
-                                                            {
-                                                                 decimalFix(row.info.online)
-                                                            }
-                                                       </td>
-                                                  </tr>
-                                                  {/* <tr>
-                                                       <td>Paid</td>
-                                                       <td>
-                                                            {row.info.paid ? "Yes" : "No"}
-                                                       </td>
-                                                  </tr> */}
-                                                  <tr>
-                                                       <td>Correction</td>
-                                                       <td>
-                                                            {row.info.correction ? "Yes" : "No"}
-                                                       </td>
-                                                  </tr>
-                                             </thead>
-                                             <tbody>
-
-                                             </tbody>
-                                        </Table>
-                                   </Sheet>
-                              )}
-                         </td>
-                    </tr>
-               </React.Fragment>
-          );
-     }
      // Update the rows data with the new structure
      let rows = []
      let csvData = []
@@ -643,6 +363,8 @@ export default function deliveryHistory() {
                          date,
                          // info
                          {
+                              dileveryId: delivery.id,
+                              custId: delivery.customer.id,
                               customer: delivery.customer.name,
                               diaryNumber: delivery.customer.diaryNumber,
                               adress: delivery.customer.address,
@@ -775,7 +497,19 @@ export default function deliveryHistory() {
                          </thead>
                          <tbody>
                               {rows.map((row, index) => (
-                                   <Row key={row.date + "_" + index} row={row} initialOpen={false} />
+                                   <Row
+                                        key={row.date + "_" + index}
+                                        row={row}
+                                        initialOpen={false}
+                                        updateCustomer={(customer) => {
+                                             console.log(customer);
+                                             const ok = window.confirm("Please Confirm Change");
+                                             if (ok) {
+                                                  dispatch(updateDelivery({ id: row.info.dileveryId, customer_id: customer.id }))
+                                             }
+                                             return ok;
+                                        }}
+                                   />
                               ))}
                               {
                                    ((rows.length == 0) ? <tr>
@@ -788,6 +522,281 @@ export default function deliveryHistory() {
                </Sheet>
           </Stack>
      </Stack>
+}
+function Row({
+     row,
+     initialOpen = false,
+     updateCustomer,
+}) {
+     const [open, setOpen] = React.useState(initialOpen);
+
+     let balance = row.subTotal - row.received
+     //o if nagative
+     if (balance < 0) {
+          balance = 0
+     }
+
+     // Define the cell groups for easier mapping
+     const cellGroups = [
+          {
+               key: 'info', cells: [
+                    { value: row.date },
+                    {
+                         value: <UpdateCell
+                              value={{
+                                   cust_id: row.info.custId,
+                                   name: row.info.customer
+                              }}
+                              onChange={(customer) => {
+                                   return updateCustomer(customer)
+                              }}
+                         />
+                    }
+               ], color: COLORS.WHITE
+          },
+          {
+               key: 'kg12', cells: [
+                    { value: decimalFix(row.kg12.cylinders) },
+                    { value: decimalFix(row.kg12.mt) },
+                    { value: decimalFix(row.kg12.rate, true) },
+                    { value: decimalFix(row.kg12.total, true) }
+               ], color: COLORS.KG_12
+          },
+          {
+               key: 'kg15', cells: [
+                    { value: decimalFix(row.kg15.cylinders) },
+                    { value: decimalFix(row.kg15.mt) },
+                    { value: decimalFix(row.kg15.rate, true) },
+                    { value: decimalFix(row.kg15.total, true) }
+               ], color: COLORS.KG_15
+          },
+          {
+               key: 'kg17', cells: [
+                    { value: decimalFix(row.kg17.cylinders) },
+                    { value: decimalFix(row.kg17.mt) },
+                    { value: decimalFix(row.kg17.rate, true) },
+                    { value: decimalFix(row.kg17.total, true) }
+               ], color: COLORS.KG_17
+          },
+          {
+               key: 'kg21', cells: [
+                    { value: decimalFix(row.kg21.cylinders) },
+                    { value: decimalFix(row.kg21.mt) },
+                    { value: decimalFix(row.kg21.rate, true) },
+                    { value: decimalFix(row.kg21.total, true) }
+               ], color: COLORS.KG_21
+          },
+          {
+               key: 'summary', cells: [
+                    { value: decimalFix(row.subTotal, true) },
+                    { value: decimalFix(row.received, true) },
+                    //balance
+                    {
+                         value: decimalFix(balance, true)
+                    }
+               ], color: COLORS.WHITE
+          }
+     ];
+
+     return (
+          <React.Fragment>
+               <tr style={{
+                    textAlign: "center",
+                    borderTopColor: (row.info.correction == true) ? "red" : "",
+                    borderBottomColor: (row.info.correction == true) ? "red" : ""
+               }}>
+                    <td style={{
+                         textAlign: "center", backgroundColor: COLORS.WHITE,
+                         borderTopColor: (row.info.correction == true) ? "red" : "",
+                         borderBottomColor: (row.info.correction == true) ? "red" : ""
+                    }}>
+                         <Box>
+                              <IconButton
+                                   aria-label="expand row"
+                                   variant="plain"
+                                   color="neutral"
+                                   size="sm"
+                                   onClick={() => setOpen(!open)}
+                              >
+                                   {open ? <MdKeyboardArrowUp /> : <MdKeyboardArrowDown />}
+                              </IconButton>
+                         </Box>
+                    </td>
+
+                    {cellGroups.map(group => (
+                         group.cells.map((cell, cellIndex) => (
+                              <td
+                                   key={`${group.key}-${cellIndex}`}
+                                   style={{
+                                        backgroundColor: group.color,
+                                        textAlign: "center",
+                                        borderTopColor: (row.info.correction == true) ? "red" : "",
+                                        borderBottomColor: (row.info.correction == true) ? "red" : ""
+                                   }}
+                              >
+                                   {cell.value}
+                              </td>
+                         ))
+                    ))}
+               </tr>
+               <tr>
+                    <td style={{ height: 0, padding: 0 }} colSpan={columns.length + 1}>
+                         {open && (
+                              <Sheet
+                                   variant="soft"
+                                   sx={{ p: 1, pl: 6, boxShadow: 'inset 0 3px 6px 0 rgba(0 0 0 / 0.08)', m: 0 }}
+                              >
+                                   <Typography level="body-lg" component="div">
+                                        Details
+                                   </Typography>
+                                   <Table
+                                        borderAxis="bothBetween"
+                                        size="md"
+                                        stickyFooter={false}
+                                        stickyHeader={false}
+                                        stripe="even"
+                                        sx={{
+                                             fontWeight: "bold",
+                                             tableLayout: "auto",
+                                             '& thead td:nth-child(1)': { width: '256px' },
+                                             // '& thead td:nth-child(2)': { width: '80%' }
+                                        }}
+                                   >
+                                        <thead>
+                                             <tr>
+                                                  <td>Diary Number</td>
+                                                  <td>
+                                                       {row.info.diaryNumber}
+                                                  </td>
+                                             </tr>
+                                             <tr>
+                                                  <td>Date</td>
+                                                  <td>
+                                                       {row.date}
+                                                  </td>
+                                             </tr>
+                                             <tr>
+                                                  <td>Address</td>
+                                                  <td>
+                                                       {titleCase(row.info.adress)}
+                                                  </td>
+                                             </tr>
+                                             <tr>
+                                                  <td>Delivered By</td>
+                                                  <td>
+                                                       {titleCase(row.info.deliveredBy)}
+                                                  </td>
+                                             </tr>
+                                             <tr>
+                                                  <td>Cash</td>
+                                                  <td>
+                                                       {decimalFix(row.info.cash)}
+                                                  </td>
+                                             </tr>
+                                             <tr>
+                                                  <td>Online</td>
+                                                  <td>
+                                                       {
+                                                            decimalFix(row.info.online)
+                                                       }
+                                                  </td>
+                                             </tr>
+                                             {/* <tr>
+                                                       <td>Paid</td>
+                                                       <td>
+                                                            {row.info.paid ? "Yes" : "No"}
+                                                       </td>
+                                                  </tr> */}
+                                             <tr>
+                                                  <td>Correction</td>
+                                                  <td>
+                                                       {row.info.correction ? "Yes" : "No"}
+                                                  </td>
+                                             </tr>
+                                        </thead>
+                                        <tbody>
+
+                                        </tbody>
+                                   </Table>
+                              </Sheet>
+                         )}
+                    </td>
+               </tr>
+          </React.Fragment>
+     );
+}
+const UpdateCell = ({ value, onChange }) => {
+     const [valueState, setValueState] = React.useState(value);
+
+     // Use CUSTOMER_LIST directly as it's now properly structured
+     const options = CUSTOMER_LIST;
+
+     // Find the current value in options
+     const currentValue = options.find((opt) => opt.id === valueState.cust_id) || null;
+
+     return (
+          <Autocomplete
+               key={`autocomplete-${valueState.cust_id}`} // Add unique key
+               variant="outlined"
+               placeholder={titleCase(valueState.name)}
+               options={options}
+               value={currentValue}
+               onChange={(_, newOption) => {
+                    if (newOption) {
+                         const confirm = onChange(newOption);
+                         if (confirm) {
+                              setValueState({ cust_id: newOption.id, name: newOption.label });
+                         }
+                    }
+               }}
+               getOptionLabel={(option) => option.label || ''}
+               isOptionEqualToValue={(option, val) => option && val && option.id === val.id}
+               clearOnBlur={false}
+               disableClearable
+               freeSolo={false}
+               openOnFocus={true}
+               sx={{
+                    fontWeight: 900,
+                    color: 'black',
+                    backgroundColor: 'white',
+                    '& .MuiInput-root': {
+                         fontWeight: "bold",
+                    }
+               }}
+               slotProps={{
+                    input: {
+                         sx: {
+                              fontWeight: 900,
+                              color: 'black',
+                         }
+                    }
+               }}
+          />
+     );
+};
+
+const UpdateCellValue = ({ tableName, columnName, value }) => {
+     const [valueState, setValueState] = React.useState(value);
+     return <>
+          {/* {value} */}
+          <input
+               style={{
+                    width: "100%",
+                    padding: 0,
+                    margin: 0,
+                    border: "none",
+                    outline: "none",
+                    backgroundColor: "transparent",
+               }}
+               type="text"
+               value={
+                    titleCase(valueState)
+               }
+               onChange={(event) => {
+                    setValueState(event.target.value);
+               }}
+          />
+     </>
 }
 
 function formatDateToDDMMYY(dateString) {

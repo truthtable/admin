@@ -71,6 +71,7 @@ export const axiosInstance = () => {
      axiosInstance_.interceptors.request.use(
           (config) => {
                const token = getLoginData()?.token;
+               //console.log("Token : " + token);
                if (token) {
                     config.headers['Authorization'] = `Bearer ${token}`;
                }

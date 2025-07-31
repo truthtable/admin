@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { axiosInstance as axios } from "../services/Api";
+import { axiosInstance as axios, getLoginData } from "../services/Api";
 import { LOGIN } from "../services/Api";
 
 const userData = localStorage.getItem("userData");
@@ -92,7 +92,7 @@ export const login = (username, password) => async (dispatch) => {
                dispatch(loginFailure(response.data?.message || "Login failed"));
           }
      } catch (error) {
-          console.log(error);
+          console.log(" login : " + error);
           dispatch(
                loginFailure(error.response?.data?.message || "Login failed"),
           );
@@ -104,7 +104,8 @@ export const validateLogin = () => async (dispatch) => {
           const response = await axios().get("check");
           //console.log(response.data);
      } catch (error) {
-          console.log(error);
+          console.log("validateLogin : " + error);
+          console.log("validateLogin : " + getLoginData());
           dispatch(
                loginFailure(error.response?.data?.message || "Login failed"),
           );

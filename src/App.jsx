@@ -72,6 +72,7 @@ function App() {
      };
 
      if (loginData.isError) {
+          //console.log(loginData.errorMessage);
           alert(loginData.errorMessage);
      }
 
