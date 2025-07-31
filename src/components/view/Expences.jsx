@@ -60,17 +60,6 @@ export default function Expences() {
           expenceError,
      } = useSelector((state) => state.expence);
 
-     [
-          {
-               "id": 2,
-               "user_id": 1,
-               "reason": "",
-               "amount": 200,
-               "created_at": "2024-03-28T12:20:08.000000Z",
-               "updated_at": "2024-10-25T10:35:21.000000Z"
-          },
-     ]
-
      console.log({ expenses, expenceLoading, expenceError });
 
      const totalExpences = expenses.reduce((acc, expence) => acc + expence.amount, 0);
@@ -185,15 +174,19 @@ export default function Expences() {
                     </thead>
                     <tbody>
                          {onlySelectedDeliveryBoy.map((expence) => (
-                              <tr key={expence.id}>
-                                   <td style={{ fontWeight: "bold" }}>{formatDate(expence.created_at)}</td>
+                              <tr key={expence.id}
+                                   style={{
+                                        backgroundColor: expence.error ? "#ffe8e8" : "white"
+                                   }}
+                              >
+                                   <td style={{ fontWeight: "bold", color: expence.error ? "red" : "black" }}>{formatDate(expence.created_at)}</td>
                                    <td style={{ fontWeight: "bold" }}>
                                         <Box
                                              sx={{
                                                   transition: 'all 0.3s',
                                                   borderRadius: 'md',
                                                   '&:hover': {
-                                                       backgroundColor: '#FFF4B7',
+                                                       backgroundColor: 'lightblue',
                                                        p: 1
                                                   }
                                              }}
@@ -203,12 +196,18 @@ export default function Expences() {
                                                        dispatch(
                                                             updateExpence({
                                                                  id: expence.id,
-                                                                 reason: value
+                                                                 reason: value,
+                                                                 error: false,
+                                                                 phone: false
                                                             })
                                                        );
                                                   }
                                              }}
-                                        ><span className='b'>{expence.reason}</span></Box>
+                                        ><span className='b'
+                                             style={{
+                                                  color: expence.error ? "red" : "black"
+                                             }}
+                                        >{expence.reason}</span></Box>
                                    </td>
                                    <td style={{ fontWeight: "bold" }}>
                                         <Box
@@ -216,7 +215,7 @@ export default function Expences() {
                                                   transition: 'all 0.3s',
                                                   borderRadius: 'md',
                                                   '&:hover': {
-                                                       backgroundColor: '#FFF4B7',
+                                                       backgroundColor: 'lightblue',
                                                        p: 1
                                                   }
                                              }}
@@ -226,12 +225,18 @@ export default function Expences() {
                                                        dispatch(
                                                             updateExpence({
                                                                  id: expence.id,
-                                                                 amount: value
+                                                                 amount: value,
+                                                                 error: false,
+                                                                 phone: false
                                                             })
                                                        );
                                                   }
                                              }}
-                                        ><span className='b'>₹{expence.amount}</span></Box>
+                                        ><span className='b'
+                                             style={{
+                                                  color: expence.error ? "red" : "black"
+                                             }}
+                                        >₹{expence.amount}</span></Box>
                                    </td>
                               </tr>
                          ))}

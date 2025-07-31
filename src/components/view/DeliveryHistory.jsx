@@ -17,7 +17,7 @@ import { set } from "firebase/database";
 import { RiDeleteBinFill } from "react-icons/ri";
 import gasServices from "../../services/gas-services.jsx";
 import PropTypes from 'prop-types';
-import { decimalFix, updateUrlParams } from "../../Tools.jsx";
+import { decimalFix, titleCase, updateUrlParams } from "../../Tools.jsx";
 import ExportCSV from "../ExportCSV.jsx";
 const COLORS = {
      WHITE: "#ffffff",
@@ -78,18 +78,19 @@ export default function deliveryHistory() {
 
      //console.log(deliveries);
 
-
      let tempUrlCustomerId = urlCustomerId ? Number(urlCustomerId) : null;
      let tempUrlCourierBoyId = urlCourierBoyId ? Number(urlCourierBoyId) : null;
-
 
      //console.log([{ urlCustomerId, tempUrlCustomerId }, { urlCourierBoyId, tempUrlCourierBoyId }]);
 
      const [customerId, setCustomerId] = useState(tempUrlCustomerId);
      const [deliverBoyId, setDeliverBoyId] = useState(tempUrlCourierBoyId);
 
-
-     const [dateStart, setDateStart] = useState(
+     const setDateStart = (date) => {
+          setDateStartState(date);
+          updateUrlParams(date, dateEnd, customerId, deliverBoyId);
+     }
+     const [dateStart, setDateStartState] = useState(
           () => {
                if (date_start) {
                     return formatDate(new Date(date_start));
@@ -97,7 +98,11 @@ export default function deliveryHistory() {
                return formatDate(new Date(new Date().getFullYear(), new Date().getMonth(), 1))
           }
      );
-     const [dateEnd, setDateEnd] = useState(
+     const setDateEnd = (date) => {
+          setDateEndState(date);
+          updateUrlParams(dateStart, date, customerId, deliverBoyId);
+     }
+     const [dateEnd, setDateEndState] = useState(
           () => {
                if (date_end) {
                     return formatDate(new Date(date_end));
@@ -107,7 +112,6 @@ export default function deliveryHistory() {
                return formatDate(date)
           }
      );
-
 
      //console.log({ customerId, deliverBoyId, dateStart, dateEnd });
 
@@ -255,7 +259,7 @@ export default function deliveryHistory() {
                {
                     key: 'info', cells: [
                          { value: row.date },
-                         { value: row.customer }
+                         { value: titleCase(row.customer) }
                     ], color: COLORS.WHITE
                },
                {
@@ -356,47 +360,63 @@ export default function deliveryHistory() {
                                         <Table
                                              borderAxis="bothBetween"
                                              size="md"
-                                             aria-label="purchases"
+                                             stickyFooter={false}
+                                             stickyHeader={false}
+                                             stripe="even"
+                                             sx={{
+                                                  fontWeight: "bold",
+                                                  tableLayout: "auto",
+                                                  '& thead td:nth-child(1)': { width: '256px' },
+                                                  // '& thead td:nth-child(2)': { width: '80%' }
+                                             }}
                                         >
                                              <thead>
                                                   <tr>
-                                                       <th>Date</th>
+                                                       <td>Diary Number</td>
+                                                       <td>
+                                                            {row.info.diaryNumber}
+                                                       </td>
+                                                  </tr>
+                                                  <tr>
+                                                       <td>Date</td>
                                                        <td>
                                                             {row.date}
                                                        </td>
                                                   </tr>
                                                   <tr>
-                                                       <th>Address</th>
+                                                       <td>Address</td>
                                                        <td>
-                                                            {row.info.adress}
+                                                            {titleCase(row.info.adress)}
                                                        </td>
                                                   </tr>
                                                   <tr>
-                                                       <th>Delivered By</th>
+                                                       <td>Delivered By</td>
                                                        <td>
-                                                            {row.info.deliveredBy}
+                                                            {titleCase(row.info.deliveredBy)}
                                                        </td>
                                                   </tr>
                                                   <tr>
-                                                       <th>Cash</th>
+                                                       <td>Cash</td>
                                                        <td>
                                                             {decimalFix(row.info.cash)}
                                                        </td>
                                                   </tr>
                                                   <tr>
-                                                       <th>Online</th>
+                                                       <td>Online</td>
                                                        <td>
-                                                            {decimalFix(row.info.online)}
+                                                            {
+                                                                 decimalFix(row.info.online)
+                                                            }
                                                        </td>
                                                   </tr>
                                                   {/* <tr>
-                                                       <th>Paid</th>
+                                                       <td>Paid</td>
                                                        <td>
                                                             {row.info.paid ? "Yes" : "No"}
                                                        </td>
                                                   </tr> */}
                                                   <tr>
-                                                       <th>Correction</th>
+                                                       <td>Correction</td>
                                                        <td>
                                                             {row.info.correction ? "Yes" : "No"}
                                                        </td>
@@ -549,6 +569,7 @@ export default function deliveryHistory() {
                          // info
                          {
                               customer: delivery.customer.name,
+                              diaryNumber: delivery.customer.diaryNumber,
                               adress: delivery.customer.address,
                               deliveredBy: delivery.courier_boy.name,
                               cash: totalCash,
@@ -576,7 +597,7 @@ export default function deliveryHistory() {
 
      return <Stack
           sx={{
-               height: "100%",
+               // height: "100%",
                width: "100%",
                backgroundColor: "white",
                borderRadius: "lg",
@@ -585,6 +606,7 @@ export default function deliveryHistory() {
                justifyContent: "center",
                alignItems: "center",
                color: "black",
+
           }}
      >
           <CircularProgress
@@ -596,7 +618,8 @@ export default function deliveryHistory() {
           <Stack
                sx={{
                     width: "100%",
-                    display: loading ? "none" : "flex"
+                    display: loading ? "none" : "flex",
+                    overflow: "auto",
                }}
                direction="row"
                gap={.5}
@@ -651,7 +674,9 @@ export default function deliveryHistory() {
                          sx={{
                               wordBreak: "keep-all",
                               tableLayout: "auto",
-                         }}
+                              fontWeight: "bold",
+                         }
+                         }
                     >
                          <thead>
                               <tr>
