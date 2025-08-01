@@ -105,12 +105,28 @@ export const validateLogin = () => async (dispatch) => {
      } catch (error) {
           console.log("validateLogin : ", error);
           let loginData = getLoginData();
-          loginData = JSON.stringify(loginData);
+          const token = loginData?.token;
           console.log("validateLogin : " + loginData);
+          console.log("token : " + token);
           dispatch(
                loginFailure(error.response?.data?.message || "Login failed"),
           );
-          localStorage.removeItem("userData");
+
+          if (
+               localData.token === null ||
+               localData.token === "" ||
+               localData.token === undefined
+          ) {
+               localStorage.removeItem("userData");
+          } else {
+               //delay for 1 second
+               setTimeout(() => {
+                    //window.location.reload();
+                    dispatch(validateLogin());
+               }, 1000);
+               //reload the page
+               //window.location.reload();
+          }
      }
 };
 

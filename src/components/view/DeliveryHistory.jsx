@@ -13,12 +13,15 @@ import { IoMdClose, IoMdDoneAll } from "react-icons/io";
 import { TbCylinder } from "react-icons/tb";
 import { ImCross } from "react-icons/im";
 import { addGasDelivery, deleteGasDelivery, gasDeliveriesIniState, updateCreateDelete, updateGasDelivery } from "../../redux/actions/gasDeliveryActions.js";
-import { set } from "firebase/database";
+import { off, set } from "firebase/database";
 import { RiDeleteBinFill } from "react-icons/ri";
 import gasServices from "../../services/gas-services.jsx";
 import PropTypes from 'prop-types';
 import { decimalFix, titleCase, updateUrlParams } from "../../Tools.jsx";
 import ExportCSV from "../ExportCSV.jsx";
+import { updateGas } from "../../state/UpdateGas.jsx";
+import { c } from "../../../dist/assets/index-2ecc25ae.js";
+import { updateOrCreateCustomerPayments } from "../../redux/customerPaymentsUpdateOrCreate.js";
 const COLORS = {
      WHITE: "#ffffff",
      KG_12: "#e3f2fd",
@@ -62,22 +65,26 @@ const columns = [
      { column: "Balance", color: COLORS.WHITE }
 ];
 const CUSTOMER_LIST = []
-let gasList = []
+let gasList = new Map();
 let deleveryGasEditUiGasList = [];
 export default function deliveryHistory() {
 
      const dispatch = useDispatch();
      const { deliveries, loading, updateSuccess, error } = useSelector((state) => state.deliverys);
+     //console.log(deliveries);
      const { userDataLoading, users, userDataError } = useSelector((state) => state.user);
      const allGasData = useSelector((state) => state.gas);
-     gasList = new Map();
+
+     deleveryGasEditUiGasList.length = 0;
+     gasList.clear();
+
      if (allGasData.data != null) {
           allGasData.data.data.forEach((value) => {
                gasList.set(value.id, value)
-               deleveryGasEditUiGasList.push(<Option key={value.id + "-" + value.company_name} value={value.id}>{value.company_name} - {value.kg}KG</Option>)
+               deleveryGasEditUiGasList.push(<Option key={value.id} value={value.id}>{value.company_name} - {value.kg}KG</Option>)
           })
      }
-     console.log(allGasData);
+     //console.log(allGasData);
 
      //clear customer list
      CUSTOMER_LIST.length = 0
@@ -149,8 +156,14 @@ export default function deliveryHistory() {
           }
      );
 
-     const loadData = () => {
-          dispatch(fetchDeliveries({ dateStart: dateStart, dateEnd: dateEnd, customer_id: customerId, courier_boy_id: deliverBoyId }));
+     const loadData = (force = false) => {
+          if (force) {
+               dispatch(fetchDeliveries({ dateStart: dateStart, dateEnd: dateEnd, customer_id: customerId, courier_boy_id: deliverBoyId }));
+          } else if (
+               ((deliveries == null || deliveries == undefined) && loading == false)
+          ) {
+               dispatch(fetchDeliveries({ dateStart: dateStart, dateEnd: dateEnd, customer_id: customerId, courier_boy_id: deliverBoyId }));
+          }
      }
 
      const updateUrlParams = (dateStart, dateEnd, customerId, deliverBoyId) => {
@@ -186,10 +199,7 @@ export default function deliveryHistory() {
 
      //console.log(deliveries);
      useEffect(() => {
-          if ((deliveries == null || deliveries == undefined) && loading == false) {
-               dispatch(fetchDeliveries());
-               console.log("fetchDeliveries...");
-          }
+          loadData();
           if (
                userDataLoading === false
                && (users == null || users == undefined)
@@ -216,7 +226,7 @@ export default function deliveryHistory() {
                     loading === false
                ) {
                     console.log("fetchDeliveries...Fire");
-                    loadData();
+                    loadData(true);
                }
           });
      }, []);
@@ -387,11 +397,13 @@ export default function deliveryHistory() {
                               diaryNumber: delivery.customer.diaryNumber,
                               adress: delivery.customer.address,
                               deliveredBy: delivery.courier_boy.name,
+                              deliverBoyId: delivery.courier_boy.id,
                               cash: totalCash,
                               online: totalOnline,
                               correction: delivery.correction,
                               paid: delivery.payments.length > 0,
                               gasList: delivery.gas_deliveries,
+                              payments: delivery.payments,
                          },
                          //gasInfo
                          cylinder_list,
@@ -493,7 +505,7 @@ export default function deliveryHistory() {
                     sx={{
                          borderRadius: "md",
                     }}
-                    onClick={() => { loadData() }}>Force Load</Button>
+                    onClick={() => { loadData(true) }}>Force Load</Button>
           </Stack>
           <Stack sx={{ backgroundColor: "lightblue", width: "100%", flexGrow: 1, display: loading ? "none" : "flex" }}>
                <Sheet
@@ -579,8 +591,6 @@ function Row({
      row,
      initialOpen = false,
      updateCustomer,
-     deleteDelivery,
-     updateGas
 }) {
      const [open, setOpen] = React.useState(initialOpen);
 
@@ -653,7 +663,7 @@ function Row({
                ], color: COLORS.WHITE
           }
      ];
-
+     //console.log(row);
      return (
           <React.Fragment>
                <tr style={{
@@ -758,25 +768,6 @@ function Row({
                                                   </td>
                                              </tr>
                                              <tr>
-                                                  <td colSpan={2}>
-                                                       {
-                                                            console.log(row)
-                                                       }
-                                                       {/* <EditGasList
-                                                            gasList={row.info.gasList}
-                                                            correction={true}
-
-                                                       /> */}
-                                                       <GasEditUi
-                                                            selectedGasList={row.info.gasList}
-                                                            customer={0}
-                                                            deliveryBoy={1}
-                                                            deleveryId={row.info.dileveryId}
-                                                            receivedAmount={row.received}
-                                                            paymentMethod={0} />
-                                                  </td>
-                                             </tr>
-                                             <tr>
                                                   <td>Correction</td>
                                                   <td>
                                                        {row.info.correction ? "Yes" : "No"}
@@ -786,18 +777,19 @@ function Row({
                                                   <td
                                                        colSpan={2}
                                                   >
-                                                       {
-                                                            //DELETE
-                                                       }
-                                                       <Button
-
-                                                            onClick={() => {
-                                                                 setOpen(false);
-                                                                 deleteDelivery()
-                                                            }}
-                                                       >
-                                                            Delete
-                                                       </Button>
+                                                       <GasEditUi
+                                                            selectedGasList={row.info.gasList}
+                                                            customer={
+                                                                 row.info.custId
+                                                            }
+                                                            deliveryBoy={
+                                                                 row.info.deliverBoyId
+                                                            }
+                                                            deleveryId={row.info.dileveryId}
+                                                            payments={
+                                                                 row.info.payments
+                                                            }
+                                                       />
                                                   </td>
                                              </tr>
                                         </thead>
@@ -862,33 +854,6 @@ const UpdateCell = ({ value, onChange }) => {
      );
 };
 
-const UpdateCellValue = ({ value, onClick }) => {
-     const [valueState, setValueState] = React.useState(value);
-     return <>
-          {/* {value} */}
-          <Button onClick={() => { onClick(value) }}>
-               {value}
-          </Button>
-          {/* <input
-               style={{
-                    width: "100%",
-                    padding: 0,
-                    margin: 0,
-                    border: "none",
-                    outline: "none",
-                    backgroundColor: "transparent",
-               }}
-               type="text"
-               value={
-                    titleCase(valueState)
-               }
-               onChange={(event) => {
-                    setValueState(event.target.value);
-               }}
-          /> */}
-     </>
-}
-
 function formatDateToDDMMYY(dateString) {
      //convert to epoch
      var date = new Date(dateString);
@@ -914,9 +879,46 @@ function calculateGasGroup(cylinders, mt, rate) {
           total: cylinders * rate
      };
 }
-const GasEditUi = ({ selectedGasList, customer, deliveryBoy, deleveryId, receivedAmount, paymentMethod }) => {
-     const [received_amount, setReceivedAmount] = useState(receivedAmount);
-     const [payment_method, setPaymentMethod] = useState(paymentMethod);
+const GasEditUi = ({ selectedGasList, customer, deliveryBoy, deleveryId, payments }) => {
+
+     const dispatch = useDispatch();
+     let onlinePayment = { id: null, amount: null, method: null };
+     let cashPayment = { id: null, amount: null, method: null };
+
+     payments.forEach((payment) => {
+          if (payment.method == 0) {
+               cashPayment = {
+                    id: payment.id,
+                    amount: payment.amount,
+                    method: payment.method
+               }
+          } else {
+               onlinePayment = {
+                    id: payment.id,
+                    amount: payment.amount,
+                    method: payment.method
+               }
+          }
+     })
+
+     const [cashAmount, setCashAmountState] = useState(cashPayment);
+     const [onlineAmount, setOnlineAmountState] = useState(onlinePayment);
+
+     let online = 0
+     let cash = 0
+
+     const setOnlineAmount = (amount) => {
+          online = amount
+          setOnlineAmountState({ id: onlinePayment.id, amount: amount, method: onlinePayment.method })
+     }
+     const setCashAmount = (amount) => {
+          cash = amount
+          setCashAmountState({ id: cashPayment.id, amount: amount, method: cashPayment.method })
+     }
+
+     console.log(cashPayment);
+     console.log(onlinePayment);
+
      const [edit, setEdit] = useState(false);
      const [editName, setEditName] = useState("");
      let glist = [];
@@ -924,6 +926,7 @@ const GasEditUi = ({ selectedGasList, customer, deliveryBoy, deleveryId, receive
      selectedGasList.forEach((gas) => {
           tempGas.set(gas.id, gas)
      })
+     //console.log(tempGas);
      const [gasData, setGasData] = useState(tempGas);
      const [deletedGasData, setDeletedGasData] = useState(new Map())
      const handleSetGasData = (id, key, value) => {
@@ -970,12 +973,12 @@ const GasEditUi = ({ selectedGasList, customer, deliveryBoy, deleveryId, receive
           }
      }
      if (!edit) {
-          return <Chip size="sm" variant="outlined" color="danger" sx={{ borderRadius: "16px", fontWeight: "bold", fontStyle: "oblique" }}
+          return <Button
                onClick={() => {
                     setEdit(true);
                }}
                startDecorator={<MdEdit />}
-          >Change</Chip>
+          >Edit</Button>
      }
      return <Modal
           aria-labelledby="modal-title"
@@ -1012,27 +1015,46 @@ const GasEditUi = ({ selectedGasList, customer, deliveryBoy, deleveryId, receive
                                    sx={{
                                         fontWeight: "bold"
                                    }}
-                              >Received Amount</Chip>
+                              >
+                                   Online
+                              </Chip>
                               <Input
                                    startDecorator={<span>₹</span>}
                                    type="number"
-                                   value={received_amount}
+                                   value={
+                                        onlineAmount.amount === null ? "" : onlineAmount.amount
+                                   }
                                    onChange={(event) => {
-                                        setReceivedAmount(event.target.value)
+                                        setOnlineAmount(event.target.value)
                                    }}
                                    required
                                    sx={{
                                         maxWidth: "128px",
                                    }}
                               />
-                              <Select defaultValue={payment_method}
-                                   onChange={(event, value) => {
-                                        setPaymentMethod(value)
+                              <Chip
+                                   size="lg"
+                                   color="warning"
+                                   sx={{
+                                        fontWeight: "bold"
                                    }}
                               >
-                                   <Option value={0}>Cash</Option>
-                                   <Option value={1}>Online</Option>
-                              </Select>
+                                   Cash
+                              </Chip>
+                              <Input
+                                   startDecorator={<span>₹</span>}
+                                   type="number"
+                                   value={
+                                        cashAmount.amount === null ? "" : cashAmount.amount
+                                   }
+                                   onChange={(event) => {
+                                        setCashAmount(event.target.value)
+                                   }}
+                                   required
+                                   sx={{
+                                        maxWidth: "128px",
+                                   }}
+                              />
                          </Stack>
                          <span className="b">&nbsp;Gas List</span>
                          <List
@@ -1072,8 +1094,8 @@ const GasEditUi = ({ selectedGasList, customer, deliveryBoy, deleveryId, receive
                                                                  handleSetGasData(data.id, "quantity", event.target.value);
                                                             }}
                                                        />
-                                                       <Input required={(data.is_empty == 0)} sx={{ width: "168px", visibility: (data.is_empty == 0) ? "visible" : "hidden" }} type="number" value={data.price} startDecorator={<span>Amt : </span>} onChange={(event) => {
-                                                            handleSetGasData(data.id, "price", event.target.value);
+                                                       <Input required={(data.is_empty == 0)} sx={{ width: "168px", visibility: (data.is_empty == 0) ? "visible" : "hidden" }} type="number" value={data.gas_price} startDecorator={<span>Amt : </span>} onChange={(event) => {
+                                                            handleSetGasData(data.id, "gas_price", event.target.value);
                                                        }} />
                                                        <Box
                                                             onClick={() => {
@@ -1173,16 +1195,29 @@ const GasEditUi = ({ selectedGasList, customer, deliveryBoy, deleveryId, receive
                                         return gas;
                                    }
                               )
-
-                              console.log(updateGasData)
-
+                              const tempPayment = [
+                                   {
+                                        deliverie_id: deleveryId,
+                                        customer_id: customer,
+                                        courier_boy_id: deliveryBoy,
+                                        id: onlinePayment.id,
+                                        amount: onlineAmount.amount,
+                                        method: 1
+                                   },
+                                   {
+                                        deliverie_id: deleveryId,
+                                        customer_id: customer,
+                                        courier_boy_id: deliveryBoy,
+                                        id: cashPayment.id,
+                                        amount: cashAmount.amount,
+                                        method: 0
+                                   }
+                              ]
+                              console.log(tempPayment)
+                              //paisa
                               dispatch(
-                                   updateDelivery(
-                                        {
-                                             id: deleveryId,
-                                             received_amount: received_amount,
-                                             payment_method: payment_method,
-                                        }
+                                   updateOrCreateCustomerPayments(
+                                        tempPayment
                                    )
                               )
                               dispatch(
@@ -1193,9 +1228,18 @@ const GasEditUi = ({ selectedGasList, customer, deliveryBoy, deleveryId, receive
                                    //Create
                                    addGasDelivery(newGasDataNoIds),
                               )
+                              const temp = updateGasData.map((gas) => (
+                                   {
+                                        id: gas.id,
+                                        gas_id: gas.gas_id,
+                                        price: gas.gas_price,
+                                        quantity: gas.quantity,
+                                        is_empty: gas.is_empty
+                                   }
+                              ))
                               dispatch(
                                    //Update
-                                   updateGasDelivery(updateGasData),
+                                   updateGasDelivery(temp),
                               )
                               setEdit(false)
                          }}>
