@@ -12,11 +12,11 @@ import { IoClose } from "react-icons/io5";
 import { BsBack } from "react-icons/bs";
 import { FaArrowLeft } from "react-icons/fa";
 import { useLocation } from "react-router";
-import { formatDateYYMMDD } from "../../Tools.jsx";
+import { decimalFix, formatDateYYMMDD } from "../../Tools.jsx";
 import { sendBillToCustomer } from "../../redux/billSlice.js";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import html2pdf from 'html2pdf.js';
+import html2pdf, { f } from 'html2pdf.js';
 
 const CUSTOMER = "customer";
 const DELIVERY = "delivery";
@@ -585,7 +585,7 @@ export const Report = ({ isLogged }) => {
      };
 
      const Purchase = () => {
-
+          const [showBreakdown, setShowBreakdown] = useState(false);
           const allGases = useSelector(state => state.gas);
           const { plants, plantsLoading, plantsError, plantsUpdateSuccess } = useSelector(state => state.plants);
           const { orders, loading, error } = useSelector(state => state.purchaseOrders);
@@ -746,7 +746,7 @@ export const Report = ({ isLogged }) => {
                               {
                                    (!loading && !plantsLoading && allGases.data != null && plants.length > 0) ? (
                                         <>
-                                             <OrderRow orders={orders} allGas={allGases.data} plants={plants} />
+                                             <OrderRow orders={orders} allGas={allGases.data} plants={plants} showBreakdown={showBreakdown} setShowBreakdown={setShowBreakdown} />
                                         </>
                                    ) : (<pre>Loading</pre>)
                               }
@@ -794,14 +794,128 @@ function formatDate(d) {
      return formattedDate;
 }
 
-function OrderRow({ orders, allGas, plants }) {
+function OrderRow({ orders, allGas, plants, showBreakdown, setShowBreakdown }) {
      const contentRef = useRef();
      const reactToPrintFn = useReactToPrint({ contentRef })
      const [selected, setSelected] = React.useState(null);
      //console.log(plants)
-     if (selected != null) {
-          //console.log(selected)
-          return <Stack direction={"column"} gap={1}>
+
+     let grandTotalAmt = 0;
+     let grandTotalPaid = 0;
+
+     let rows = []
+     orders.forEach((order, index) => {
+
+          console.log(order);
+
+          const orderNumber = order.order_no;
+          const orderDate = order.date;
+          const orderPlant = plants.filter(plant => plant.id === order.plant_id)[0].name
+          const orderSchemeType = order.scheme_type;
+          const orderSchemeRate = order.scheme;
+          const defectiveAmt = order.defective_amount;
+          const tcs = order.tcs;
+          const for_ = order.for_charges;
+          const paid = order.pay_amt;
+
+          let orderTotalKg = 0
+          let orderTotalQty = 0
+          let orderTotalReturnKg = 0
+          let orderTotalReturnQty = 0
+          let orderTotalAmt = 0;
+
+          order.items.forEach((item, i) => {
+               const gas = allGas.data.filter(gas => gas.id === item.gas_id)[0]
+               const qty = item.qty
+               const rate = item.rate
+               const totalKg = gas.kg * qty
+               const totalAmt = totalKg * rate
+               const returnQty = item.return_cyl_qty
+               const totalReturnKg = gas.kg * returnQty
+
+               orderTotalKg += totalKg
+               orderTotalQty += qty
+               orderTotalReturnQty += returnQty
+               orderTotalReturnKg += totalReturnKg
+               orderTotalAmt += totalAmt;
+
+               rows.push(
+                    <>
+                         <tr
+                              key={index + "_" + i + "order_item"}
+                         >
+                              <td className="b">{orderNumber}</td>
+                              <td className="b">{orderDate}</td>
+                              <td className="b" colSpan={2}>{orderPlant}</td>
+                              <td className="b">{orderSchemeType}</td>
+                              {/* <td className="b">{"₹" + decimalFix(orderSchemeRate)}</td> */}
+                              <td className="b">{gas.kg + " KG"}</td>
+                              <td className="b">{qty}</td>
+                              <td className="b">{totalKg}</td>
+                              <td className="b">{"₹" + decimalFix(rate)}</td>
+                              <td className="b">{"₹" + decimalFix(totalAmt)}</td>
+                              <td className="b">{returnQty}</td>
+                              <td className="b">{totalReturnKg}</td>
+                         </tr>
+                    </>
+               )
+          })
+          const orderTotalScheme = (orderSchemeRate * orderTotalKg);
+          const orderTotalTCS = (tcs * orderTotalAmt);
+          const orderTotalFOR = (for_ * orderTotalKg);
+          const grandTotal = (orderTotalAmt + orderTotalTCS + orderTotalFOR - orderTotalScheme - defectiveAmt);
+          const balance = (grandTotal - paid);
+
+          grandTotalAmt += orderTotalAmt;
+          grandTotalPaid += paid;
+
+          if (showBreakdown) {
+               rows.push(
+                    <>
+                         <tr>
+                              <td className="b" colSpan={2}>Total Qty : {orderTotalQty}</td>
+                              <td className="b" colSpan={2}>Total Kg : {orderTotalKg}</td>
+                              <td className="b" colSpan={2}>Total MT Qty : {orderTotalReturnQty}</td>
+                              <td className="b" colSpan={2}>Total MT Kg : {orderTotalReturnKg}</td>
+                         </tr>
+                         <tr>
+                              <td className="b" colSpan={2}>Scheme Rate : ₹{decimalFix(tcs)}</td>
+                              <td className="b" colSpan={2}>Scheme Total: ₹{decimalFix(orderTotalScheme)}</td>
+                              <td className="b" colSpan={2}>TCS : ₹{decimalFix(tcs)}</td>
+                              <td className="b" colSpan={2}>TCS Total ₹{decimalFix(orderTotalTCS)}</td>
+                              <td className="b" colSpan={2}>FOR : ₹{decimalFix(for_)}</td>
+                              <td className="b" colSpan={2}>FOR TOTAL ₹{decimalFix(orderTotalFOR)}</td>
+                         </tr>
+                         <tr>
+                              <td className="b" colSpan={2}>Defective : ₹{decimalFix(defectiveAmt)}</td>
+                              <td className="b" colSpan={2}>TOTAL ₹{decimalFix(grandTotal)}</td>
+                              <td className="b" colSpan={2}>PAID ₹{decimalFix(paid)}</td>
+                              <td className="b" colSpan={2}>BAL ₹{decimalFix(balance)}</td>
+                         </tr>
+                    </>
+               )
+          }
+          rows.push(<tr>
+               <td className="b" colSpan={12}></td>
+          </tr>)
+     })
+
+     rows.push(
+          <>
+               <tr>
+                    <td className="b" colSpan={12}>Grand Total Amount : {decimalFix(grandTotalAmt)}</td>
+               </tr>
+               <tr>
+                    <td className="b" colSpan={12}>Grand Total Paid : {decimalFix(grandTotalPaid)}</td>
+               </tr>
+               <tr>
+                    <td className="b" colSpan={12}>Grand Total Balance : {decimalFix(grandTotalAmt - grandTotalPaid)}</td>
+               </tr>
+          </>
+     )
+
+     return <Stack direction={"column"} gap={1}>
+          <Stack direction={"column"} gap={1}>
                <Stack direction={"row"} gap={1}>
                     <Card
                          variant="soft"
@@ -815,6 +929,7 @@ function OrderRow({ orders, allGas, plants }) {
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
+                              height: "42px",
                          }}
                          onClick={() => {
                               setSelected(null)
@@ -834,12 +949,39 @@ function OrderRow({ orders, allGas, plants }) {
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
+                              height: "42px",
                          }}
                          onClick={() => {
                               reactToPrintFn()
                          }}
                     >
                          <span style={{ fontWeight: "bold" }}>Print</span>
+                    </Card>
+                    <Divider
+                         sx={{
+                              flexGrow: 1,
+                              opacity: 0,
+                         }}
+                    />
+                    <Card
+                         variant="solid"
+                         color="primary"
+                         sx={{
+                              cursor: "pointer",
+                              "transition": "all 0.3s",
+                              "&:hover": {
+                                   backgroundColor: "#c7dff7",
+                              },
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              height: "42px",
+                         }}
+                         onClick={() => {
+                              setShowBreakdown(!showBreakdown)
+                         }}
+                    >
+                         <span style={{ fontWeight: "bold" }}>Breakdown</span>
                     </Card>
                </Stack>
 
@@ -854,244 +996,44 @@ function OrderRow({ orders, allGas, plants }) {
                          borderAxis="both"
                          size="sm"
                          variant="outlined"
-                         sx={{ width: "100%", mt: 1, tableLayout: "auto", }}
+                         sx={{
+                              width: "100%", mt: 1, tableLayout: "auto",
+                              "& th": {
+                                   fontWeight: "bold",
+                                   color: "black",
+                              },
+                              "& td": {
+                                   fontWeight: "bold",
+                                   color: "black",
+                                   wordBreak: "keep-all",
+                              }
+                         }}
                     >
                          <thead>
                               <tr>
                                    <th>Order No.</th>
                                    <th>Order Date</th>
-                                   <th>Plant</th>
-                                   <th>Scheme</th>
+                                   <th colSpan={2}>Plant</th>
+                                   {/* <th>Scheme</th> */}
                                    <th>Rate</th>
                                    <th>Gas</th>
                                    <th>Qty</th>
                                    <th>Total Kg</th>
                                    <th>Rate</th>
                                    <th>Total</th>
-                                   <th>Return Qty</th>
-                                   <th>Total Return Kg</th>
+                                   <th>MT Qty</th>
+                                   <th>Total MT Kg</th>
                               </tr>
                          </thead>
                          <tbody>
                               {
-                                   orders.map((order, index) => {
-
-                                        if (order.id != selected.id) {
-                                             return
-                                        }
-
-                                        //console.log(order)
-
-                                        const orderNumber = order.order_no;
-                                        const orderDate = order.date;
-                                        const orderSchemeType = order.scheme_type;
-                                        const orderTtotalPayAmt = Number(order.pay_amt);
-                                        const orderTCS = Number(order.tcs);
-                                        const orderFOR = Number(order.for_charges);
-                                        const orderSchemeRate = Number(order.scheme);
-                                        const orderPlant = plants.filter(plant => plant.id === order.plant_id)[0].name
-                                        const orderTotalDefectiveAmount = Number(order.defective_amount);
-
-                                        let totalCylinder = 0;
-                                        let orderTotalQty = 0;
-                                        let orderTotalKg = 0;
-                                        let orderTotalAmt = 0;
-                                        let orderTotalTCS = 0;
-                                        let orderTotalFOR = 0;
-                                        let orderTotalScheme = 0;
-                                        let orderTotalRemainingAmt = 0;
-                                        let orderTotalReturnQty = 0;
-                                        let orderTotalReturnKg = 0;
-
-                                        let orderCleared = order.cleared;
-
-                                        let grandTotal = 0;
-
-                                        return <>
-                                             {
-                                                  order.items.map((item, index) => {
-                                                       const gas = allGas.data.filter(gas => gas.id === item.gas_id)[0]
-                                                       const kg = gas.kg
-                                                       const qty = item.qty
-                                                       const returnQty = item.return_cyl_qty
-                                                       const rate = item.rate
-                                                       const totalKg = kg * qty
-                                                       const totalReturnKg = kg * returnQty
-                                                       const totalAmt = totalKg * rate
-
-                                                       orderTotalQty += qty
-                                                       orderTotalKg += totalKg
-                                                       orderTotalReturnKg += totalReturnKg
-                                                       orderTotalReturnQty += returnQty
-                                                       orderTotalAmt += totalAmt
-
-                                                       orderTotalScheme = (orderSchemeRate * orderTotalKg);
-                                                       orderTotalTCS = (orderTCS * orderTotalAmt);
-                                                       orderTotalFOR = (orderFOR * orderTotalKg);
-
-                                                       grandTotal = orderTotalAmt + orderTotalTCS + orderTotalFOR - orderTotalScheme - orderTotalDefectiveAmount
-
-                                                       orderTotalRemainingAmt = grandTotal - orderTtotalPayAmt;
-
-                                                       return <tr
-                                                            key={index + "order_item"}
-                                                       >
-                                                            <td className="b">{orderNumber}</td>
-                                                            <td className="b">{orderDate}</td>
-                                                            <td className="b">{orderPlant}</td>
-                                                            <td className="b">{orderSchemeType}</td>
-                                                            <td className="b">{"₹" + orderSchemeRate}</td>
-                                                            <td className="b">{gas.kg + " KG"}</td>
-                                                            <td className="b">{qty}</td>
-                                                            <td className="b">{totalKg}</td>
-                                                            <td className="b">{"₹" + rate}</td>
-                                                            <td className="b">{"₹" + totalAmt}</td>
-                                                            <td className="b">{returnQty}</td>
-                                                            <td className="b">{totalReturnKg}</td>
-                                                       </tr>
-                                                  })
-                                             }
-
-
-                                             <tr>
-                                                  <td className="b" colSpan={12}></td>
-                                             </tr>
-                                             <tr>
-                                                  <td className="b" colSpan={2}>Total Kg :</td>
-                                                  <td className="b" colSpan={10}>{orderTotalKg} KG</td>
-                                             </tr>
-                                             <tr>
-                                                  <td className="b" colSpan={2}>Total Qty :</td>
-                                                  <td className="b" colSpan={10}>{orderTotalQty}</td>
-                                             </tr>
-                                             <tr>
-                                                  <td className="b" colSpan={2}>Total Return Kg :</td>
-                                                  <td className="b" colSpan={10}>{orderTotalReturnKg} KG</td>
-                                             </tr>
-                                             <tr>
-                                                  <td className="b" colSpan={2}>Total Return Qty :</td>
-                                                  <td className="b" colSpan={10}>{orderTotalReturnQty}</td>
-                                             </tr>
-                                             <tr>
-                                                  <td className="b" colSpan={12}></td>
-                                             </tr>
-                                             <tr>
-                                                  <td className="b" colSpan={2}>Defective Amount :</td>
-                                                  <td className="b" colSpan={10}>{"₹" + orderTotalDefectiveAmount}</td>
-                                             </tr>
-                                             <tr>
-                                                  <td className="b" colSpan={2}>Total Scheme :</td>
-                                                  <td className="b" colSpan={10}>{"₹" + orderTotalScheme}</td>
-                                             </tr>
-                                             <tr>
-                                                  <td className="b" colSpan={2}>Total TCS ( <i>{"₹" + orderTCS}</i> ):</td>
-                                                  <td className="b" colSpan={10}>{"₹" + orderTotalTCS.toFixed(2)}</td>
-                                             </tr>
-                                             <tr>
-                                                  <td className="b" colSpan={2}>Total FOR ( <i>{"₹" + orderFOR}</i> ):</td>
-                                                  <td className="b" colSpan={10}>{"₹" + orderTotalFOR.toFixed(2)}</td>
-                                             </tr>
-                                             <tr>
-                                                  <td className="b" colSpan={12}></td>
-                                             </tr>
-                                             <tr>
-                                                  <td className="b" style={{ color: "#305499", fontSize: "1rem" }} colSpan={2}>Total:
-                                                  </td>
-                                                  <td className="b" style={{ color: "#305499", fontSize: "1rem" }}
-                                                       colSpan={10}>{"₹" + grandTotal.toFixed(2)}</td>
-                                             </tr>
-                                             <tr>
-                                                  <td className="b" style={{ color: "#1d5d2e", fontSize: "1rem" }} colSpan={2}>Payed
-                                                       Amount :
-                                                  </td>
-                                                  <td className="b" style={{ color: "#1d5d2e", fontSize: "1rem" }}
-                                                       colSpan={10}>{"₹" + orderTtotalPayAmt.toFixed(2)}</td>
-                                             </tr>
-                                             <tr>
-                                                  <td className="b" style={{ color: "#A0153E", fontSize: "1rem" }}
-                                                       colSpan={2}>Remaining Amt :
-                                                  </td>
-                                                  <td className="b" style={{ color: "#A0153E", fontSize: "1rem" }}
-                                                       colSpan={10}>{"₹" + orderTotalRemainingAmt.toFixed(2)}</td>
-                                             </tr>
-                                        </>
-                                   })
+                                   rows
                               }
                          </tbody>
                     </Table>
                     <Ending />
                </Stack>
           </Stack>
-     }
-     return <Stack direction={"column"} gap={1}>
-          {
-               orders.map((order, index) => {
-                    const orderNumber = order.order_no;
-                    const orderDate = order.date;
-                    const orderSchemeType = order.scheme_type;
-                    const orderSchemeRate = Number(order.scheme);
-
-                    if (order.items.length === 0) {
-                         return <Card key={`order-row-empty-${order.id}`}
-                              sx={{
-                                   width: "100%",
-                                   cursor: "pointer",
-                                   "transition": "all 0.3s",
-                                   "&:hover": {
-                                        backgroundColor: "#c7dff7",
-                                   },
-                              }}
-                         >
-                              <Box style={{ margin: 0 }}>
-                                   <Stack
-                                        direction="row"
-                                   >
-                                        <span style={{ fontWeight: "bold" }}>{`Order No. ${orderNumber}`}</span>
-                                        <span style={{ fontWeight: "bold" }}>|{` Date ${orderDate}`}</span>
-                                        <span style={{ fontWeight: "bold" }}>|{` Scheme ${orderSchemeType}`}</span>
-                                        <span style={{ fontWeight: "bold" }}>|{` Scheme Rate ${orderSchemeRate}`}</span>
-                                   </Stack>
-                                   <Card
-                                        variant="soft"
-                                        color="danger"
-                                        sx={{ margin: 0, py: 0 }}
-                                   >
-                                        <span
-                                             style={{ fontWeight: "bold" }}>No Gas Added Please Add Gas from the edit option</span>
-                                   </Card>
-
-                              </Box>
-                         </Card>
-                    } else {
-                         return (
-                              <Card key={`order-row-${order.id}`}
-                                   sx={{
-                                        width: "100%",
-                                        cursor: "pointer",
-                                        "transition": "all 0.3s",
-                                        "&:hover": {
-                                             backgroundColor: "#c7dff7",
-                                        },
-                                   }}
-                                   onClick={() => {
-                                        setSelected(order)
-                                   }}
-                              >
-                                   <Box>
-                                        <Stack
-                                             direction="row"
-                                        >
-                                             <span style={{ fontWeight: "bold" }}>{`Order No. ${orderNumber}`}</span>
-                                             <span style={{ fontWeight: "bold" }}>|{` Date ${orderDate}`}</span>
-                                             <span style={{ fontWeight: "bold" }}>|{` Scheme ${orderSchemeType}`}</span>
-                                             <span style={{ fontWeight: "bold" }}>|{` Scheme Rate ${orderSchemeRate}`}</span>
-                                        </Stack>
-                                   </Box>
-                              </Card>
-                         )
-                    }
-               })
-          }
      </Stack>
 }
 

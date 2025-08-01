@@ -163,12 +163,7 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
                     (orderItems.find(item => item.gas_id === gas.id) == null)
                );
 
-               console.log(availableGas);
-
-               if (!availableGas) {
-                    alert("No more GO GAS items available to add");
-                    return;
-               }
+               //console.log(availableGas);
 
                const updatedItems = [...orderItems, {
                     gas_id: availableGas.id,
