@@ -21,7 +21,9 @@ const ExportCSV = (props) => {
                target="_blank"
                className="inline-block px-4 py-2 ms-1 hover:bg-blue-700 hover:text-white text-black rounded-md transition duration-200 font-bold"
           >
-               Download
+               {
+                    props.children ? props.children : "Download"
+               }
           </CSVLink>
      );
 };

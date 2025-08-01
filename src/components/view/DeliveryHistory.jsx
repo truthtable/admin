@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Box, Chip, Divider, LinearProgress, Select, Stack, Tab, Table, TabList, TabPanel, Tabs, Option, Button, Modal, Sheet, ModalClose, Typography, Input, List, ListItem, ListItemButton, ListItemDecorator, ListItemContent, FormControl, FormLabel, RadioGroup, Radio, Card, IconButton, CircularProgress, Autocomplete, TextField } from "@mui/joy";
 import { useDispatch, useSelector } from "react-redux";
-import { deleteDeliveryById, deliveriesIniState, fetchDeliveries, updateDelivery } from "../../redux/actions/deliveryActions.js";
+import { deleteDeliveryById, fetchDeliveries, UPDATE_DELIVERY_SUCCESS_RESET, updateDelivery, updateDeliverySuccess } from "../../redux/actions/deliveryActions.js";
 import { fetchGasData } from "../../state/GasList.jsx";
 import { fetchUser, fetchUserRequest } from "../../redux/actions/userActions.js";
 import { RxFontStyle } from "react-icons/rx";
@@ -12,7 +12,7 @@ import { MdDone, MdEdit, MdKeyboardArrowDown, MdKeyboardArrowRight, MdKeyboardAr
 import { IoMdClose, IoMdDoneAll } from "react-icons/io";
 import { TbCylinder } from "react-icons/tb";
 import { ImCross } from "react-icons/im";
-import { addGasDelivery, deleteGasDelivery, gasDeliveriesIniState, updateCreateDelete, updateGasDelivery } from "../../redux/actions/gasDeliveryActions.js";
+import { addGasDelivery, deleteGasDelivery, gasDeliverySuccessReset, UPDATE_GAS_DELIVERY_SUCCESS_RESET, updateCreateDelete, updateGasDelivery } from "../../redux/actions/gasDeliveryActions.js";
 import { off, set } from "firebase/database";
 import { RiDeleteBinFill } from "react-icons/ri";
 import gasServices from "../../services/gas-services.jsx";
@@ -22,6 +22,7 @@ import ExportCSV from "../ExportCSV.jsx";
 import { updateGas } from "../../state/UpdateGas.jsx";
 import { c } from "../../../dist/assets/index-2ecc25ae.js";
 import { updateOrCreateCustomerPayments } from "../../redux/customerPaymentsUpdateOrCreate.js";
+import Switch, { switchClasses } from '@mui/joy/Switch';
 const COLORS = {
      WHITE: "#ffffff",
      KG_12: "#e3f2fd",
@@ -74,6 +75,9 @@ export default function deliveryHistory() {
      //console.log(deliveries);
      const { userDataLoading, users, userDataError } = useSelector((state) => state.user);
      const allGasData = useSelector((state) => state.gas);
+     const { gasDeliverysSucsess } = useSelector((state) => state.gasDelivery);
+
+
 
      deleveryGasEditUiGasList.length = 0;
      gasList.clear();
@@ -230,6 +234,21 @@ export default function deliveryHistory() {
                }
           });
      }, []);
+
+     console.log(gasDeliverysSucsess, updateSuccess)
+     if (gasDeliverysSucsess) {
+          dispatch({
+               type: UPDATE_GAS_DELIVERY_SUCCESS_RESET,
+          });
+          loadData(true);
+     }
+     if (updateSuccess) {
+          dispatch({
+               type: UPDATE_DELIVERY_SUCCESS_RESET
+          })
+          loadData(true);
+     }
+     //loadData(true);
 
      // First, let's add a helper function to calculate gas group totals
 
@@ -476,7 +495,7 @@ export default function deliveryHistory() {
                     filename={
                          "deliveries_" + formatDateToDDMMYY(dateStart) + "_TO_" + formatDateToDDMMYY(dateEnd) + ".csv"
                     }
-               />
+               >Download File</ExportCSV>
                <Divider
                     sx={{
                          flexGrow: 1,
@@ -593,6 +612,7 @@ function Row({
      updateCustomer,
 }) {
      const [open, setOpen] = React.useState(initialOpen);
+     const [openEdit, setOpenEdit] = React.useState(false);
 
      let balance = row.subTotal - row.received
      //o if nagative
@@ -606,15 +626,7 @@ function Row({
                key: 'info', cells: [
                     { value: row.date },
                     {
-                         value: <UpdateCell
-                              value={{
-                                   cust_id: row.info.custId,
-                                   name: row.info.customer
-                              }}
-                              onChange={(customer) => {
-                                   return updateCustomer(customer)
-                              }}
-                         />
+                         value: row.info.customer
                     }
                ], color: COLORS.WHITE
           },
@@ -742,6 +754,21 @@ function Row({
                                                   </td>
                                              </tr>
                                              <tr>
+                                                  <td>Customer</td>
+                                                  <td>
+                                                       {/* {titleCase(row.info.customer)} */}
+                                                       <UpdateCell
+                                                            value={{
+                                                                 cust_id: row.info.custId,
+                                                                 name: row.info.customer
+                                                            }}
+                                                            onChange={(customer) => {
+                                                                 return updateCustomer(customer)
+                                                            }}
+                                                       />
+                                                  </td>
+                                             </tr>
+                                             <tr>
                                                   <td>Address</td>
                                                   <td>
                                                        {titleCase(row.info.adress)}
@@ -789,6 +816,8 @@ function Row({
                                                             payments={
                                                                  row.info.payments
                                                             }
+                                                            correction={row.info.correction}
+                                                            openEdit={openEdit}
                                                        />
                                                   </td>
                                              </tr>
@@ -879,11 +908,21 @@ function calculateGasGroup(cylinders, mt, rate) {
           total: cylinders * rate
      };
 }
-const GasEditUi = ({ selectedGasList, customer, deliveryBoy, deleveryId, payments }) => {
+const GasEditUi = ({
+     selectedGasList,
+     customer,
+     deliveryBoy,
+     deleveryId,
+     payments,
+     correction,
+     openEdit
+}) => {
 
      const dispatch = useDispatch();
      let onlinePayment = { id: null, amount: null, method: null };
      let cashPayment = { id: null, amount: null, method: null };
+
+     const [checked, setChecked] = useState(correction);
 
      payments.forEach((payment) => {
           if (payment.method == 0) {
@@ -919,7 +958,7 @@ const GasEditUi = ({ selectedGasList, customer, deliveryBoy, deleveryId, payment
      console.log(cashPayment);
      console.log(onlinePayment);
 
-     const [edit, setEdit] = useState(false);
+     const [edit, setEdit] = useState(openEdit);
      const [editName, setEditName] = useState("");
      let glist = [];
      let tempGas = new Map();
@@ -1119,6 +1158,35 @@ const GasEditUi = ({ selectedGasList, customer, deliveryBoy, deleveryId, payment
                                    </ListItemContent>
                               </ListItem>
                          </List>
+                         <span className="b">&nbsp;Correction</span>
+                         <Stack direction="row" gap={1} alignContent={"center"} sx={{ mb: 1 }}>
+                              <Switch
+                                   checked={checked}
+                                   onChange={(event) => setChecked(event.target.checked)}
+                                   sx={(theme) => ({
+                                        '--Switch-thumbShadow': '0 3px 7px 0 rgba(0 0 0 / 0.12)',
+                                        '--Switch-thumbSize': '27px',
+                                        '--Switch-trackWidth': '51px',
+                                        '--Switch-trackHeight': '31px',
+                                        '--Switch-trackBackground': 'rgb(48 209 88)', // Green color for off state
+                                        [`& .${switchClasses.thumb}`]: {
+                                             transition: 'width 0.2s, left 0.2s',
+                                        },
+                                        '&:hover': {
+                                             '--Switch-trackBackground': 'rgb(48 209 88)', // Green color on hover when off
+                                        },
+                                        '&:active': {
+                                             '--Switch-thumbWidth': '32px',
+                                        },
+                                        [`&.${switchClasses.checked}`]: {
+                                             '--Switch-trackBackground': 'rgb(220 53 69)', // Red color for on state
+                                             '&:hover': {
+                                                  '--Switch-trackBackground': 'rgb(220 53 69)', // Red color on hover when on
+                                             },
+                                        },
+                                   })}
+                              />
+                         </Stack>
                     </Sheet>
                     <Sheet sx={{
                          overflow: "auto",
@@ -1153,6 +1221,20 @@ const GasEditUi = ({ selectedGasList, customer, deliveryBoy, deleveryId, payment
                               <RiDeleteBinFill />
                          </Box>
                          <Divider orientation="horizontal" sx={{ flexGrow: 1, opacity: 0 }} />
+                         {/* <Button
+                              color={
+                                   correction ? "success" : "warning"
+                              }
+                              variant="outlined"
+                              onClick={() => {
+                                   console.log(correction)
+                                   setEdit(false)
+                                   dispatch(updateDelivery({ id: deleveryId, correction: !correction }))
+                              }}>
+                              Mark {
+                                   correction ? "Ok" : "Correction"
+                              }
+                         </Button> */}
                          <Button color="warning" variant="outlined" onClick={() => {
                               setEdit(false)
                          }}>
@@ -1213,7 +1295,7 @@ const GasEditUi = ({ selectedGasList, customer, deliveryBoy, deleveryId, payment
                                         method: 0
                                    }
                               ]
-                              console.log(tempPayment)
+                              //console.log(tempPayment)
                               //paisa
                               dispatch(
                                    updateOrCreateCustomerPayments(
@@ -1228,6 +1310,7 @@ const GasEditUi = ({ selectedGasList, customer, deliveryBoy, deleveryId, payment
                                    //Create
                                    addGasDelivery(newGasDataNoIds),
                               )
+                              dispatch(updateDelivery({ id: deleveryId, correction: checked }))
                               const temp = updateGasData.map((gas) => (
                                    {
                                         id: gas.id,
@@ -1249,4 +1332,24 @@ const GasEditUi = ({ selectedGasList, customer, deliveryBoy, deleveryId, payment
                </Sheet>
           </form>
      </Modal>
+}
+const Cell = ({ onClick, children }) => {
+     return <Box
+          onClick={() => {
+               onClick()
+          }}
+          sx={{
+               backgroundColor: "transparent",
+               border: "none",
+               display: "flex",
+               alignItems: "center",
+               justifyContent: "center",
+               color: "black",
+               fontWeight: "bold",
+          }}
+     >
+          <span>{
+               children
+          }</span>
+     </Box>
 }

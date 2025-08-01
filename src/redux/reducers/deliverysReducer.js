@@ -6,6 +6,7 @@ import {
      FETCH_DELIVERIES_SUCCESS,
      FETCH_DELIVERIES_FAILURE,
      UPDATE_DELIVERY_SUCCESS,
+     UPDATE_DELIVERY_SUCCESS_RESET,
      DELETE_DELIVERY_SUCCESS,
      DELETE_DELIVERY,
 } from "../actions/deliveryActions";
@@ -38,6 +39,11 @@ const deliverysReducer = (state = initialState, action) => {
                     loading: false,
                     deliveries: action.payload,
                     error: false,
+                    updateSuccess: false,
+               };
+          case UPDATE_DELIVERY_SUCCESS_RESET:
+               return {
+                    ...state,
                     updateSuccess: false,
                };
           case FETCH_DELIVERIES_FAILURE:

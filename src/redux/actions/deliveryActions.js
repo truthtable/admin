@@ -7,6 +7,7 @@ export const FETCH_DELIVERIES_REQUEST = "FETCH_DELIVERIES_REQUEST";
 export const FETCH_DELIVERIES_SUCCESS = "FETCH_DELIVERIES_SUCCESS";
 export const FETCH_DELIVERIES_FAILURE = "FETCH_DELIVERIES_FAILURE";
 export const UPDATE_DELIVERY_SUCCESS = "UPDATE_DELIVERY_SUCCESS";
+export const UPDATE_DELIVERY_SUCCESS_RESET = "UPDATE_DELIVERY_SUCCESS_RESET";
 export const DELETE_DELIVERY = "DELETE_DELIVERY";
 export const DELETE_DELIVERY_SUCCESS = "DELETE_DELIVERY_SUCCESS";
 
@@ -144,4 +145,10 @@ export const deleteDeliveryById = (id) => {
                dispatch(fetchDeliveriesFailure(error.message));
           }
      };
+};
+
+export const updateDeliverySuccessReset = () => async (dispatch) => {
+     dispatch({
+          type: UPDATE_DELIVERY_SUCCESS_RESET,
+     });
 };

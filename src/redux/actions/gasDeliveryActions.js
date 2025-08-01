@@ -9,6 +9,8 @@ export const DELETE_GAS_DELIVERY = "DELETE_GAS_DELIVERY";
 export const GAS_DELIVERY_ERROR = "GAS_DELIVERY_ERROR";
 export const LOADING = "LOADING";
 export const UPDATE_CREATE_DELETE = "UPDATE_CREATE_DELETE";
+export const UPDATE_GAS_DELIVERY_SUCCESS_RESET =
+     "UPDATE_GAS_DELIVERY_SUCCESS_RESET";
 
 // Initial state
 export const gasDeliveriesIniState = () => async (dispatch) => {
@@ -141,4 +143,9 @@ export const updateCreateDelete = (data) => async (dispatch) => {
                type: GAS_DELIVERY_ERROR,
           });
      }
+};
+export const gasDeliverySuccessReset = () => async (dispatch) => {
+     dispatch({
+          type: UPDATE_GAS_DELIVERY_SUCCESS_RESET,
+     });
 };
