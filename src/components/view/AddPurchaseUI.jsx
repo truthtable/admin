@@ -1,4 +1,5 @@
 /* eslint-disable react/prop-types */
+import React from "react";
 import {
      Box,
      Button,
@@ -149,12 +150,36 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
      };
      const addEmptyItem = () => {
           try {
-               const goGasId = gaslistData.find(gas => (gas.company_name === "GO GASS") && (orderItems.find(item => item.gas_id === gas.id) == null)).id;
-               //console.log(goGasId)
-               const updatedItems = [...orderItems, { gas_id: goGasId, qty: 0, rate: 0, return_cyl_qty: 0 }];
+               // const goGasId = gaslistData.find(
+               //      gas => (gas.company_name === "GO GAS")
+               //           && (orderItems.find(item => item.gas_id === gas.id) == null)
+               // ).id;
+               // const updatedItems = [...orderItems, { gas_id: goGasId, qty: 0, rate: 0, return_cyl_qty: 0 }];
+               // setOrderItems(updatedItems);
+
+               //console.log(gaslistData);
+               const availableGas = gaslistData.find(gas =>
+                    (gas.company_name === "GO GAS") &&
+                    (orderItems.find(item => item.gas_id === gas.id) == null)
+               );
+
+               console.log(availableGas);
+
+               if (!availableGas) {
+                    alert("No more GO GAS items available to add");
+                    return;
+               }
+
+               const updatedItems = [...orderItems, {
+                    gas_id: availableGas.id,
+                    qty: 0,
+                    rate: 0,
+                    return_cyl_qty: 0
+               }];
                setOrderItems(updatedItems);
+
           } catch (e) {
-               //console.warn(e);
+               console.warn(e);
                return;
           }
      };
@@ -532,7 +557,7 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
                                                                                           }}
                                                                                      >
                                                                                           {gaslistData.map(gas => {
-                                                                                               if (gas.company_name === "GO GASS") return (
+                                                                                               if (gas.company_name === "GO GAS") return (
                                                                                                     <Option
                                                                                                          key={gas.id}
                                                                                                          value={gas.id}
