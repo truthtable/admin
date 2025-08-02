@@ -115,7 +115,7 @@ const ViewCustomer = () => {
      const [openNewConnection, setOpenNewConnection] = useState(false);
      const NewConnectionForm = () => {
           const [gasIdList, setGasIdList] = useState(new Array());
-          const addGasIdList = (id, qty) => {
+          const addGasIdList = (id, qty, price) => {
                if (qty < 1) {
                     alert("Quantity should be greater than 0");
                     return;
@@ -131,8 +131,9 @@ const ViewCustomer = () => {
                }
 
                //console.log(id, qty);
-               setGasIdList((prevList) => [...prevList, { id: id, qty: qty }]);
+               setGasIdList((prevList) => [...prevList, { id: id, qty: qty, price: price }]);
           };
+          console.log(gasIdList)
           const removeGasItem = (index) => {
                setGasIdList((prevList) => {
                     let temp = [...prevList];
@@ -156,6 +157,7 @@ const ViewCustomer = () => {
                setAccessory("");
                setPrice("");
           };
+          console.log(accessoryList)
           const removeAccessory = (index) => {
                setAccessoryList((prevList) => {
                     let temp = [...prevList];
@@ -219,7 +221,7 @@ const ViewCustomer = () => {
                                              "aadhar_card_no": t.aadhar_card_no,
                                              "accessories": accessoryList
                                         });
-                                        //console.log(data)
+                                        console.log(data)
                                         const token = getLoginData()?.token;
                                         let config = {
                                              method: 'post',
@@ -248,7 +250,41 @@ const ViewCustomer = () => {
                                    direction={"column"}
                               >
                                    <Input placeholder="Name" name="name" required />
-                                   <Input placeholder="Phone" name="phone" required type="number" />
+                                   <Input
+                                        placeholder="Phone"
+                                        name="phone"
+                                        required
+                                        type="tel"
+                                        onChange={(e) => {
+
+                                             //remove + from phone number if present
+                                             if (e.target.value.startsWith('+')) {
+                                                  e.target.value = e.target.value.substring(1);
+                                             }
+
+                                             const value = e.target.value;
+                                             // Allow only digits and + symbol
+                                             const sanitized = value.replace(/[^\d+]/g, '');
+                                             e.target.value = sanitized;
+                                        }}
+                                        onBlur={(e) => {
+                                             const value = e.target.value.trim();
+                                             const patterns = [
+                                                  /^\+91\d{10}$/, // +919876543210 (13 characters)
+                                                  /^91\d{10}$/,   // 919876543210 (12 characters)
+                                                  /^\d{10}$/      // 9876543210 (10 characters)
+                                             ];
+
+                                             const isValid = patterns.some(pattern => pattern.test(value));
+
+                                             if (!isValid && value.length > 0) {
+                                                  alert('Phone number must be in one of these formats:\n+919876543210 (13 digits)\n919876543210 (12 digits)\n9876543210 (10 digits)');
+                                                  // Remove the focus() call to prevent infinite loop
+                                             }
+                                        }}
+                                        pattern="^(\+91\d{10}|91\d{10}|\d{10})$"
+                                        title="Phone number must be: +919876543210 or 919876543210 or 9876543210"
+                                   />
                                    <Input placeholder="Address" name="address" required />
                                    <Input placeholder="Aadhar Card No." type="number" name="aadhar_card_no" required />
                                    <Input placeholder="Diary No." type="number" name="diary_no" required />
@@ -270,7 +306,7 @@ const ViewCustomer = () => {
                                                             fontWeight: "bold",
                                                             flexGrow: 1
                                                        }}
-                                                  >{gas.company_name} : {gas.kg}KG : {item.qty} QTY</ListItemContent>
+                                                  >{gas.company_name} : {gas.kg}KG : {item.qty} QTY : Price ₹{item.price} : TOTAL ₹{item.qty * item.price}</ListItemContent>
                                                   <Box
                                                        sx={{
                                                             display: "flex",
@@ -317,9 +353,15 @@ const ViewCustomer = () => {
                                              }}
                                              startDecorator={<Typography>Quantity : </Typography>}
                                         />
+                                        <Input type="number" placeholder="Price" name="price" defaultValue={tempPrice}
+                                             onChange={(e) => {
+                                                  tempPrice = Number(e.target.value)
+                                             }}
+                                             startDecorator={<Typography>Price : </Typography>}
+                                        />
                                         <Button
                                              onClick={() => {
-                                                  addGasIdList(tempSelectedId, tempQty)
+                                                  addGasIdList(tempSelectedId, tempQty, tempPrice)
                                              }}
                                         >Add Gas</Button>
                                    </Stack>
@@ -400,6 +442,7 @@ const ViewCustomer = () => {
           </div>
      }
      let tempQty = 1
+     let tempPrice = 0
      let tempSelectedId = gasList[0].id
      let new_connection = null
      try {
@@ -410,30 +453,6 @@ const ViewCustomer = () => {
      } catch (e) {
           //console.log(e)
      }
-     /*new_connection =
-     [
-    {
-        "id": 3,
-        "custome_id": 120,
-        "gas_id": 2,
-        "gas_qty": 2,
-        "gas_price": 100.5,
-        "accessorie": "Regulator",
-        "accessorie_price": 25,
-        "created_at": "2025-01-09T14:09:26.000000Z"
-    },
-    {
-        "id": 4,
-        "custome_id": 120,
-        "gas_id": 2,
-        "gas_qty": 2,
-        "gas_price": 100.5,
-        "accessorie": "Regulator",
-        "accessorie_price": 25,
-        "created_at": "2025-01-09T14:09:34.000000Z"
-    }
-]
-     */
      new_connection = new_connection ? new_connection : []
      //console.log(new_connection)
      return (
