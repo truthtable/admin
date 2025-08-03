@@ -1,5 +1,5 @@
 // src/redux/actions/deliveryActions.js
-import { axiosInstance as axios } from "../../services/Api";
+import { axiosInstance as axios, URL } from "../../services/Api";
 
 // Action Types
 export const INIT_STATE = "DELIVERIES_INIT_STATE";
@@ -48,8 +48,8 @@ export const deleteDeliverySuccess = (id) => ({
      payload: id,
 });
 
-const API = "https://srdgas.online/public/api/delivery";
-const GAS_API = "https://srdgas.online/public/api/gasDeliverys";
+const API = URL + "api/delivery";
+const GAS_API = URL + "api/gasDeliverys";
 
 //initial state
 export const deliveriesIniState = () => {

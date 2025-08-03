@@ -1,6 +1,6 @@
-import { axiosInstance as axios } from "../../services/Api";
+import { axiosInstance as axios, URL } from "../../services/Api";
 
-const API = "https://srdgas.online/public/api/expenses";
+const API = URL + "api/expenses";
 
 //Action Types
 export const INIT_STATE = "EXPENSES_INIT_STATE";

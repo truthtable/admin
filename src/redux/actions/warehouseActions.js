@@ -16,9 +16,9 @@ export const DELETE_WAREHOUSE_REQUEST = "DELETE_WAREHOUSE_REQUEST";
 export const DELETE_WAREHOUSE_SUCCESS = "DELETE_WAREHOUSE_SUCCESS";
 export const DELETE_WAREHOUSE_FAILURE = "DELETE_WAREHOUSE_FAILURE";
 
-import { axiosInstance as axios } from "../../services/Api";
+import { axiosInstance as axios, URL } from "../../services/Api";
 
-const API_URL = "https://srdgas.online/public/api/warehouses";
+const API_URL = URL + "api/warehouses";
 
 export const fetchWarehouses = () => async (dispatch) => {
      dispatch({ type: FETCH_WAREHOUSES_REQUEST });

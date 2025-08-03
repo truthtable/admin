@@ -1,4 +1,4 @@
-import { axiosInstance as axios } from "../../services/Api";
+import { axiosInstance as axios, URL } from "../../services/Api";
 
 // Action Types
 export const FETCH_USER_REQUEST = "FETCH_USER_REQUEST";
@@ -20,7 +20,7 @@ export const fetchUserFailure = (error) => ({
      payload: error,
 });
 
-const API = "https://srdgas.online/public/api/userData";
+const API = URL + "api/userData";
 
 // Async Action to Fetch User
 export const fetchUser = () => {

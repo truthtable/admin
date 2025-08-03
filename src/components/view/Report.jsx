@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Box, Button, Card, Divider, Input, LinearProgress, Option, Select, Sheet, Stack, Table } from "@mui/joy";
+import { Box, Button, Card, Checkbox, CircularProgress, Divider, Input, LinearProgress, Option, Select, Sheet, Stack, Table } from "@mui/joy";
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCustomers } from "../../redux/actions/customerActions";
 import { fetchReport } from "../../redux/actions/reportActions";
@@ -110,6 +110,9 @@ export const Report = ({ isLogged }) => {
 
      console.log("BILL", isBillLoading, isBillError, isBillSuccess, billErrorMessage);
 
+     if (isBillSuccess) {
+          alert("Bill sent successfully");
+     }
 
      // console.log({
      //      reportLoading,
@@ -141,6 +144,8 @@ export const Report = ({ isLogged }) => {
                     return formattedDate;
                }
           });
+
+          const [showNewConnections, setShowNewConnections] = useState(false);
 
 
           //console.log('selectedCustomer', selectedCustomer);
@@ -300,6 +305,31 @@ export const Report = ({ isLogged }) => {
                                         defaultValue={endDate}
                                    />
                               </Stack>
+
+                              <Stack
+                                   gap={1}
+                                   sx={{
+                                        flexDirection: { xs: 'column', md: 'row' },
+                                        alignItems: { xs: 'flex-start', md: 'center' }
+                                   }}
+                              >
+                                   <span style={{
+                                        fontWeight: "bold",
+                                        color: "black",
+                                        minWidth: { xs: '100%', md: 'auto' },
+                                        whiteSpace: 'nowrap'
+                                   }}>
+                                        New Connections :
+                                   </span>
+                                   <Checkbox
+                                        label=""
+                                        size="lg"
+                                        checked={showNewConnections}
+                                        onChange={(e) => {
+                                             setShowNewConnections(e.target.checked);
+                                        }}
+                                   />
+                              </Stack>
                          </Stack>
 
                          <Divider sx={{ backgroundColor: "#979797", m: 1 }} />
@@ -401,7 +431,17 @@ export const Report = ({ isLogged }) => {
                                                   <tbody>
                                                        {
                                                             report.customer.new_connection.map((connection, index) => {
-                                                                 return <tr key={index + "new_connection"}>
+
+                                                                 if (connection.gas_id !== null || connection.gas_id !== undefined || connection.gas_id !== "") {
+                                                                      grandTotal += connection.gas_price * connection.gas_qty
+                                                                 }
+                                                                 if (connection.accessorie_id !== null || connection.accessorie_id !== undefined || connection.accessorie_id !== "") {
+                                                                      grandTotal += connection.accessorie_price
+                                                                 }
+
+                                                                 return <tr key={index + "new_connection"} style={{
+                                                                      display: showNewConnections ? "" : "none"
+                                                                 }}>
                                                                       <td className="b">{formatDate(connection.created_at)}</td>
                                                                       <td className="b">Office</td>
                                                                       <td className="b">{
@@ -425,8 +465,23 @@ export const Report = ({ isLogged }) => {
                                                                       return
                                                                  }
                                                                  let subTotal = 0;
-                                                                 grandTotalPaid += delivery.received_amount;
-                                                                 return delivery.gas_deliveries.map((gasDelivery, index) => {
+                                                                 let onlinePaymet = 0
+                                                                 let cashPayment = 0
+                                                                 let paymentDate = ""
+                                                                 //grandTotalPaid += delivery.received_amount;
+                                                                 console.log(delivery.payments);
+                                                                 delivery.payments.forEach((payment) => {
+                                                                      grandTotalPaid += payment.amount
+                                                                      if (payment.method == 0) {
+                                                                           cashPayment += payment.amount
+                                                                      } else {
+                                                                           onlinePaymet += payment.amount
+                                                                      }
+                                                                      paymentDate = formatDate(payment.created_at)
+                                                                 })
+                                                                 console.log(paymentDate);
+                                                                 let rows = []
+                                                                 delivery.gas_deliveries.map((gasDelivery, index) => {
                                                                       let tempTotal = gasDelivery.price * gasDelivery.quantity;
                                                                       subTotal += tempTotal;
                                                                       grandTotal += tempTotal;
@@ -434,7 +489,7 @@ export const Report = ({ isLogged }) => {
                                                                            grandGasQuantity += gasDelivery.quantity;
                                                                       else
                                                                            grandPendingQuantity += gasDelivery.quantity;
-                                                                      return <tr key={index + "report_td" + gasDelivery.id}>
+                                                                      rows.push(<tr key={index + "report_td" + gasDelivery.id}>
                                                                            <td className="b">{formatDate(delivery.created_at)}</td>
                                                                            <td className="b">{report.courierBoy.find((boy) => boy.id === delivery.courier_boy_id).username
                                                                            }</td>
@@ -445,9 +500,34 @@ export const Report = ({ isLogged }) => {
                                                                            </td>
                                                                            <td className="b">{gasDelivery.quantity}</td>
                                                                            <td className="b">{gasDelivery.is_empty ? "-" : `₹${gasDelivery.price}`}</td>
-                                                                           <td className="b">{gasDelivery.is_empty ? "-" : `₹${tempTotal}`}</td>
-                                                                      </tr>
+                                                                           <td className="b" style={{ color: "#292b76" }}>{gasDelivery.is_empty ? "-" : `₹${tempTotal}`}</td>
+                                                                      </tr>)
                                                                  })
+                                                                 if (onlinePaymet > 0 || cashPayment > 0) {
+                                                                      let isBothPayment = false
+                                                                      if (onlinePaymet > 0 && cashPayment > 0) {
+                                                                           isBothPayment = true
+                                                                      }
+                                                                      rows.push(<tr
+                                                                           key={index1 + "report_td" + "payment"}
+
+                                                                      >
+                                                                           <td className="b">{paymentDate}</td>
+                                                                           {
+                                                                                onlinePaymet > 0 ? <td className="b" colSpan={isBothPayment ? 0 : 4}>Online Payment : ₹{decimalFix(onlinePaymet)}</td> : <></>
+                                                                           }
+                                                                           {
+                                                                                cashPayment > 0 ? <td className="b" colSpan={isBothPayment ? 3 : 4}>Cash Payment : ₹{decimalFix(cashPayment)}</td> : <></>
+                                                                           }
+                                                                           {
+                                                                                <td className="b" style={{ color: "#0A6847" }}>
+                                                                                     -₹{decimalFix(onlinePaymet + cashPayment)}
+                                                                                </td>
+                                                                           }
+                                                                      </tr>)
+                                                                 }
+
+                                                                 return rows
 
                                                             })
                                                        }
@@ -544,7 +624,9 @@ export const Report = ({ isLogged }) => {
                                                   width: { xs: '100%', md: 'auto' }
                                              }}
                                         >
-                                             Send Bill To Customer
+                                             {
+                                                  isBillLoading ? <CircularProgress /> : "Send Bill To Customer"
+                                             }
                                         </Button>
                                    </> : <></>
                               }

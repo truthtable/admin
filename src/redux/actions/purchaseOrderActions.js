@@ -1,4 +1,4 @@
-import { axiosInstance as axios } from "../../services/Api";
+import { axiosInstance as axios, URL } from "../../services/Api";
 import { loginInial } from "../authSlice";
 
 export const FETCH_ORDERS_REQUEST = "FETCH_ORDERS_REQUEST";
@@ -17,10 +17,9 @@ export const fetchOrders = (options) => async (dispatch) => {
      dispatch({ type: FETCH_ORDERS_REQUEST });
      console.log("params", options);
      try {
-          const response = await axios().get(
-               "https://srdgas.online/public/api/purchase-orders",
-               { params: options },
-          );
+          const response = await axios().get(URL + "api/purchase-orders", {
+               params: options,
+          });
           let logs = response.headers["x-log-data"];
           logs = decodeURIComponent(logs);
           console.log("xlog : ", logs);
@@ -39,7 +38,7 @@ export const createOrder = (orderData) => async (dispatch) => {
      dispatch({ type: FETCH_ORDERS_REQUEST });
      try {
           const response = await axios().post(
-               "https://srdgas.online/public/api/purchase-orders",
+               URL + "api/purchase-orders",
                orderData,
           );
           //console.log(response);
@@ -56,7 +55,7 @@ export const updateOrder = (id, orderData) => async (dispatch) => {
      dispatch({ type: FETCH_ORDERS_REQUEST });
      try {
           const response = await axios().put(
-               `https://srdgas.online/public/api/purchase-orders/${id}`,
+               URL + `api/purchase-orders/${id}`,
                orderData,
           );
           console.log(response.data);
@@ -72,9 +71,7 @@ export const updateOrder = (id, orderData) => async (dispatch) => {
 export const deleteOrder = (id) => async (dispatch) => {
      dispatch({ type: FETCH_ORDERS_REQUEST });
      try {
-          await axios().delete(
-               `https://srdgas.online/public/api/purchase-orders/${id}`,
-          );
+          await axios().delete(URL + `api/purchase-orders/${id}`);
           dispatch({ type: DELETE_ORDER_SUCCESS, payload: id });
      } catch (error) {
           if (error.response.status === 401) {

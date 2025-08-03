@@ -20,7 +20,6 @@ import PropTypes from 'prop-types';
 import { decimalFix, titleCase, updateUrlParams } from "../../Tools.jsx";
 import ExportCSV from "../ExportCSV.jsx";
 import { updateGas } from "../../state/UpdateGas.jsx";
-import { c } from "../../../dist/assets/index-2ecc25ae.js";
 import { updateOrCreateCustomerPayments } from "../../redux/customerPaymentsUpdateOrCreate.js";
 import Switch, { switchClasses } from '@mui/joy/Switch';
 const COLORS = {
@@ -349,7 +348,7 @@ export default function deliveryHistory() {
                               kg: 15
                          }
                     })
-                    const date = formatDateToDDMMYY(delivery.created_at)
+                    const date = formatDateToDDMMYY_HHMM(delivery.created_at)
                     let total12Kg = cyl12KgQty * cyl12KgRate
                     let total15Kg = cyl15KgQty * cyl15KgRate
                     let total17Kg = cyl17KgQty * cyl17KgRate
@@ -892,7 +891,23 @@ function formatDateToDDMMYY(dateString) {
      var yyyy = yy.toString().slice(2, 4);
      return dd + "/" + mm + "/" + yyyy;
 }
-
+function formatDateToDDMMYY_HHMM(dateString) {
+     //convert to epoch
+     var date = new Date(dateString);
+     var dd = String(date.getDate()).padStart(2, '0');
+     var mm = String(date.getMonth() + 1).padStart(2, '0'); //January is 0!
+     var yy = date.getFullYear();
+     var yyyy = yy.toString().slice(2, 4);
+     let str = dd + "/" + mm + "/" + yyyy;
+     let time = date.toLocaleTimeString("en-IN", {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+          timeZone: 'Asia/Kolkata'
+     });
+     time = time.toUpperCase();
+     return str + " - " + time;
+}
 const formatDate = (date) => {
      const year = date.getFullYear();
      const month = String(date.getMonth() + 1).padStart(2, '0');

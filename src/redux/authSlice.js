@@ -1,6 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { axiosInstance as axios, getLoginData } from "../services/Api";
-import { LOGIN } from "../services/Api";
+import {
+     axiosInstance as axios,
+     getLoginData,
+     LOGIN,
+     URL,
+} from "../services/Api";
 
 const userData = localStorage.getItem("userData");
 let localData = null;
@@ -24,6 +28,7 @@ const authSlice = createSlice({
           isError: false,
           errorMessage: "",
           checkLogin: false,
+          networkError: false,
      },
      reducers: {
           loginInial(state) {
@@ -31,11 +36,13 @@ const authSlice = createSlice({
                state.isLoading = false;
                state.isError = false;
                state.checkLogin = false;
+               state.networkError = false;
           },
           loginStart: (state) => {
                state.isLoading = true;
                state.isError = false;
                state.checkLogin = false;
+               state.networkError = false;
           },
           loginSuccess: (state, action) => {
                state.isLoading = false;
@@ -43,6 +50,7 @@ const authSlice = createSlice({
                state.checkLogin = true;
                state.isError = false;
                state.errorMessage = "";
+               state.networkError = false;
           },
           loginFailure: (state, action) => {
                state.isLoading = false;
@@ -50,6 +58,15 @@ const authSlice = createSlice({
                state.errorMessage = action.payload;
                state.checkLogin = false;
                state.data = null;
+               state.networkError = false;
+          },
+          networkError: (state, action) => {
+               state.isLoading = false;
+               state.isError = true;
+               state.errorMessage = action.payload;
+               state.checkLogin = false;
+               state.data = null;
+               state.networkError = true;
           },
           logout: (state) => {
                state.data = null;
@@ -57,12 +74,19 @@ const authSlice = createSlice({
                state.isError = false;
                state.errorMessage = "";
                state.checkLogin = false;
+               state.networkError = false;
           },
      },
 });
 
-export const { loginInial, loginStart, loginSuccess, loginFailure, logout } =
-     authSlice.actions;
+export const {
+     loginInial,
+     loginStart,
+     loginSuccess,
+     loginFailure,
+     logout,
+     networkError,
+} = authSlice.actions;
 
 const API = LOGIN;
 
@@ -93,9 +117,23 @@ export const login = (username, password) => async (dispatch) => {
           }
      } catch (error) {
           console.log(" login : " + error);
-          dispatch(
-               loginFailure(error.response?.data?.message || "Login failed"),
-          );
+          // Check if it's a network error
+          if (
+               error.code === "ERR_NETWORK" ||
+               error.message === "Network Error"
+          ) {
+               dispatch(
+                    networkError(
+                         "Network connection failed. Please check your internet connection.",
+                    ),
+               );
+          } else {
+               dispatch(
+                    loginFailure(
+                         error.response?.data?.message || "Login failed",
+                    ),
+               );
+          }
      }
 };
 
@@ -106,11 +144,26 @@ export const validateLogin = () => async (dispatch) => {
           console.log("validateLogin : ", error);
           let loginData = getLoginData();
           const token = loginData?.token;
+          localData = JSON.stringify(loginData);
           console.log("validateLogin : " + loginData);
           console.log("token : " + token);
           dispatch(
                loginFailure(error.response?.data?.message || "Login failed"),
           );
+
+          //handle here
+          if (
+               error.code === "ERR_NETWORK" ||
+               error.message === "Network Error"
+          ) {
+               // Dispatch network error action instead of login failure
+               dispatch(
+                    networkError(
+                         "Network connection failed. Please check your internet connection.",
+                    ),
+               );
+               return;
+          }
 
           if (
                localData.token === null ||
@@ -118,14 +171,7 @@ export const validateLogin = () => async (dispatch) => {
                localData.token === undefined
           ) {
                localStorage.removeItem("userData");
-          } else {
-               //delay for 1 second
-               setTimeout(() => {
-                    //window.location.reload();
-                    dispatch(validateLogin());
-               }, 1000);
-               //reload the page
-               //window.location.reload();
+               dispatch(logout());
           }
      }
 };

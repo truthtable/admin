@@ -30,7 +30,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchCustomerData } from "../../state/Customers.jsx";
 import UpdateCustomerCell, { NUMBER, TEXT } from "../edit/UpdateCustomerCell.jsx";
 import { notNull } from "../../helpers.jsx/Validation.jsx";
-import { getLoginData, UPDATE_CUSTOMER, UPDATE_USER } from "../../services/Api.jsx";
+import { getLoginData, UPDATE_CUSTOMER, UPDATE_USER, URL } from "../../services/Api.jsx";
 
 import { TbHomePlus } from "react-icons/tb";
 import { fetchGas } from "../../redux/actions/gasAction.js";
@@ -226,7 +226,7 @@ const ViewCustomer = () => {
                                         let config = {
                                              method: 'post',
                                              maxBodyLength: Infinity,
-                                             url: 'https://srdgas.online/public/api/createCustomer',
+                                             url: URL + 'api/createCustomer',
                                              headers: {
                                                   'Content-Type': 'application/json',
                                                   'Authorization': `Bearer ${token}`,

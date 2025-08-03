@@ -1,4 +1,4 @@
-import { axiosInstance as axios } from "../../services/Api";
+import { axiosInstance as axios, URL } from "../../services/Api";
 import { loginInial } from "../authSlice";
 
 export const FETCH_ITEMS_REQUEST = "FETCH_ITEMS_REQUEST";
@@ -16,9 +16,7 @@ export const iniState = () => async (dispatch) => {
 export const fetchItems = () => async (dispatch) => {
      dispatch({ type: FETCH_ITEMS_REQUEST });
      try {
-          const response = await axios().get(
-               "https://srdgas.online/public/api/purchase-order-items",
-          );
+          const response = await axios().get(URL + "api/purchase-order-items");
           dispatch({ type: FETCH_ITEMS_SUCCESS, payload: response.data });
      } catch (error) {
           if (error.response.status === 401) {
@@ -32,7 +30,7 @@ export const createItem = (itemData) => async (dispatch) => {
      dispatch({ type: FETCH_ITEMS_REQUEST });
      try {
           const response = await axios().post(
-               "https://srdgas.online/public/api/purchase-order-items",
+               URL + "api/purchase-order-items",
                itemData,
           );
           dispatch({ type: CREATE_ITEM_SUCCESS, payload: response.data });
@@ -49,7 +47,7 @@ export const updateItem = (id, itemData) => async (dispatch) => {
      try {
           //console.log(id, itemData);
           const response = await axios().put(
-               `https://srdgas.online/public/api/purchase-order-items/${id}`,
+               URL + `api/purchase-order-items/${id}`,
                itemData,
           );
           //console.log(response);
@@ -66,9 +64,7 @@ export const updateItem = (id, itemData) => async (dispatch) => {
 export const deleteItem = (id) => async (dispatch) => {
      dispatch({ type: FETCH_ITEMS_REQUEST });
      try {
-          await axios().delete(
-               `https://srdgas.online/public/api/purchase-order-items/${id}`,
-          );
+          await axios().delete(URL + `api/purchase-order-items/${id}`);
           dispatch({ type: DELETE_ITEM_SUCCESS, payload: id });
      } catch (error) {
           if (error.response.status === 401) {

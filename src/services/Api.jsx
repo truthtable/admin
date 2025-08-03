@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export const URL = "https://srdgas.online/public/";
+export const URL = "https://srdgas.online/";
 export const LOGIN = URL + "api/token";
 export const CHECK_LOGIN = URL + "api/check";
 

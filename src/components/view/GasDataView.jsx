@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { GAS_DATA, UPDATE_GAS } from "../../services/Api.jsx";
+import { GAS_DATA, UPDATE_GAS, URL } from "../../services/Api.jsx";
 import { fetchGetData } from "../../state/GetData.jsx";
 import DataTable from "../table/DataTable.jsx";
 import TableHead from "../table/TableHead.jsx";

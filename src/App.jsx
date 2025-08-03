@@ -54,7 +54,7 @@ function App() {
      //let isLogoded = false;
      let isLogoded = loginData?.data?.loginStatus || false;
 
-     //console.log(loginData);
+     console.log(loginData);
 
      //get url from window.location
      const url = new URL(window.location.href);
@@ -74,6 +74,9 @@ function App() {
      if (loginData.isError) {
           //console.log(loginData.errorMessage);
           alert(loginData.errorMessage);
+          //2 sec delay
+          //dispatch(validateLogin());
+
      }
 
      let username = "";

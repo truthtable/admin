@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { axiosInstance as axios } from "../services/Api";
+import { axiosInstance as axios, URL } from "../services/Api";
 
 const billSlice = createSlice({
      name: "bill",
@@ -41,12 +41,11 @@ export const sendBillToCustomer =
 
           dispatch(billLoading());
           try {
-               await axios().post("sendBillSms", {
+               const response = await axios().post("sendBillSms", {
                     link: transformedLink,
                     customerNumber,
                     amount,
                });
-
                dispatch(billSuccess());
           } catch (error) {
                console.log(error);

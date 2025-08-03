@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import "../crud-css/read.css";
 import { BsFillExclamationOctagonFill, BsFilter } from "react-icons/bs";
 import DataTable from "../../components/table/DataTable";
-import { GET_WEATHOUSE_DATA, getLoginData } from "../../services/Api";
+import { GET_WEATHOUSE_DATA, getLoginData, URL } from "../../services/Api";
 import { Button } from "@mui/joy";
 
 const wherehouseread = () => {
@@ -61,8 +61,8 @@ const wherehouseread = () => {
                {showFilterInput && (
                     <div
                          className={`transition- duration-300 ease-in-out ${showFilterInput
-                                   ? "h-auto opacity-100"
-                                   : "h-0 opacity-0 overflow-hidden"
+                              ? "h-auto opacity-100"
+                              : "h-0 opacity-0 overflow-hidden"
                               }
       bg-white p-4 border rounded-lg shadow-md mt-4 space-y-4 space-x-3`}
                     >

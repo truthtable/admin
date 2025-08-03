@@ -1,4 +1,4 @@
-import { axiosInstance as axios } from "../../services/Api";
+import { axiosInstance as axios, URL } from "../../services/Api";
 
 //actions
 export const FETCH_GAS_REQUEST = "FETCH_GAS_REQUEST";
@@ -22,7 +22,7 @@ export const fetchGasFailure = (error) => ({
      payload: error,
 });
 
-const API = "https://srdgas.online/public/api/gas";
+const API = URL + "api/gas";
 
 export const fetchGas = () => {
      return async (dispatch) => {
