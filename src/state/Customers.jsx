@@ -9,7 +9,7 @@ export const fetchCustomerData = createAsyncThunk(
           let errorMessage = "";
           try {
                const token = getLoginData()?.token;
-               const response = await fetch(CUSTOMER_DATA, {
+               const response = await fetch(CUSTOMER_DATA + "?isAdmin=" + true, {
                     method: "get",
                     headers: new Headers({
                          "ngrok-skip-browser-warning": "69420",

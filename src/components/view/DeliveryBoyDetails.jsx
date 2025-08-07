@@ -8,7 +8,7 @@ import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchGetData } from "../../state/GetData.jsx";
 import React, { useEffect, useState } from "react";
-import { GET_COURIER_BOY_DATA, getLoginData, UPDATE_COURIER_BOY, UPDATE_USER, URL } from "../../services/Api.jsx";
+import { GET_COURIER_BOY_DATA, getLoginData, UPDATE_COURIER_BOY, UPDATE_USER } from "../../services/Api.jsx";
 import UpdateCustomerCell, { NUMBER, TEXT } from "../edit/UpdateCustomerCell.jsx";
 import DeliveryBoyCard from "./DeliveryBoyCard.jsx";
 import { Link } from "react-router-dom";
@@ -35,9 +35,12 @@ export default function DeliveryBoyDetails() {
           return formattedDate;
      });
      //update url params
-     updateUrlParams({
-          "startDate": startDate
-     });
+     // updateUrlParams({
+     //      "startDate": startDate
+     // });
+     // updateUrlParams({
+     //      startDate
+     // });
 
      const [endDate, setEndDate] = React.useState(() => {
           const lastDateOfCurrentMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
@@ -49,15 +52,24 @@ export default function DeliveryBoyDetails() {
           const formattedDate = `${year}-${month}-${day}`;
           return formattedDate;
      });
-     updateUrlParams({
-          "endDate": endDate
-     });
-     //console.log(startDate, endDate)
+     // updateUrlParams({
+     //      endDate
+     // });
+     console.log(startDate, endDate)
+
+     //UPDATE URL
+     let url = window.location.href;
+     url = url.split("?")[0];
+     url = url + `?&start_date=${startDate}&end_date=${endDate}`;
+     window.location.href = url;
+
+
      let GET_COURIER_BOY_DATA_URL = "";
      GET_COURIER_BOY_DATA_URL = GET_COURIER_BOY_DATA + "?" + new URLSearchParams({
           startDate: startDate,
           endDate: endDate,
      }).toString();
+     console.log(GET_COURIER_BOY_DATA_URL)
      //replace the url with the new one in browser
 
      //
@@ -79,7 +91,7 @@ export default function DeliveryBoyDetails() {
                     } catch (e) {
                          expenses = 0;
                     }
-                    console.log(expenses);
+                    console.log('expenses', expenses);
                     rows.push(makeRow(item, expenses));
                     deliveryBoyData.push(item);
                });

@@ -24,6 +24,7 @@ import { updateOrCreateCustomerPayments } from "../../redux/customerPaymentsUpda
 import Switch, { switchClasses } from '@mui/joy/Switch';
 const COLORS = {
      WHITE: "#ffffff",
+     KG_4: "#fde3e3",
      KG_12: "#e3f2fd",
      KG_15: "#e8f5e9",
      KG_17: "#fff3e0",
@@ -32,37 +33,43 @@ const COLORS = {
 
 const columns = [
      //Info
-     { column: "Date", color: COLORS.WHITE },
-     { column: "Customer", color: COLORS.WHITE },
+     { column: "date", color: COLORS.WHITE },
+     { column: "customer", color: COLORS.WHITE },
+
+     //4KG Group
+     { column: "4kg cyl", color: COLORS.KG_4 },
+     { column: "mt", color: COLORS.KG_4 },
+     { column: "rate", color: COLORS.KG_4 },
+     { column: "total", color: COLORS.KG_4 },
 
      // 12KG Group 
-     { column: "12KG CYL", color: COLORS.KG_12 },
-     { column: "MT", color: COLORS.KG_12 },
-     { column: "Rate", color: COLORS.KG_12 },
-     { column: "Total", color: COLORS.KG_12 },
+     { column: "12kg cyl", color: COLORS.KG_12 },
+     { column: "mt", color: COLORS.KG_12 },
+     { column: "rate", color: COLORS.KG_12 },
+     { column: "total", color: COLORS.KG_12 },
 
      // 15KG Group
-     { column: "15KG CYL", color: COLORS.KG_15 },
-     { column: "MT", color: COLORS.KG_15 },
-     { column: "Rate", color: COLORS.KG_15 },
-     { column: "Total", color: COLORS.KG_15 },
+     { column: "15kg cyl", color: COLORS.KG_15 },
+     { column: "mt", color: COLORS.KG_15 },
+     { column: "rate", color: COLORS.KG_15 },
+     { column: "total", color: COLORS.KG_15 },
 
      // 17KG Group
-     { column: "17KG CYL", color: COLORS.KG_17 },
-     { column: "MT", color: COLORS.KG_17 },
-     { column: "Rate", color: COLORS.KG_17 },
-     { column: "Total", color: COLORS.KG_17 },
+     // { column: "17kg cyl", color: COLORS.KG_17 },
+     // { column: "mt", color: COLORS.KG_17 },
+     // { column: "rate", color: COLORS.KG_17 },
+     // { column: "total", color: COLORS.KG_17 },
 
      // 21KG Group
-     { column: "21KG CYL", color: COLORS.KG_21 },
-     { column: "MT", color: COLORS.KG_21 },
-     { column: "Rate", color: COLORS.KG_21 },
-     { column: "Total", color: COLORS.KG_21 },
+     { column: "21kg cyl", color: COLORS.KG_21 },
+     { column: "mt", color: COLORS.KG_21 },
+     { column: "rate", color: COLORS.KG_21 },
+     { column: "total", color: COLORS.KG_21 },
 
      // Summary rows  
-     { column: "Sub Total", color: COLORS.WHITE },
-     { column: "Received", color: COLORS.WHITE },
-     { column: "Balance", color: COLORS.WHITE }
+     { column: "sub total", color: COLORS.WHITE },
+     { column: "received", color: COLORS.WHITE },
+     { column: "balance", color: COLORS.WHITE }
 ];
 const CUSTOMER_LIST = []
 let gasList = new Map();
@@ -252,7 +259,11 @@ export default function deliveryHistory() {
      // First, let's add a helper function to calculate gas group totals
 
      // Update the createData function to be more organized
-     function createData(date, info, gasInfo, kg12Data, kg15Data, kg17Data, kg21Data, received) {
+     function createData(date, info, gasInfo, kg4Data, kg12Data, kg15Data, kg17Data, kg21Data, received) {
+
+          const kg4 = calculateGasGroup(kg4Data.cylinders, kg4Data.mt, kg4Data.rate);
+          //console.log("4kg", kg4);
+
           const kg12 = calculateGasGroup(kg12Data.cylinders, kg12Data.mt, kg12Data.rate);
           const kg15 = calculateGasGroup(kg15Data.cylinders, kg15Data.mt, kg15Data.rate);
           const kg17 = calculateGasGroup(kg17Data.cylinders, kg17Data.mt, kg17Data.rate);
@@ -265,6 +276,7 @@ export default function deliveryHistory() {
                customer: info.customer,
                info: info,
                gasInfo: gasInfo,
+               kg4,
                kg12,
                kg15,
                kg17,
@@ -283,6 +295,10 @@ export default function deliveryHistory() {
                rows = deliveries.map((delivery) => {
                     let totalCash = 0
                     let totalOnline = 0
+
+                    let cyl4KgQty = 0
+                    let cyl4KgMt = 0
+                    let cyl4KgRate = 0
 
                     let cyl12KgQty = 0
                     let cyl12KgMt = 0
@@ -308,6 +324,18 @@ export default function deliveryHistory() {
                          }
                     })
                     const cylinder_list = delivery.gas_deliveries.map((gas) => {
+
+                         if (gas.kg == 4) {
+                              //console.log("4kg", gas);
+
+                              if (gas.is_empty == 0) {
+                                   cyl4KgQty = gas.quantity
+                                   cyl4KgRate = gas.gas_price
+                              } else {
+                                   cyl4KgMt += gas.quantity
+                              }
+                         }
+
                          if (gas.kg == 12) {
                               if (gas.is_empty == 0) {
                                    cyl12KgQty = gas.quantity
@@ -349,21 +377,31 @@ export default function deliveryHistory() {
                          }
                     })
                     const date = formatDateToDDMMYY_HHMM(delivery.created_at)
+                    let total4Kg = cyl4KgQty * cyl4KgRate
                     let total12Kg = cyl12KgQty * cyl12KgRate
                     let total15Kg = cyl15KgQty * cyl15KgRate
                     let total17Kg = cyl17KgQty * cyl17KgRate
                     let total21Kg = cyl21KgQty * cyl21KgRate
-                    let totalTotal = total12Kg + total15Kg + total17Kg + total21Kg
+                    let totalTotal = total12Kg + total15Kg + total17Kg + total21Kg + total4Kg
                     let received = totalCash + totalOnline
                     let balance = totalTotal - received
-                    if (balance < 0) {
-                         balance = 0
-                    }
+                    console.log({ cyl4KgMt, cyl4KgRate, cyl4KgQty, total4Kg, received, balance });
+                    // if (balance < 0) {
+                    //      balance = 0
+                    // }
                     csvData.push([
                          //"Date",
                          date,
                          //"Customer",
                          titleCase(delivery.customer.name),
+                         //"4KG CYL",
+                         cyl4KgQty,
+                         //"MT",
+                         cyl4KgMt,
+                         //"Rate",
+                         cyl4KgRate,
+                         //"Total",
+                         total4Kg,
                          //"12KG CYL",
                          cyl12KgQty,
                          //"MT",
@@ -425,6 +463,8 @@ export default function deliveryHistory() {
                          },
                          //gasInfo
                          cylinder_list,
+                         // 4KG Group
+                         { cylinders: cyl4KgQty, mt: cyl4KgMt, rate: cyl4KgRate },
                          // 12KG Group
                          { cylinders: cyl12KgQty, mt: cyl12KgMt, rate: cyl12KgRate },
                          // 15KG Group
@@ -630,6 +670,15 @@ function Row({
                ], color: COLORS.WHITE
           },
           {
+               key: 'kg4', cells: [
+                    { value: decimalFix(row.kg4.cylinders) },
+                    { value: decimalFix(row.kg4.mt) },
+                    { value: decimalFix(row.kg4.rate, true) },
+                    { value: decimalFix(row.kg4.total, true) }
+               ],
+               color: COLORS.KG_4
+          },
+          {
                key: 'kg12', cells: [
                     {
                          value: decimalFix(row.kg12.cylinders)
@@ -647,14 +696,14 @@ function Row({
                     { value: decimalFix(row.kg15.total, true) }
                ], color: COLORS.KG_15
           },
-          {
-               key: 'kg17', cells: [
-                    { value: decimalFix(row.kg17.cylinders) },
-                    { value: decimalFix(row.kg17.mt) },
-                    { value: decimalFix(row.kg17.rate, true) },
-                    { value: decimalFix(row.kg17.total, true) }
-               ], color: COLORS.KG_17
-          },
+          // {
+          //      key: 'kg17', cells: [
+          //           { value: decimalFix(row.kg17.cylinders) },
+          //           { value: decimalFix(row.kg17.mt) },
+          //           { value: decimalFix(row.kg17.rate, true) },
+          //           { value: decimalFix(row.kg17.total, true) }
+          //      ], color: COLORS.KG_17
+          // },
           {
                key: 'kg21', cells: [
                     { value: decimalFix(row.kg21.cylinders) },

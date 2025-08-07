@@ -194,6 +194,13 @@ export const Report = ({ isLogged }) => {
           let grandTotalPaid = 0;
           let grandGasQuantity = 0;
           let grandPendingQuantity = 0;
+
+          let grandTotal_4Kg = 0;
+          let grandTotal_12Kg = 0;
+          let grandTotal_15Kg = 0;
+          let grandTotal_17Kg = 0;
+          let grandTotal_21Kg = 0;
+
           return (
                <Stack
                     sx={{

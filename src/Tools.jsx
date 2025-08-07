@@ -37,6 +37,9 @@ export const formatDateYYMMDD = (date) => {
 
 //just add param to end of url
 export const updateUrlParams = (dateStart, dateEnd, customerId, deliverBoyId) => {
+
+     //console.log(dateStart, dateEnd, customerId, deliverBoyId);
+
      // Grab everything after the #
      const fullHash = window.location.hash.substring(1);            // e.g. "/admin/deliveryHistory?foo=bar"
      const [path, rawQuery = ''] = fullHash.split('?');             // separate path and query
@@ -46,12 +49,15 @@ export const updateUrlParams = (dateStart, dateEnd, customerId, deliverBoyId) =>
      // Set or delete each filter
      const updates = { dateStart, dateEnd, customerId, deliverBoyId };
      Object.entries(updates).forEach(([key, val]) => {
-          if (val == null || val === '') {
+          console.log(key, val);
+          if (val == null || val === '' || val === undefined) {
                params.delete(key);
           } else {
                params.set(key, val);
           }
      });
+
+     console.log(params.toString());
 
      // Rebuild and replace the hash (no history entry)
      const newHash = path + (params.toString() ? `?${params}` : '');

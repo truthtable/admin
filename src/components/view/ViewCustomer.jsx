@@ -21,7 +21,10 @@ import {
      ListItem,
      ListItemButton,
      ListItemContent,
-     Table
+     Table,
+     FormControl,
+     FormLabel,
+     Checkbox
 } from "@mui/joy";
 import TableHead from "../table/TableHead.jsx";
 import axios from "axios";
@@ -45,6 +48,7 @@ import {
      resetConnection
 } from '../../redux/connectionSlice.js'
 import { set } from "firebase/database";
+let CUSTOMERS = [];
 const ViewCustomer = () => {
 
      const dispatch = useDispatch();
@@ -82,6 +86,8 @@ const ViewCustomer = () => {
                     });
                }
 
+               CUSTOMERS.push(...temp);
+
                temp.forEach((item) => {
                     data.push(makeRow(item, loadConnection));
                });
@@ -115,6 +121,8 @@ const ViewCustomer = () => {
      const [openNewConnection, setOpenNewConnection] = useState(false);
      const NewConnectionForm = () => {
           const [gasIdList, setGasIdList] = useState(new Array());
+          const [noGas, setNoGas] = useState(true);
+          const [noAccessory, setNoAccessory] = useState(true);
           const addGasIdList = (id, qty, price) => {
                if (qty < 1) {
                     alert("Quantity should be greater than 0");
@@ -144,6 +152,7 @@ const ViewCustomer = () => {
           const [accessory, setAccessory] = useState("");
           const [price, setPrice] = useState("");
           const [accessoryList, setAccessoryList] = useState(new Array());
+          const [loadingSubmit, setLoadingSubmit] = useState(false);
           const addAccessory = (accessory, price) => {
                if (price < 1) {
                     alert("Price should be greater than 0");
@@ -199,10 +208,7 @@ const ViewCustomer = () => {
                                    (e) => {
                                         e.preventDefault();
 
-                                        if (gasIdList.length == 0) {
-                                             alert("Please select a gas");
-                                             return;
-                                        }
+                                        setLoadingSubmit(true);
 
                                         //get the form data in json format
                                         const formData = new FormData(e.target);
@@ -212,16 +218,33 @@ const ViewCustomer = () => {
                                         })
                                         //console.log(t)
 
+                                        let diaryNo = t.diary_no;
+                                        if (diaryNo.length > 0) {
+                                             //check if diary number is already taken
+                                             let isTaken = false;
+                                             CUSTOMERS.forEach((customer) => {
+                                                  if (customer.diaryNumber == diaryNo) {
+                                                       isTaken = true;
+                                                  }
+                                             });
+                                             if (isTaken) {
+                                                  alert("Diary Number already taken");
+                                                  setLoadingSubmit(false);
+                                                  return;
+                                             }
+                                        }
+
                                         let data = JSON.stringify({
                                              "name": t.name,
                                              "phone_no": t.phone,
                                              "address": t.address,
-                                             "gas": gasIdList,
+                                             "gas": noGas ? [] : gasIdList,
                                              "diaryNumber": t.diary_no,
                                              "aadhar_card_no": t.aadhar_card_no,
-                                             "accessories": accessoryList
+                                             "accessories": noAccessory ? [] : accessoryList
                                         });
                                         console.log(data)
+
                                         const token = getLoginData()?.token;
                                         let config = {
                                              method: 'post',
@@ -233,14 +256,25 @@ const ViewCustomer = () => {
                                              },
                                              data: data
                                         };
-                                        setOpenNewConnection(false);
+
                                         axios.request(config)
                                              .then((response) => {
-                                                  //console.log(JSON.stringify(response.data));
-                                                  dispatch(fetchCustomerData());
+                                                  console.log(JSON.stringify(response.data));
+                                                  if (response.data.success == true) {
+                                                       dispatch(fetchCustomerData());
+                                                       setOpenNewConnection(false);
+                                                       setLoadingSubmit(false);
+                                                  } else {
+                                                       alert("Error Adding Customer");
+                                                       console.log(response.data);
+                                                       setLoadingSubmit(false);
+                                                  }
+
                                              })
                                              .catch((error) => {
+                                                  alert("Error Adding Customer");
                                                   console.log(error);
+                                                  setLoadingSubmit(false);
                                              });
 
                                    }
@@ -249,46 +283,62 @@ const ViewCustomer = () => {
                               <Stack spacing={2}
                                    direction={"column"}
                               >
-                                   <Input placeholder="Name" name="name" required />
-                                   <Input
-                                        placeholder="Phone"
-                                        name="phone"
-                                        required
-                                        type="tel"
-                                        onChange={(e) => {
+                                   <FormControl>
+                                        <FormLabel>Name</FormLabel>
+                                        <Input placeholder="Name" name="name" required />
+                                   </FormControl>
+                                   <FormControl>
+                                        <FormLabel>Phone Number</FormLabel>
+                                        <Input
+                                             placeholder="Phone"
+                                             name="phone"
+                                             required
+                                             type="tel"
+                                             onChange={(e) => {
 
-                                             //remove + from phone number if present
-                                             if (e.target.value.startsWith('+')) {
-                                                  e.target.value = e.target.value.substring(1);
-                                             }
+                                                  //remove + from phone number if present
+                                                  if (e.target.value.startsWith('+')) {
+                                                       e.target.value = e.target.value.substring(1);
+                                                  }
 
-                                             const value = e.target.value;
-                                             // Allow only digits and + symbol
-                                             const sanitized = value.replace(/[^\d+]/g, '');
-                                             e.target.value = sanitized;
-                                        }}
-                                        onBlur={(e) => {
-                                             const value = e.target.value.trim();
-                                             const patterns = [
-                                                  /^\+91\d{10}$/, // +919876543210 (13 characters)
-                                                  /^91\d{10}$/,   // 919876543210 (12 characters)
-                                                  /^\d{10}$/      // 9876543210 (10 characters)
-                                             ];
+                                                  const value = e.target.value;
+                                                  // Allow only digits and + symbol
+                                                  const sanitized = value.replace(/[^\d+]/g, '');
+                                                  e.target.value = sanitized;
+                                             }}
+                                             onBlur={(e) => {
+                                                  const value = e.target.value.trim();
+                                                  const patterns = [
+                                                       /^\+91\d{10}$/, // +919876543210 (13 characters)
+                                                       /^91\d{10}$/,   // 919876543210 (12 characters)
+                                                       /^\d{10}$/      // 9876543210 (10 characters)
+                                                  ];
 
-                                             const isValid = patterns.some(pattern => pattern.test(value));
+                                                  const isValid = patterns.some(pattern => pattern.test(value));
 
-                                             if (!isValid && value.length > 0) {
-                                                  alert('Phone number must be in one of these formats:\n+919876543210 (13 digits)\n919876543210 (12 digits)\n9876543210 (10 digits)');
-                                                  // Remove the focus() call to prevent infinite loop
-                                             }
-                                        }}
-                                        pattern="^(\+91\d{10}|91\d{10}|\d{10})$"
-                                        title="Phone number must be: +919876543210 or 919876543210 or 9876543210"
-                                   />
-                                   <Input placeholder="Address" name="address" required />
-                                   <Input placeholder="Aadhar Card No." type="number" name="aadhar_card_no" required />
-                                   <Input placeholder="Diary No." type="number" name="diary_no" required />
-                                   <List>
+                                                  if (!isValid && value.length > 0) {
+                                                       alert('Phone number must be in one of these formats:\n+919876543210 (13 digits)\n919876543210 (12 digits)\n9876543210 (10 digits)');
+                                                       // Remove the focus() call to prevent infinite loop
+                                                  }
+                                             }}
+                                             pattern="^(\+91\d{10}|91\d{10}|\d{10})$"
+                                             title="Phone number must be: +919876543210 or 919876543210 or 9876543210"
+                                        />
+                                   </FormControl>
+                                   <FormControl>
+                                        <FormLabel>Address</FormLabel>
+                                        <Input placeholder="Address" name="address" required />
+                                   </FormControl>
+                                   <FormControl>
+                                        <FormLabel>Aadhar Card No.</FormLabel>
+                                        <Input placeholder="Aadhar Card No." type="number" name="aadhar_card_no" />
+                                   </FormControl>
+                                   <FormControl>
+                                        <FormLabel>Diary No.</FormLabel>
+                                        <Input placeholder="Diary No." type="number" name="diary_no" />
+                                   </FormControl>
+                                   <FormLabel sx={{ opacity: noGas ? 0.5 : 1 }}>Gas List</FormLabel>
+                                   <List sx={{ display: noGas ? "none" : "block" }}>
                                         {gasIdList.map((item, index) => {
                                              const gas = gasList.find((gas) => gas.id === item.id);
                                              return <ListItem
@@ -330,6 +380,7 @@ const ViewCustomer = () => {
                                    <Stack
                                         direction={"row"}
                                         gap={1}
+                                        sx={{ display: noGas ? "none" : "flex" }}
                                    >
                                         <Select sx={{ flexGrow: 1 }}
                                              placeholder="Select Gas"
@@ -365,7 +416,10 @@ const ViewCustomer = () => {
                                              }}
                                         >Add Gas</Button>
                                    </Stack>
-                                   <List>
+                                   <FormLabel sx={{ opacity: noAccessory ? 0.5 : 1 }}>Accessory List</FormLabel>
+                                   <List
+                                        sx={{ display: noAccessory ? "none" : "block" }}
+                                   >
                                         {accessoryList.map((item, index) => {
                                              return <ListItem
                                                   key={"accessory_" + index}
@@ -403,7 +457,7 @@ const ViewCustomer = () => {
                                         })
                                         }
                                    </List>
-                                   <Stack direction={"row"} gap={1}>
+                                   <Stack direction={"row"} gap={1} sx={{ display: noAccessory ? "none" : "flex" }}>
                                         <Input sx={{ flexGrow: 1 }} placeholder="Accessory" value={accessory}
                                              onChange={(e) => {
                                                   setAccessory(e.target.value)
@@ -420,8 +474,65 @@ const ViewCustomer = () => {
                                              }}
                                         >Add Accessory</Button>
                                    </Stack>
-                                   <Button type="submit"
-                                   >Add Customer</Button>
+                                   <Divider sx={{ opacity: 0, m: 1 }} />
+                                   <Stack direction={"row"} gap={1}>
+                                        <Stack
+                                             gap={1}
+                                             sx={{
+                                                  flexDirection: { xs: 'column', md: 'row' },
+                                                  alignItems: { xs: 'flex-start', md: 'center' }
+                                             }}
+                                        >
+                                             <Checkbox
+                                                  label=""
+                                                  size="lg"
+                                                  checked={noGas}
+                                                  onChange={(e) => {
+                                                       setNoGas(e.target.checked);
+                                                  }}
+                                             />
+                                             <span style={{
+                                                  fontWeight: "bold",
+                                                  color: "black",
+                                                  minWidth: { xs: '100%', md: 'auto' },
+                                                  whiteSpace: 'nowrap'
+                                             }}>
+                                                  No Gas :
+                                             </span>
+
+                                             <Stack
+                                                  gap={1}
+                                                  sx={{
+                                                       flexDirection: { xs: 'column', md: 'row' },
+                                                       alignItems: { xs: 'flex-start', md: 'center' }
+                                                  }}
+                                             >
+                                                  <Checkbox
+                                                       label=""
+                                                       size="lg"
+                                                       checked={noAccessory}
+                                                       onChange={(e) => {
+                                                            setNoAccessory(e.target.checked);
+                                                       }}
+                                                  />
+                                                  <span style={{
+                                                       fontWeight: "bold",
+                                                       color: "black",
+                                                       minWidth: { xs: '100%', md: 'auto' },
+                                                       whiteSpace: 'nowrap'
+                                                  }}>
+                                                       No Accessory :
+                                                  </span>
+                                             </Stack>
+                                        </Stack>
+                                   </Stack>
+                                   <Divider sx={{ opacity: 0, m: 1 }} />
+                                   {
+                                        loadingSubmit ? <LinearProgress /> : <>
+                                             <Button type="submit"
+                                             >Add Customer</Button>
+                                        </>
+                                   }
                               </Stack>
                          </form>
                     </Sheet>
