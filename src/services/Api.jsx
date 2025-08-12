@@ -82,7 +82,6 @@ export const axiosInstance = () => {
                     token = authToken
                }
                //console.log({ optToken, authToken, token });
-               //console.log("Token : " + token);
                if (token) {
                     config.headers['Authorization'] = `Bearer ${token}`;
                }
