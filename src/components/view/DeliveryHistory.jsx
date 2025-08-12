@@ -326,7 +326,6 @@ export default function deliveryHistory() {
                     const cylinder_list = delivery.gas_deliveries.map((gas) => {
 
                          if (gas.kg == 4) {
-                              //console.log("4kg", gas);
 
                               if (gas.is_empty == 0) {
                                    cyl4KgQty = gas.quantity
