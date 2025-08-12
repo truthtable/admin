@@ -1,4 +1,4 @@
-import { Box, Button, Container, Divider, Input, LinearProgress, Modal, ModalClose, Sheet, Stack, Table, Typography } from "@mui/joy";
+import { Box, Button, Container, Divider, IconButton, Input, LinearProgress, Modal, ModalClose, Sheet, Stack, Table, Typography } from "@mui/joy";
 import { BsSearch } from "react-icons/bs";
 import DataTable from "../table/DataTable.jsx";
 import TableHead from "../table/TableHead.jsx";
@@ -8,11 +8,13 @@ import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchGetData } from "../../state/GetData.jsx";
 import React, { useEffect, useState } from "react";
-import { GET_COURIER_BOY_DATA, getLoginData, UPDATE_COURIER_BOY, UPDATE_USER } from "../../services/Api.jsx";
+import { GET_COURIER_BOY_DATA, getLoginData, UPDATE_COURIER_BOY, UPDATE_USER, URL as API } from "../../services/Api.jsx";
 import UpdateCustomerCell, { NUMBER, TEXT } from "../edit/UpdateCustomerCell.jsx";
 import DeliveryBoyCard from "./DeliveryBoyCard.jsx";
 import { Link } from "react-router-dom";
 import { updateUrlParams } from "../../Tools.jsx";
+import { loginUpdatedReset, updateLoginData } from "../../redux/authSlice.js";
+import { FaCheck } from "react-icons/fa";
 
 export default function DeliveryBoyDetails() {
      const dispatch = useDispatch();
@@ -20,10 +22,12 @@ export default function DeliveryBoyDetails() {
 
      const update = useSelector((state) => state.updateCustomer);
 
+     const loading = useSelector((state) => state.loginV2.isLoading);
+     const updated = useSelector((state) => state.loginV2.updated);
+
      const rows = [];
      const deliveryBoyData = []
 
-     //
      const [startDate, setStartDate] = React.useState(() => {
           const firstDateOfCurrentMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 
@@ -55,7 +59,7 @@ export default function DeliveryBoyDetails() {
      // updateUrlParams({
      //      endDate
      // });
-     console.log(startDate, endDate)
+     //console.log(startDate, endDate)
 
      //UPDATE URL
      let url = window.location.href;
@@ -63,48 +67,31 @@ export default function DeliveryBoyDetails() {
      url = url + `?&start_date=${startDate}&end_date=${endDate}`;
      window.location.href = url;
 
-
      let GET_COURIER_BOY_DATA_URL = "";
      GET_COURIER_BOY_DATA_URL = GET_COURIER_BOY_DATA + "?" + new URLSearchParams({
           startDate: startDate,
           endDate: endDate,
      }).toString();
-     console.log(GET_COURIER_BOY_DATA_URL)
-     //replace the url with the new one in browser
-
-     //
-
-
      if (data.data !== null) {
-          if (data.data.data.length > 0 && stripUrlParams(data.url) == stripUrlParams(GET_COURIER_BOY_DATA)) {
-               data.data.data.forEach((item) => {
-                    let expenses = 0;
-                    try {
-                         let temp = data.data.expenses.find((element) => {
-                              if (element.user_id === item.id) {
-                                   expenses = element.expense;
-                                   return true;
-                              }
-                              return false;
-                         })
-                         expenses = temp.total_expense
-                    } catch (e) {
-                         expenses = 0;
+          if (data.data.length > 0 && stripUrlParams(data.url) == stripUrlParams(GET_COURIER_BOY_DATA)) {
+               data.data.forEach((item) => {
+                    if (item.login == null) {
+                         return;
                     }
-                    console.log('expenses', expenses);
-                    rows.push(makeRow(item, expenses));
+                    console.log(item);
+                    rows.push(makeRow(item, item.expenses_sum_amount));
                     deliveryBoyData.push(item);
                });
           }
      }
-
-     //console.log(data);
-
      const get = () => {
           //console.log(GET_COURIER_BOY_DATA_URL);
           dispatch(fetchGetData(GET_COURIER_BOY_DATA_URL))
      }
-
+     if (updated) {
+          get();
+          dispatch(loginUpdatedReset());
+     }
      useEffect(() => {
 
           if (data.data == null || new URL(data.url).pathname != new URL(GET_COURIER_BOY_DATA_URL).pathname) {
@@ -181,6 +168,7 @@ export default function DeliveryBoyDetails() {
                                                   "name": t.name,
                                                   "username": t.username,
                                                   "password": t.password,
+                                                  "phone": t.phone,
                                              });
 
                                              console.log(data);
@@ -192,7 +180,7 @@ export default function DeliveryBoyDetails() {
                                              let config = {
                                                   method: 'post',
                                                   maxBodyLength: Infinity,
-                                                  url: URL + 'api/createDeliveryBoy',
+                                                  url: API + 'api/createDeliveryBoy',
                                                   headers: {
                                                        'Content-Type': 'application/json',
                                                        'Authorization': `Bearer ${token}`,
@@ -216,6 +204,7 @@ export default function DeliveryBoyDetails() {
                                         direction={"column"}
                                    >
                                         <Input placeholder="Full Name" name="name" required />
+                                        <Input placeholder="Phone Number" name="phone" required />
                                         <Input placeholder="User Name" name="username" required />
                                         <Input placeholder="Password" name="password" required />
                                         <Button type="submit"
@@ -240,31 +229,6 @@ export default function DeliveryBoyDetails() {
                }}
           >
                <Stack direction="row" mb={1} spacing={1} justifyContent="flex-end">
-                    {/* <Input placeholder="Name" />
-                    <Button startDecorator={<BsSearch />}>Search</Button> */}
-                    {/* <Stack gap={1} direction={"row"} alignContent={"center"} alignItems={"center"} >
-                         <span style={{ fontWeight: "bold", color: "black" }}>Date&nbsp;Start&nbsp;:&nbsp;</span>
-                         <Input type="date" sx={{ width: "100%" }}
-                              onChange={(event) => {
-                                   setStartDate(event.target.value)
-                              }}
-                              defaultValue={startDate}
-                         />
-                    </Stack>
-                    <Stack gap={1} direction={"row"} alignContent={"center"} alignItems={"center"} mr={2}>
-                         <span style={{ fontWeight: "bold", color: "black" }}>End&nbsp;Start&nbsp;:&nbsp;</span>
-                         <Input type="date" sx={{ width: "100%" }}
-                              onChange={(event) => {
-                                   setEndDate(event.target.value)
-                              }}
-                              defaultValue={endDate}
-                         />
-                    </Stack>
-                    <Stack gap={1} direction={"row"} alignContent={"center"} alignItems={"center"} mr={2}>
-                         <Button
-                         //onClick={get}
-                         >OK</Button>
-                    </Stack> */}
                     <Stack gap={1} direction={"row"} alignContent={"center"} alignItems={"center"} >
                          <span style={{ fontWeight: "bold", color: "black" }}>Date&nbsp;Start&nbsp;:&nbsp;</span>
                          <Input type="date" sx={{ width: "100%" }}
@@ -303,51 +267,15 @@ export default function DeliveryBoyDetails() {
                     <Divider sx={{ flexGrow: 1, opacity: 0 }} />
                     <NewBoy />
                </Stack>
-
-               {/* <DataTable
-                    thead={[
-                         // <TableHead>Name</TableHead>,
-                         // <TableHead>Name</TableHead>,
-                         <TableHead>User ID</TableHead>,
-                         <TableHead>Password</TableHead>,
-                         <TableHead>Expense</TableHead>,
-                         // <TableHead>Truck</TableHead>,
-                    ]}
-                    tbody={rows}
-                    loading={data.isLoading}
-               /> */}
-               <div style={{ display: data.isLoading ? "block" : "none" }}>
+               <div style={{ display: (data.isLoading || loading) ? "block" : "none" }}>
                     <LinearProgress color="primary" variant="soft" />
                </div>
-               {/* <Box
-                    sx={{
-                         display: 'flex',
-                         justifyContent: 'center',
-                         flexWrap: 'wrap',
-                         gap: 1,
-                         marginTop: 5
-
-                    }}
-               >
-                    {
-                         deliveryBoyData.map((item, index) => {
-                              return (
-                                   <DeliveryBoyCard
-                                        key={index}
-                                        title={item.username}
-                                        id={item.id}
-                                        expence={[]}
-                                   />
-                              )
-                         }
-                         )
-                    }
-               </Box> */}
                <Table>
                     <thead>
                          <tr>
                               <th>Username</th>
                               <th>Password</th>
+                              <th>Number</th>
                               <th colSpan={3}>Expense : <i>{getCurrentMonthString()}</i></th>
                          </tr>
                     </thead>
@@ -400,43 +328,54 @@ export default function DeliveryBoyDetails() {
 
 function makeRow(item, expense) {
      //console.log(item);
+     const dispatch = useDispatch();
      return [
-
+          <UpdateLoginInfo
+               value={item.login.username}
+               onUpdate={(val) => {
+                    dispatch(
+                         updateLoginData({
+                              username: val,
+                              id: item.login.id,
+                         })
+                    )
+               }}
+          />,
+          <UpdateLoginInfo
+               value={item.login.password}
+               onUpdate={(val) => {
+                    dispatch(
+                         updateLoginData({
+                              password: val,
+                              id: item.login.id,
+                         })
+                    )
+               }}
+          />,
+          <UpdateLoginInfo
+               value={item.login.phone}
+               onUpdate={(val) => {
+                    dispatch(
+                         updateLoginData({
+                              phone: val,
+                              id: item.login.id,
+                         })
+                    )
+               }}
+          />,
+          //item.username,
           // <UpdateCustomerCell
-          //      updateUser={true}
+          //      updateUser={false}
           //      key={item.id}
           //      userId={item.userId}
           //      custId={item.id}
-          //      text={item.name}
+          //      text={item.password}
+          //      value={item.password}
+          //      table={UPDATE_COURIER_BOY}
           //      type={TEXT}
-          //      value={item.name}
-          //      table={UPDATE_USER}
-          //      name="name"
+          //      name='password'
           // />,
-          //item.name,
-          <UpdateCustomerCell
-               updateUser={false}
-               key={item.id}
-               userId={item.userId}
-               custId={item.id}
-               text={item.username}
-               value={item.username}
-               type={TEXT}
-               table={UPDATE_COURIER_BOY}
-               name="username"
-          />,
-          //item.username,
-          <UpdateCustomerCell
-               updateUser={false}
-               key={item.id}
-               userId={item.userId}
-               custId={item.id}
-               text={item.password}
-               value={item.password}
-               table={UPDATE_COURIER_BOY}
-               type={TEXT}
-               name='password'
-          />,
+          // item.login.username,
           <span
                style={{
                     fontSize: '1.2em',
@@ -509,3 +448,50 @@ function stripUrlParams(url) {
      return urlObj.toString();
 }
 
+const UpdateLoginInfo = ({
+     value,
+     onUpdate,
+}) => {
+     const [val, setVal] = useState(value);
+     const [sent, setSent] = useState(false);
+     return <>
+          <Input
+               type="text"
+               value={val}
+               onChange={(e) => {
+                    setVal(e.target.value);
+               }}
+               onBlur={(e) => {
+                    if (val != value) {
+                         let ok = confirm(`Update ${value} to ${val} ?`);
+                         if (ok && !sent) {
+                              onUpdate(val);
+                         }
+                         else {
+                              setVal(value);
+                         }
+                    }
+               }}
+               sx={{
+                    //remove the border
+                    border: "none",
+
+               }}
+               endDecorator={
+                    (val != value) && (<IconButton
+                         onClick={() => {
+                              setSent(true);
+                         }}
+                         sx={{
+                              ml: 1,
+                              "&:hover": {
+                                   backgroundColor: "rgb(75 112 245 / 25%)",
+                              },
+                         }}
+                    >
+                         <FaCheck />
+                    </IconButton>)
+               }
+          />
+     </>
+};

@@ -29,6 +29,7 @@ const authSlice = createSlice({
           errorMessage: "",
           checkLogin: false,
           networkError: false,
+          updated: false,
      },
      reducers: {
           loginInial(state) {
@@ -43,6 +44,7 @@ const authSlice = createSlice({
                state.isError = false;
                state.checkLogin = false;
                state.networkError = false;
+               state.updated = false;
           },
           loginSuccess: (state, action) => {
                state.isLoading = false;
@@ -51,6 +53,10 @@ const authSlice = createSlice({
                state.isError = false;
                state.errorMessage = "";
                state.networkError = false;
+               state.updated = true;
+          },
+          loginUpdatedReset: (state) => {
+               state.updated = false;
           },
           loginFailure: (state, action) => {
                state.isLoading = false;
@@ -102,6 +108,7 @@ export const {
      logout,
      networkError,
      clearError,
+     loginUpdatedReset,
 } = authSlice.actions;
 
 const API = LOGIN;
@@ -171,6 +178,7 @@ export const validateOtp = (otp) => async (dispatch) => {
           console.log("validateLogin : ", error);
           dispatch(loginFailure(error.response?.data?.message || "OTP failed"));
      }
+     dispatch(loginSuccess(null));
 };
 //! DELETE
 export const validateLogin_X = () => async (dispatch) => {
@@ -210,6 +218,19 @@ export const validateLogin_X = () => async (dispatch) => {
                dispatch(logout());
           }
      }
+};
+//update the user data
+export const updateLoginData = (data) => async (dispatch) => {
+     dispatch(loginStart());
+     try {
+          const response = await axios().post(URL + "api/updateLogin", data);
+          console.log(response.data);
+          //alert if not success
+     } catch (error) {
+          console.error(error);
+          alert(error.response.data.message);
+     }
+     dispatch(loginSuccess(null));
 };
 
 export default authSlice.reducer;
