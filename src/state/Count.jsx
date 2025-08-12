@@ -13,7 +13,7 @@ export const fetchCount = createAsyncThunk(
           };
           let errorMessage = "";
 
-          const token = getState().login.token;
+          const token = sessionStorage.getItem("authToken");
 
           //console.log(token);
           try {

@@ -68,8 +68,23 @@ const authSlice = createSlice({
                state.data = null;
                state.networkError = true;
           },
+          clearError: (state) => {
+               state.isLoading = false;
+               state.isError = false;
+               state.errorMessage = "";
+               state.checkLogin = false;
+               state.data = null;
+               state.networkError = false;
+          },
           logout: (state) => {
                state.data = null;
+               state.isLoading = false;
+               state.isError = false;
+               state.errorMessage = "";
+               state.checkLogin = false;
+               state.networkError = false;
+          },
+          otpVerified: (state) => {
                state.isLoading = false;
                state.isError = false;
                state.errorMessage = "";
@@ -86,6 +101,7 @@ export const {
      loginFailure,
      logout,
      networkError,
+     clearError,
 } = authSlice.actions;
 
 const API = LOGIN;
@@ -94,6 +110,8 @@ export const login = (username, password) => async (dispatch) => {
      dispatch(loginStart());
      try {
           //check if the username and password are empty
+          sessionStorage.removeItem("otpToken");
+          sessionStorage.removeItem("authToken");
           if (!username || !password) {
                return dispatch(
                     loginFailure("Username and Password are required"),
@@ -105,12 +123,11 @@ export const login = (username, password) => async (dispatch) => {
                username,
                password,
           });
-          const data = {
-               data: response.data,
-               timeStamps: new Date(),
-          };
-          if (response.data?.loginStatus || false) {
-               localStorage.setItem("userData", JSON.stringify(data));
+          console.log(response.data);
+          if (response.data?.loginStatus) {
+               //localStorage.setItem("userData", JSON.stringify(data));
+               //console.log(data.data.token);
+               sessionStorage.setItem("otpToken", response.data.token);
                dispatch(loginSuccess(response.data));
           } else {
                dispatch(loginFailure(response.data?.message || "Login failed"));
@@ -136,8 +153,27 @@ export const login = (username, password) => async (dispatch) => {
           }
      }
 };
-
-export const validateLogin = () => async (dispatch) => {
+export const validateOtp = (otp) => async (dispatch) => {
+     try {
+          dispatch(loginStart());
+          const response = await axios().post("verify-otp", { otp });
+          console.log(response.data);
+          //sessionStorage.removeItem('otpToken')
+          //dispatch(otpVerified(response.data));
+          if (response.data.success) {
+               sessionStorage.setItem("authToken", response.data.token);
+               sessionStorage.removeItem("otpToken");
+               //reload window
+               window.location.reload();
+          }
+          console.log(response);
+     } catch (error) {
+          console.log("validateLogin : ", error);
+          dispatch(loginFailure(error.response?.data?.message || "OTP failed"));
+     }
+};
+//! DELETE
+export const validateLogin_X = () => async (dispatch) => {
      try {
           const response = await axios().get("check");
      } catch (error) {
@@ -145,8 +181,8 @@ export const validateLogin = () => async (dispatch) => {
           let loginData = getLoginData();
           const token = loginData?.token;
           localData = JSON.stringify(loginData);
-          console.log("validateLogin : " + loginData);
-          console.log("token : " + token);
+          //console.log("validateLogin : " + loginData);
+          //console.log("token : " + token);
           dispatch(
                loginFailure(error.response?.data?.message || "Login failed"),
           );

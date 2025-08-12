@@ -245,7 +245,7 @@ const ViewCustomer = () => {
                                         });
                                         console.log(data)
 
-                                        const token = getLoginData()?.token;
+                                        const token = sessionStorage.getItem("authToken");
                                         let config = {
                                              method: 'post',
                                              maxBodyLength: Infinity,

@@ -6,7 +6,7 @@ export const fetchGasData = createAsyncThunk("gas/fetchGasData", async () => {
      let data = null;
      let errorMessage = false;
      try {
-          const token = getLoginData()?.token;
+          const token = sessionStorage.getItem("authToken");
           const response = await fetch(GAS_DATA, {
                method: "get",
                headers: new Headers({

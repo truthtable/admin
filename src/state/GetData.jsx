@@ -13,7 +13,7 @@ export const fetchGetData = createAsyncThunk(
           }).toString();
           console.log(turl);
           try {
-               const token = getLoginData()?.token;
+               const token = sessionStorage.getItem("authToken");
                const response = await fetch(turl, {
                     method: "get",
                     headers: new Headers({

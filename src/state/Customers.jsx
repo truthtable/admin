@@ -8,7 +8,7 @@ export const fetchCustomerData = createAsyncThunk(
           let data = null;
           let errorMessage = "";
           try {
-               const token = getLoginData()?.token;
+               const token = sessionStorage.getItem("authToken");
                const response = await fetch(CUSTOMER_DATA + "?isAdmin=" + true, {
                     method: "get",
                     headers: new Headers({

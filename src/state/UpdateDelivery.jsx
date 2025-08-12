@@ -15,7 +15,7 @@ export const updateDelivery = createAsyncThunk(
           }
 
           try {
-               const token = getLoginData()?.token;
+               const token = sessionStorage.getItem("authToken");
                const response = await fetch(UPDATE_DELIVERY + data.id, {
                     method: "put",
                     headers: new Headers({

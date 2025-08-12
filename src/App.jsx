@@ -31,7 +31,7 @@ import {
      // ViewAdmin,
      ViewCustomer,
 } from "./crud";
-import { Box, Button, Card, Chip, CssVarsProvider, Input, LinearProgress, Sheet, Stack, Typography, } from "@mui/joy";
+import { Box, Button, Card, Chip, CircularProgress, CssVarsProvider, Input, LinearProgress, Sheet, Stack, Typography, } from "@mui/joy";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchLogin } from "./state/LoginAPI";
 // import { fetchCheckLogin } from "./state/CheckLogin";
@@ -43,18 +43,27 @@ import { Report } from "./components/view/Report.jsx";
 // import DeliveryHistory from "./components/view/DeliveryHistory.jsx";
 import deliveryHistory from "./components/view/DeliveryHistory.jsx";
 import { FcHighPriority } from "react-icons/fc";
-import { login, validateLogin } from "./redux/authSlice.js";
+import { clearError, login, validateOtp } from "./redux/authSlice.js";
 
 function App() {
+
+     //sessionStorage.setItem("authToken", "hello world");
+     //sessionStorage.removeItem('authToken');
+     //const token = sessionStorage.getItem("authToken");
+     //console.log(token);
 
      const dispatch = useDispatch();
 
      const loginData = useSelector((state) => state.loginV2);
 
-     //let isLogoded = false;
-     let isLogoded = loginData?.data?.loginStatus || false;
+     const [otp, setOtp] = useState("");
+     let isLogoded = sessionStorage?.getItem("authToken") !== null;
+     let otpVerification = sessionStorage?.getItem("otpToken") !== null;
+     console.log(otpVerification, isLogoded)
+     // ...existing code...
+     //let isLogoded = loginData?.data?.loginStatus || false;
 
-     console.log(loginData);
+     console.log(isLogoded);
 
      //get url from window.location
      const url = new URL(window.location.href);
@@ -74,6 +83,7 @@ function App() {
      if (loginData.isError) {
           //console.log(loginData.errorMessage);
           alert(loginData.errorMessage);
+          dispatch(clearError());
           //2 sec delay
           //dispatch(validateLogin());
 
@@ -238,9 +248,9 @@ function App() {
           </Box>
      }
 
-     if (isLogoded) {
-          dispatch(validateLogin());
-     }
+     // if (isLogoded) {
+     //      dispatch(validateLogin());
+     // }
 
      return (
           <CssVarsProvider>
@@ -395,11 +405,76 @@ function App() {
                                              </Routes>
                                         </Box>
                                    </Stack>
-                              </HashRouter> : <LoginUI />
+                              </HashRouter> : (
+                                   (!otpVerification) ? <LoginUI /> : <>
+                                        <Stack
+                                             sx={{ flexGrow: 1, overflow: "hidden" }}
+                                             direction="column"
+                                             justifyContent="flex-start"
+                                             alignItems="center"
+                                             gap={1}
+                                             mt={15}
+                                        >
+                                             <Input
+                                                  sx={{
+                                                       width: "420px",
+                                                  }}
+                                                  placeholder="OTP"
+                                                  size="lg"
+                                                  variant="soft"
+                                                  type="number"
+                                                  onChange={(event) => {
+                                                       setOtp(event.target.value);
+                                                  }}
+                                             />
+                                             <CircularProgress
+                                                  sx={{
+                                                       display: loginData.isLoading ? "block" : "none",
+                                                  }}
+                                             />
+                                             <Stack
+                                                  sx={{
+                                                       flexGrow: 1, overflow: "hidden",
+                                                       display: loginData.isLoading ? "none" : "flex",
+                                                  }}
+                                                  direction="row"
+                                                  justifyContent="center"
+                                                  alignItems="flex-start"
+                                                  gap={1}
+                                             >
+                                                  <Button
+                                                       sx={{
+                                                            width: "120px",
+                                                       }}
+                                                       color="warning"
+                                                       variant="soft"
+                                                       onClick={function () {
+                                                            sessionStorage.removeItem("authToken");
+                                                            sessionStorage.removeItem("otpToken");
+                                                            //reaload the page
+                                                            window.location.reload();
+                                                       }}
+                                                  >Cancel</Button>
+                                                  <Button
+                                                       sx={{
+                                                            width: "120px",
+                                                       }}
+                                                       color="primary"
+                                                       variant="soft"
+                                                       onClick={function () {
+                                                            dispatch(validateOtp(otp));
+                                                       }}
+                                                  >
+                                                       Verify OTP
+                                                  </Button>
+                                             </Stack>
+                                        </Stack>
+                                   </>
+                              )
                          )
                     }
                </Stack>
-          </CssVarsProvider>
+          </CssVarsProvider >
 
      );
 }

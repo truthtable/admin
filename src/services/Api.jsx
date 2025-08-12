@@ -64,7 +64,6 @@ export const getLoginData = () => {
      return localData;
 }
 
-
 const axiosInstance_ = axios.create({
      baseURL: URL + 'api/',
 });
@@ -74,7 +73,15 @@ export const axiosInstance = () => {
      // Add a request interceptor to attach the token
      axiosInstance_.interceptors.request.use(
           (config) => {
-               const token = getLoginData()?.token;
+               const optToken = sessionStorage.getItem("otpToken");
+               const authToken = sessionStorage.getItem("authToken");
+               let token = null
+               if (optToken) {
+                    token = optToken
+               } if (authToken) {
+                    token = authToken
+               }
+               //console.log({ optToken, authToken, token });
                //console.log("Token : " + token);
                if (token) {
                     config.headers['Authorization'] = `Bearer ${token}`;

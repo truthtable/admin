@@ -37,7 +37,7 @@ const GasList = () => {
           setLoading(true);
           try {
 
-               const token = getLoginData()?.token;
+               const token = sessionStorage.getItem("authToken");
 
                const res = await fetch(api, {
                     method: "get",

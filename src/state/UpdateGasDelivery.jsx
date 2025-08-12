@@ -10,7 +10,7 @@ export const gasDeliverys = createAsyncThunk(
           let errorMessage = "";
 
           try {
-               const token = getLoginData()?.token;
+               const token = sessionStorage.getItem("authToken");
                if (data.opration == "insert") {
                     const response = await fetch(INSERT_GAS_DELIVERY, {
                          method: "post",

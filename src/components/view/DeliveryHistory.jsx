@@ -385,7 +385,7 @@ export default function deliveryHistory() {
                     let totalTotal = total12Kg + total15Kg + total17Kg + total21Kg + total4Kg
                     let received = totalCash + totalOnline
                     let balance = totalTotal - received
-                    console.log({ cyl4KgMt, cyl4KgRate, cyl4KgQty, total4Kg, received, balance });
+                    //console.log({ cyl4KgMt, cyl4KgRate, cyl4KgQty, total4Kg, received, balance });
                     // if (balance < 0) {
                     //      balance = 0
                     // }

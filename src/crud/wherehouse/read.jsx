@@ -14,7 +14,7 @@ const wherehouseread = () => {
      const fetchData = async () => {
           setLoading(true);
           try {
-               const token = getLoginData()?.token;
+               const token = sessionStorage.getItem("authToken")
                const res = await fetch(GET_WEATHOUSE_DATA, {
                     method: "get",
                     headers: new Headers({

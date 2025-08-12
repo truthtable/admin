@@ -187,7 +187,7 @@ export default function DeliveryBoyDetails() {
 
                                              // return;
 
-                                             const token = getLoginData()?.token;
+                                             const token = sessionStorage.getItem("authToken");
 
                                              let config = {
                                                   method: 'post',

@@ -13,7 +13,7 @@ export const fetchCustomerSearchData = createAsyncThunk(
                return { data, error, errorMessage };
           }
           try {
-               const token = getLoginData()?.token;
+               const token = sessionStorage.getItem("authToken");
                const response = await fetch(
                     SEARCH_CUSTOMER + "?name=" + search,
                     {

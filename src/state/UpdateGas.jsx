@@ -10,7 +10,7 @@ export const updateGas = createAsyncThunk(
           let payload = json_to_x_www_form_urlencoded({ price: data.price });
           console.log(payload);
           try {
-               const token = getLoginData()?.token;
+               const token = sessionStorage.getItem("authToken");
                const response = await fetch(UPDATE_GAS + data.id, {
                     method: "put",
                     headers: new Headers({

@@ -8,7 +8,7 @@ export const fetchDeliveryHistory = createAsyncThunk(
           let data = null;
           let errorMessage = "";
           try {
-               const token = getLoginData()?.token;
+               const token = sessionStorage.getItem("authToken");
                const response = await fetch(GET_DELIVERY_HISTORY, {
                     method: "get",
                     headers: new Headers({
