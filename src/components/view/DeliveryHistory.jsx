@@ -327,7 +327,7 @@ export default function deliveryHistory() {
 
                          if (gas.kg == 4) {
 
-                              if (gas.is_empty == 0) {
+                              if (!gas.is_empty) {
                                    cyl4KgQty = gas.quantity
                                    cyl4KgRate = gas.gas_price
                               } else {
@@ -336,7 +336,7 @@ export default function deliveryHistory() {
                          }
 
                          if (gas.kg == 12) {
-                              if (gas.is_empty == 0) {
+                              if (!gas.is_empty) {
                                    cyl12KgQty = gas.quantity
                                    cyl12KgRate = gas.gas_price
                               } else {
@@ -344,7 +344,7 @@ export default function deliveryHistory() {
                               }
                          }
                          if (gas.kg == 15) {
-                              if (gas.is_empty == 0) {
+                              if (!gas.is_empty) {
                                    cyl15KgQty = gas.quantity
                                    cyl15KgRate = gas.gas_price
                               } else {
@@ -353,7 +353,7 @@ export default function deliveryHistory() {
                          }
                          // 17KG Group
                          if (gas.kg == 17) {
-                              if (gas.is_empty == 0) {
+                              if (!gas.is_empty) {
                                    cyl17KgQty = gas.quantity
                                    cyl17KgRate = gas.gas_price
                               } else {
@@ -362,7 +362,7 @@ export default function deliveryHistory() {
                          }
                          //21KG Group
                          if (gas.kg == 21) {
-                              if (gas.is_empty == 0) {
+                              if (!gas.is_empty) {
                                    cyl21KgQty = gas.quantity
                                    cyl21KgRate = gas.gas_price
                               } else {
@@ -562,7 +562,7 @@ export default function deliveryHistory() {
                     sx={{
                          borderRadius: "md",
                     }}
-                    onClick={() => { loadData(true) }}>Force Load</Button>
+                    onClick={() => { loadData(true) }}>Load</Button>
           </Stack>
           <Stack sx={{ backgroundColor: "lightblue", width: "100%", flexGrow: 1, display: loading ? "none" : "flex" }}>
                <Sheet
@@ -1039,7 +1039,7 @@ const GasEditUi = ({
      }
      const handleAddGasData = (gasId) => {
           let tempGas = new Map(gasData);
-          tempGas.set("new_" + gasData.size + 1, { id: "new_" + gasData.size + 1, is_empty: 0, quantity: 0, price: 0, gas_id: + gasId })
+          tempGas.set("new_" + gasData.size + 1, { id: "new_" + gasData.size + 1, is_empty: false, quantity: 0, price: 0, gas_id: + gasId })
           setGasData(tempGas)
      }
      const handleDeleteGasData = (gasId) => {
@@ -1166,17 +1166,29 @@ const GasEditUi = ({
                          >
                               {
                                    [...gasData.values()].map((data) => {
+                                        console.log("nc", data.nc);
                                         return <ListItem key={data.id} sx={{ width: "100%" }}>
                                              <ListItemContent sx={{ color: "black", fontWeight: "bold" }}>
                                                   {/* {gas.company_name} - {gas.kg}KG {data.quantity}Qty ₹{data.price} */}
+
                                                   <Stack direction="row" spacing={1} alignItems={"center"} >
+                                                       {(!data.is_empty) ? <>
+                                                            <span>NC</span>
+                                                            <Switch
+                                                                 checked={data.nc}
+                                                                 onChange={() => {
+                                                                      handleSetGasData(data.id, "nc", !data.nc);
+                                                                 }}
+
+                                                            />
+                                                       </> : null}
                                                        <RadioGroup
-                                                            value={data.is_empty ?? 0} // Ensure a fallback value if data.is_empty is undefined
+                                                            value={data.is_empty == true ? 1 : 0} // Ensure a fallback value if data.is_empty is undefined
                                                             name="radio-buttons-group"
                                                             orientation="horizontal"
                                                             required
                                                             onChange={(event) => {
-                                                                 handleSetGasData(data.id, "is_empty", event.target.value); // Update gasData with the selected value
+                                                                 handleSetGasData(data.id, "is_empty", event.target.value == 1); // Update gasData with the selected value
                                                             }}
                                                        >
                                                             <Radio value={0} label="Delivered" variant="outlined" color="success" />
@@ -1196,7 +1208,7 @@ const GasEditUi = ({
                                                                  handleSetGasData(data.id, "quantity", event.target.value);
                                                             }}
                                                        />
-                                                       <Input required={(data.is_empty == 0)} sx={{ width: "168px", visibility: (data.is_empty == 0) ? "visible" : "hidden" }} type="number" value={data.gas_price} startDecorator={<span>Amt : </span>} onChange={(event) => {
+                                                       <Input required={(!data.is_empty)} sx={{ width: "168px", visibility: (!data.is_empty) ? "visible" : "hidden" }} type="number" value={data.gas_price} startDecorator={<span>Amt : </span>} onChange={(event) => {
                                                             handleSetGasData(data.id, "gas_price", event.target.value);
                                                        }} />
                                                        <Box
@@ -1380,7 +1392,8 @@ const GasEditUi = ({
                                         gas_id: gas.gas_id,
                                         price: gas.gas_price,
                                         quantity: gas.quantity,
-                                        is_empty: gas.is_empty
+                                        is_empty: gas.is_empty,
+                                        nc: gas.nc
                                    }
                               ))
                               dispatch(

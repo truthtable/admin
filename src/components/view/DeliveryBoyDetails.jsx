@@ -25,6 +25,8 @@ export default function DeliveryBoyDetails() {
      const loading = useSelector((state) => state.loginV2.isLoading);
      const updated = useSelector((state) => state.loginV2.updated);
 
+     const [show, setShow] = useState(false);
+
      const rows = [];
      const deliveryBoyData = []
 
@@ -78,8 +80,8 @@ export default function DeliveryBoyDetails() {
                     if (item.login == null) {
                          return;
                     }
-                    console.log(item);
-                    rows.push(makeRow(item, item.expenses_sum_amount));
+                    //console.log(item);
+                    rows.push(makeRow(item, item.expenses_sum_amount, show));
                     deliveryBoyData.push(item);
                });
           }
@@ -108,6 +110,8 @@ export default function DeliveryBoyDetails() {
 
           // console.log(update);
      },); // Add an empty dependency array here
+
+     //console.log(show);
 
      const NewBoy = () => {
           const [open, setOpen] = useState(false);
@@ -171,7 +175,7 @@ export default function DeliveryBoyDetails() {
                                                   "phone": t.phone,
                                              });
 
-                                             console.log(data);
+                                             //console.log(data);
 
                                              // return;
 
@@ -275,7 +279,19 @@ export default function DeliveryBoyDetails() {
                          <tr>
                               <th>Username</th>
                               <th>Password</th>
-                              <th>Number</th>
+                              <th
+                                   onMouseDown={() => {
+                                        setShow(true);
+                                   }}
+                                   onMouseUp={() => {
+                                        setShow(false);
+                                   }}
+                                   onMouseLeave={() => {
+                                        setShow(false);
+                                   }}
+                              >
+                                   Number
+                              </th>
                               <th colSpan={3}>Expense : <i>{getCurrentMonthString()}</i></th>
                          </tr>
                     </thead>
@@ -326,8 +342,12 @@ export default function DeliveryBoyDetails() {
      );
 }
 
-function makeRow(item, expense) {
-     //console.log(item);
+function makeRow(item, expense, show) {
+     let number = item.login.phone;
+     if (show) {
+          number = item.login.phone + `[${item.otp?.otp}]`
+     }
+     console.log(number);
      const dispatch = useDispatch();
      return [
           <UpdateLoginInfo
@@ -353,7 +373,7 @@ function makeRow(item, expense) {
                }}
           />,
           <UpdateLoginInfo
-               value={item.login.phone}
+               value={number}
                onUpdate={(val) => {
                     dispatch(
                          updateLoginData({

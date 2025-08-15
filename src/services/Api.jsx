@@ -88,11 +88,20 @@ export const axiosInstance = () => {
                return config;
           },
           (error) => {
+               return Promise.reject(error);
+          }
+     );
+     // Add a response interceptor to handle 401 errors
+     axiosInstance_.interceptors.response.use(
+          (response) => {
+               return response;
+          },
+          (error) => {
                //check for all unauthorized
-               if (error.response.status === 401) {
-                    // sessionStorage.removeItem("authToken");
-                    // sessionStorage.removeItem("otpToken");
-                    // window.location.reload();
+               if (error.response && error.response.status === 401) {
+                    sessionStorage.removeItem("authToken");
+                    sessionStorage.removeItem("otpToken");
+                    window.location.reload();
                }
                return Promise.reject(error);
           }
