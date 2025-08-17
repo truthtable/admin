@@ -29,7 +29,6 @@ import { createOrder } from "../../redux/actions/purchaseOrderActions";
 import { FaRegPlusSquare } from "react-icons/fa";
 import { set } from "firebase/database";
 import { Form } from "react-router-dom";
-import { D } from "../../../dist/assets/stylis-79144faa";
 import { all } from "axios";
 
 export default function AddPurchaseUI({ gaslistData, plants }) {
