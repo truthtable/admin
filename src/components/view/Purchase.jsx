@@ -50,9 +50,15 @@ import AddPurchaseUI from "./AddPurchaseUI.jsx";
 import { getPlants } from "../../redux/actions/plantsActions.js";
 import { BsPrinter } from "react-icons/bs";
 import { Link } from "react-router-dom";
+import { decimalFix } from "../../Tools.jsx";
 
 let gasList = [];
 let gasListMap = new Map();
+
+const noTdStyle = {
+     borderWidth: 0, padding: 0, margin: 0,
+}
+
 export default function Purchase() {
      const dispatch = useDispatch();
 
@@ -186,14 +192,15 @@ export default function Purchase() {
 
                     const gas = gasListMap.get(item.gas_id);
 
-                    const kg = gas.kg
-                    const qty = item.qty
-                    const returnQty = item.return_cyl_qty
-                    const rate = item.rate
+                    const kg = parseInt(gas.kg)
+                    const qty = parseInt(item.qty)
+                    const returnQty = parseInt(item.return_cyl_qty)
+                    const rate = parseFloat(item.rate)
 
                     const totalKg = kg * qty
                     const totalReturnKg = kg * returnQty
-                    const totalAmt = totalKg * rate
+                    const totalAmt = item.nc ? qty * rate : totalKg * rate
+
 
                     orderTotalQty += qty
                     orderTotalKg += totalKg
@@ -202,14 +209,9 @@ export default function Purchase() {
 
                     orderRows.push(
                          <tr key={`order-row-${order.id}-${index}`}>
-                              <Cell id={order.id} data={orderNumber} tableName="purchase_orders" column="order_no" />
-                              <Cell id={order.id} data={orderDate} tableName="purchase_orders" column="date" />
-                              {/* <Cell id={order.id} data={orderPlant.name} tableName="" column="" /> */}
-                              <td
-                                   style={{
-                                        borderWidth: 0, padding: 0, margin: 0,
-                                   }}
-                              >
+                              <td style={noTdStyle}><Cell id={order.id} data={orderNumber} tableName="purchase_orders" column="order_no" /></td>
+                              <td style={noTdStyle}> <Cell id={order.id} data={orderDate} tableName="purchase_orders" column="date" /></td>
+                              <td style={noTdStyle}>
                                    <form
                                         onSubmit={(event) => {
                                              event.preventDefault();
@@ -219,7 +221,6 @@ export default function Purchase() {
                                              //dispatch(updateOrder(order.id, { [column]: editValue }))
                                         }}
                                    >
-
                                         <Select
                                              placeholder="Plant"
                                              name="plant_id"
@@ -243,18 +244,17 @@ export default function Purchase() {
                                                   })
                                              }
                                         </Select>
-
                                    </form>
                               </td>
-                              <Cell id={order.id} data={orderSchemeType} tableName="purchase_orders" column="scheme_type" />
-                              <Cell id={order.id} data={orderSchemeRate} tableName="purchase_orders" column="scheme" />
-                              <Cell id={item.id} data={gas} tableName="purchase_order_items" column="gas_id" />
-                              <Cell id={item.id} data={qty} tableName="purchase_order_items" column="qty" />
-                              <Cell id={order.id} data={totalKg + " KG"} editable={false} tableName="" column="" />
-                              <Cell id={item.id} data={rate} tableName="purchase_order_items" column="rate" />
-                              <Cell id={order.id} data={"₹" + totalAmt.toFixed(2)} editable={false} tableName="" column="" />
-                              <Cell id={item.id} data={returnQty} tableName="purchase_order_items" column="return_cyl_qty" />
-                              <Cell id={order.id} data={totalReturnKg + " KG"} editable={false} tableName="" column="" />
+                              <td style={noTdStyle}><Cell id={order.id} data={orderSchemeType} tableName="purchase_orders" column="scheme_type" /></td>
+                              <td style={noTdStyle}> <Cell id={order.id} data={orderSchemeRate} tableName="purchase_orders" column="scheme" /></td>
+                              <td style={noTdStyle}> <Cell id={item.id} data={gas} nc={item.nc} tableName="purchase_order_items" column="gas_id" /></td>
+                              <td style={noTdStyle}><Cell id={item.id} data={qty} tableName="purchase_order_items" column="qty" /></td>
+                              <td style={noTdStyle}> <Cell id={order.id} data={totalKg + " KG"} editable={false} tableName="" column="" /></td>
+                              <td style={noTdStyle}><Cell id={item.id} data={rate} tableName="purchase_order_items" column="rate" /></td>
+                              <td style={noTdStyle}><Cell id={order.id} data={decimalFix(totalAmt, true)} editable={false} tableName="" column="" /></td>
+                              <td style={noTdStyle}><Cell id={item.id} data={returnQty} editable={(!item.nc)} tableName={item.nc ? "" : "purchase_order_items"} column={item.nc ? "" : "return_cyl_qty"} /></td>
+                              <td style={noTdStyle}><Cell id={order.id} data={totalReturnKg + " KG"} editable={false} tableName="" column="" /></td>
                          </tr>
                     )
                })
@@ -478,26 +478,6 @@ export default function Purchase() {
                               }}
                          >{`Payment Done : ₹${grandTotalPayAmt}`}</span>
                     </Chip>
-                    {/* <Chip
-                         sx={
-                              {
-
-                                   alignItems: "center",
-                                   justifyContent: "center",
-                                   backgroundColor: "#133E87",
-                                   display: loading ? "none" : "flex",
-                                   px: 2
-                              }
-                         }
-                         size="sm"
-                    >
-                         <span
-                              style={{
-                                   color: "white",
-                                   fontWeight: "bold",
-                              }}
-                         >{`Total Expance : ₹${(grandTotalBallance - grandTotalPayAmt).toFixed(2)}`}</span>
-                    </Chip> */}
                     <Divider
                          sx={{
                               flexGrow: 1,
@@ -658,7 +638,7 @@ export default function Purchase() {
                </Box>
           </Sheet>)
 }
-export const Cell = ({ id, data, tableName, column, editable = true }) => {
+export const Cell = ({ id, data, tableName, column, editable = true, nc = false }) => {
      const [editMode, setEditMode] = useState(false);
      const [editValue, setEditValue] = useState(data);
      const dispatch = useDispatch();
@@ -702,8 +682,9 @@ export const Cell = ({ id, data, tableName, column, editable = true }) => {
      let gasId = null
      if (column === "gas_id") {
           //console.log(gas)
+          let ncTag = nc ? "[NC] " : ""
           gasId = gas.id
-          data = `${data.company_name} : ${data.kg} KG`
+          data = `${ncTag} ${data.company_name} : ${data.kg} KG`
 
      }
      if (
@@ -808,20 +789,16 @@ export const Cell = ({ id, data, tableName, column, editable = true }) => {
           />
      }
      if (!editMode) {
-          return <td style={{
-               borderWidth: 0, padding: 0, margin: 0,
-          }}>
+          return <>
                <DataDisplay />
-          </td>
+          </>
      }
 
      if (column === "gas_id") {
-          return <td
-               style={{ padding: 0, borderWidth: 0, minWidth: "200px" }}
-          >
+          return <>
                <Stack alignContent="center"
                     justifyContent="center"
-                    alignItems="center" direction="row" sx={{ width: "100%" }}>
+                    alignItems="center" direction="row" sx={{ width: "100%", minWidth: "200px" }}>
                     <Select
                          defaultValue={gas.id}
                          size="sm"
@@ -886,7 +863,7 @@ export const Cell = ({ id, data, tableName, column, editable = true }) => {
                          <ImCheckmark />
                     </Box>
                </Stack>
-          </td>
+          </>
      }
 
      let type = "text"
@@ -904,7 +881,7 @@ export const Cell = ({ id, data, tableName, column, editable = true }) => {
                type = "date"
                break;
      }
-     return <td style={{ borderWidth: 0, padding: 0, margin: 0 }}>{editMode ? (
+     return <>{editMode ? (
           <Stack direction="row" sx={{ width: "100%" }}>
                <Input
                     sx={{
@@ -981,7 +958,7 @@ export const Cell = ({ id, data, tableName, column, editable = true }) => {
                />
           </Stack>
      ) : <DataDisplay />}
-     </td>
+     </>
 }
 const TotalRow = ({ children, data, order }) => {
      const [show, setShow] = useState(false);
@@ -1162,6 +1139,7 @@ const AddGas = ({ order }) => {
                          orderNo: order.order_no,
                          orderDate: order.date,
                     }}
+                    className="flex"
                >
                     <Box
                          sx={{

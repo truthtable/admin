@@ -8,6 +8,8 @@ import {
      Chip,
      Container,
      Divider,
+     FormControl,
+     FormLabel,
      Input,
      LinearProgress,
      Modal,
@@ -25,21 +27,12 @@ import { CgAdd, CgTrash } from "react-icons/cg";
 import { useDispatch } from "react-redux";
 import { createOrder } from "../../redux/actions/purchaseOrderActions";
 import { FaRegPlusSquare } from "react-icons/fa";
+import { set } from "firebase/database";
+import { Form } from "react-router-dom";
+import { D } from "../../../dist/assets/stylis-79144faa";
+import { all } from "axios";
 
 export default function AddPurchaseUI({ gaslistData, plants }) {
-
-     // console.log(
-     //      calculatePurchaseSummary(
-     //           [
-     //                { qty: 6, kg: 12, rate: 10, return_cyl_qty: 4 }, // GO GASS : 12 KG
-     //                { qty: 10, kg: 15, rate: 12, return_cyl_qty: 2 }, // GO GASS : 15 KG
-     //                { qty: 7, kg: 17, rate: 45, return_cyl_qty: 1 }   // GO GASS : 17 KG
-     //           ],
-     //           0.01,
-     //           3.41,
-     //           5000
-     //      )
-     // )
 
      const dispatch = useDispatch();
 
@@ -51,6 +44,8 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
 
      const [addPurchaseModel, setAddPurchaseModel] = useState(false);
      const [orderItems, setOrderItems] = useState([]);
+     const [ncOrderItems, setNcOrderItems] = useState([]);
+     //console.log(ncOrderItems);
 
      if ((gaslistData != null) && (gaslistData.length === 0) || (plants === undefined || plants === null || plants.length === 0)) {
           return <></>
@@ -80,6 +75,12 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
           totalReturnKg += Number(item.return_cyl_qty) * Number(gasListMap.get(item.gas_id).kg)
      })
 
+     ncOrderItems.forEach(item => {
+          totalQty += Number(item.qty)
+          totalKg += Number(item.qty) * Number(gasListMap.get(item.gas_id).kg)
+          totalAmt += Number(item.qty) * Number(item.rate)
+     })
+
      const totalScheme = (totalKg * scheme_rate)
 
      const totalTcs = tcs * totalAmt
@@ -95,26 +96,37 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
 
      //console.log({ totalQty, totalKg, totalReturnQty, totalReturnKg, totalAmt, totalScheme, billing, totalTcs, totalFor })
 
-     const removeItem = (index) => {
-          const updatedItems = orderItems.filter((_, i) => i !== index);
-          setOrderItems(updatedItems);
+     const removeItem = (index, nc = false) => {
+          let oi = orderItems
+          if (nc) {
+               oi = ncOrderItems
+          }
+          const updatedItems = oi.filter((_, i) => i !== index);
+          if (nc) {
+               setNcOrderItems(updatedItems);
+          } else {
+               setOrderItems(updatedItems);
+          }
      };
-     const handleItemChange = (index, field, value) => {
+     const handleItemChange = (index, field, value, nc = false) => {
+          let oi = []
+          if (nc) { oi = ncOrderItems }
+          else { oi = orderItems }
           if (field === 'id' || field === 'gas_id') {
-               setOrderItems(orderItems.map((item, i) => {
+               const temp = oi.map((item, i) => {
                     if (i === index) {
                          return { ...item, [field]: value }
                     }
                     return item
-               }))
+               })
+               if (nc) { setNcOrderItems(temp) }
+               else { setOrderItems(temp) }
                return
           }
           try {
-               const updatedItems = orderItems.map((item, i) => {
-
+               const updatedItems = oi.map((item, i) => {
                     const s = value.split('');
                     let n = '';
-
                     let dotCont = 0;
                     s.forEach(c => {
                          if (
@@ -143,37 +155,44 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
                     return i === index ? { ...item, [field]: n } : item
                }
                );
-               setOrderItems(updatedItems);
+               if (nc) {
+                    setNcOrderItems(updatedItems);
+               } else {
+                    setOrderItems(updatedItems);
+               }
           } catch (e) {
                console.warn(e);
           }
      };
      const addEmptyItem = (nc = false) => {
           try {
-               // const goGasId = gaslistData.find(
-               //      gas => (gas.company_name === "GO GAS")
-               //           && (orderItems.find(item => item.gas_id === gas.id) == null)
-               // ).id;
-               // const updatedItems = [...orderItems, { gas_id: goGasId, qty: 0, rate: 0, return_cyl_qty: 0 }];
-               // setOrderItems(updatedItems);
-
-               //console.log(gaslistData);
-               const availableGas = gaslistData.find(gas =>
-                    (gas.company_name === "GO GAS") &&
-                    (orderItems.find(item => item.gas_id === gas.id) == null)
-               );
-
-               //console.log(availableGas);
-
-               const updatedItems = [...orderItems, {
-                    gas_id: availableGas.id,
-                    qty: 0,
-                    rate: 0,
-                    return_cyl_qty: 0,
-                    nc: nc
-               }];
-               setOrderItems(updatedItems);
-
+               if (nc) {
+                    const availableGas = gaslistData.find(gas =>
+                         (gas.company_name === "GO GAS") &&
+                         (ncOrderItems.find(item => item.gas_id === gas.id) == null)
+                    );
+                    const updatedItems = [...ncOrderItems, {
+                         gas_id: availableGas.id,
+                         qty: 0,
+                         rate: 0,
+                         return_cyl_qty: 0,
+                         nc: nc
+                    }];
+                    setNcOrderItems(updatedItems);
+               } else {
+                    const availableGas = gaslistData.find(gas =>
+                         (gas.company_name === "GO GAS") &&
+                         (orderItems.find(item => item.gas_id === gas.id) == null)
+                    );
+                    const updatedItems = [...orderItems, {
+                         gas_id: availableGas.id,
+                         qty: 0,
+                         rate: 0,
+                         return_cyl_qty: 0,
+                         nc: nc
+                    }];
+                    setOrderItems(updatedItems);
+               }
           } catch (e) {
                console.warn(e);
                return;
@@ -184,9 +203,7 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
                <Button
                     variant="solid"
                     size="sm"
-                    sx={{
-                         backgroundColor: "#12467b",
-                    }}
+                    className="bg-[#12467b]"
                     startDecorator={<CgAdd />}
                     onClick={() => setAddPurchaseModel(true)}
                >
@@ -197,57 +214,41 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
                     aria-describedby="modal-desc"
                     open={addPurchaseModel}
                     onClose={() => setAddPurchaseModel(false)}
-                    sx={{
-                         display: "flex",
-                         justifyContent: "center",
-                         alignItems: "center",
-                    }}
+                    className="flex justify-center items-center"
                >
                     <Container
                          maxWidth="xl"
                     >
                          <Sheet
                               variant="outlined"
-                              sx={{
-                                   borderRadius: "md",
-                                   p: 3,
-                                   boxShadow: "lg",
-                                   maxHeight: "100vh",
-                                   overflow: "auto"
-                              }}
+                              className="rounded-md p-3 shadow-lg max-h-screen overflow-auto"
                          >
-                              <ModalClose variant="plain" sx={{ m: 1 }} />
+                              <ModalClose variant="plain" className="m-1" />
                               <Typography
                                    component="h2"
                                    id="modal-title"
                                    level="h4"
                                    textColor="inherit"
-                                   fontWeight="lg"
+                                   className="font-bold"
                               >
                                    Add Purchase
                               </Typography>
-                              <LinearProgress
-                                   sx={{
-                                        my: 1,
-                                        width: "100%",
-                                        display: "none",
-                                   }}
-
-                              />
-                              <Divider sx={{
-                                   my: 1
+                              <LinearProgress className="my-1 w-full" sx={{
+                                   display: "none",
                               }} />
+                              <Divider className="my-1" />
                               <form
                                    onSubmit={(event) => {
                                         event.preventDefault();
                                         const formData = new FormData(event.currentTarget);
                                         const formJson = Object.fromEntries(formData.entries());
-                                        formJson.scheme = scheme_rate
-                                        formJson.purchase_order_items = orderItems;
-                                        formData.tcs = tcs
-                                        formData.for_charges = for_charges
-                                        formData.defective_amount = defective_amount
-                                        //console.log(formJson);
+                                        formJson.scheme = scheme_rate;
+                                        let allOrderItems = [...orderItems, ...ncOrderItems];
+                                        formJson.purchase_order_items = allOrderItems;
+                                        formData.tcs = tcs;
+                                        formData.for_charges = for_charges;
+                                        formData.defective_amount = defective_amount;
+                                        console.log(formJson);
                                         dispatch(createOrder(formJson));
                                         setAddPurchaseModel(false);
                                    }}
@@ -255,470 +256,242 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
                                    <Stack
                                         direction="column"
                                         gap={1}
-                                        sx={{
-                                             width: "100%",
-                                             borderRadius: "md",
-                                             padding: 1,
-                                             marginTop: 1,
-                                             backgroundColor: "transparent",
-                                             color: "black",
-                                        }}>
+                                        className="w-full rounded-md p-1 mt-1 bg-transparent text-black">
                                         <Stack
                                              direction="row"
                                              gap={1}
                                         >
-                                             <Input
-                                                  placeholder="Date"
-                                                  type="date"
-                                                  name="date"
-                                                  required
-                                                  size="sm"
-                                                  onKeyDown={(e) => {
-                                                       try {
-                                                            e.preventDefault()
-                                                       } catch (e) {
-                                                            console.warn(e)
-                                                       }
-                                                  }}
-                                                  onFocus={(e) => {
-                                                       try {
-                                                            e.target.showPicker()
-                                                       } catch (e) {
-                                                            console.warn(e)
-                                                       }
-                                                  }}
-                                                  onClick={(e) => {
-                                                       try {
-                                                            e.target.showPicker()
-                                                       } catch (e) {
-                                                            console.warn(e)
-                                                       }
-                                                  }}
-                                                  sx={{
-                                                       width: "100%",
-                                                       flexGrow: 1,
-                                                  }}
-                                             />
-                                             <Input
-                                                  placeholder="Order No."
-                                                  type="text"
-                                                  name="order_no"
-                                                  size="sm"
-                                                  required
-                                                  sx={{
-                                                       width: "100%",
-                                                       flexGrow: 1,
-                                                  }}
-                                             />
-                                             <Select
-                                                  placeholder="Plant"
-                                                  required
-                                                  name="plant_id"
-                                                  size="sm"
-                                                  sx={{
-                                                       width: "100%",
-                                                       flexGrow: 1,
-                                                  }}
-                                             >
-                                                  {
-                                                       plants.map(plant => {
-                                                            return (<Option key={plant.id} value={plant.id}>{plant.name}</Option>)
-                                                       })
-                                                  }
-                                             </Select>
-                                             <Input sx={{
-                                                  width: "100%",
-                                                  flexGrow: 1,
-                                             }} placeholder="Scheme" size="sm" type="text" name="scheme_type" required />
-                                             <Input sx={{
-                                                  width: "100%",
-                                                  flexGrow: 1,
-                                             }}
-                                                  value={
-                                                       scheme_rate
-                                                  }
-                                                  onChange={(e) => {
-                                                       const value = e.target.value;
-                                                       const s = value.split('');
-                                                       let n = '';
-                                                       let dotCont = 0;
-                                                       s.forEach(c => {
-                                                            if (c === '.' || c === ',') {
-                                                                 dotCont++;
+                                             <FormControl className="w-full flex-grow">
+                                                  <FormLabel>Date</FormLabel>
+                                                  <Input
+                                                       placeholder="Date"
+                                                       type="date"
+                                                       name="date"
+                                                       required
+                                                       size="sm"
+                                                       onKeyDown={(e) => {
+                                                            try {
+                                                                 e.preventDefault()
+                                                            } catch (e) {
+                                                                 console.warn(e)
                                                             }
-                                                            if (c.match(/[0-9]/)) {
-                                                                 n += c;
+                                                       }}
+                                                       onFocus={(e) => {
+                                                            try {
+                                                                 e.target.showPicker()
+                                                            } catch (e) {
+                                                                 console.warn(e)
                                                             }
-                                                            if (c === '.' && dotCont <= 1) {
-                                                                 n += c;
+                                                       }}
+                                                       onClick={(e) => {
+                                                            try {
+                                                                 e.target.showPicker()
+                                                            } catch (e) {
+                                                                 console.warn(e)
                                                             }
-                                                       });
-                                                       if (n.startsWith('.')) {
-                                                            n = '0' + n;
+                                                       }}
+                                                       className="w-full flex-grow"
+                                                  />
+                                             </FormControl>
+                                             <FormControl className="w-full flex-grow">
+                                                  <FormLabel>Order No.</FormLabel>
+                                                  <Input
+                                                       placeholder="Order No."
+                                                       type="text"
+                                                       name="order_no"
+                                                       size="sm"
+                                                       required
+                                                       className="w-full flex-grow"
+                                                  />
+                                             </FormControl>
+                                             <FormControl className="w-full flex-grow">
+                                                  <FormLabel>Plant</FormLabel>
+                                                  <Select
+                                                       placeholder="Plant"
+                                                       required
+                                                       name="plant_id"
+                                                       size="sm"
+                                                       className="w-full flex-grow"
+                                                  >
+                                                       {
+                                                            plants.map(plant => {
+                                                                 return (<Option key={plant.id} value={plant.id}>{plant.name}</Option>)
+                                                            })
                                                        }
-                                                       n = n.replace(/^0+(\d)/, '$1');
-                                                       if (n.length === 0) {
-                                                            n = 0;
+                                                  </Select>
+                                             </FormControl>
+                                             <FormControl className="w-full flex-grow">
+                                                  <FormLabel>Scheme</FormLabel>
+                                                  <Input className="w-full flex-grow" placeholder="Scheme" size="sm" type="text" name="scheme_type" required />
+                                             </FormControl>
+                                             <FormControl className="w-full flex-grow">
+                                                  <FormLabel>Scheme Rate</FormLabel>
+                                                  <Input className="w-full flex-grow"
+                                                       value={
+                                                            scheme_rate
                                                        }
-                                                       setSchemeRate(n);
-                                                  }}
+                                                       onChange={(e) => {
+                                                            const value = e.target.value;
+                                                            const s = value.split('');
+                                                            let n = '';
+                                                            let dotCont = 0;
+                                                            s.forEach(c => {
+                                                                 if (c === '.' || c === ',') {
+                                                                      dotCont++;
+                                                                 }
+                                                                 if (c.match(/[0-9]/)) {
+                                                                      n += c;
+                                                                 }
+                                                                 if (c === '.' && dotCont <= 1) {
+                                                                      n += c;
+                                                                 }
+                                                            });
+                                                            if (n.startsWith('.')) {
+                                                                 n = '0' + n;
+                                                            }
+                                                            n = n.replace(/^0+(\d)/, '$1');
+                                                            if (n.length === 0) {
+                                                                 n = 0;
+                                                            }
+                                                            setSchemeRate(n);
+                                                       }}
 
-                                                  placeholder="Scheme Rate" size="sm" type="number" name="scheme_rate" required
-                                                  endDecorator={
-                                                       <Chip
-                                                            variant="outlined"
-                                                            style={{
-                                                                 fontWeight: "bold",
-                                                                 backgroundColor: "#47474721",
-                                                            }}>
-                                                            ₹{totalScheme.toFixed(2)}
-                                                       </Chip>
-                                                  }
-                                             />
+                                                       placeholder="Scheme Rate" size="sm" type="number" name="scheme_rate" required
+                                                       endDecorator={
+                                                            <Chip
+                                                                 variant="outlined"
+                                                                 className="font-bold bg-gray-100"
+                                                            >
+                                                                 ₹{totalScheme.toFixed(2)}
+                                                            </Chip>
+                                                       }
+                                                  />
+                                             </FormControl>
                                         </Stack>
                                         <Card>
                                              <CardContent
-                                                  sx={{
-                                                       display: "flex",
-                                                  }}
+                                                  className="flex"
                                              >
                                                   <Table
-                                                       sx={{
-
-                                                            width: "100%",
-                                                            flexGrow: 1,
-                                                            tableLayout: "fixed",
-                                                            fontWeight: "bold",
-                                                       }}
-                                                       size="sm"
+                                                       className="w-full flex-grow table-fixed font-bold text-right"
+                                                       size="md"
                                                   >
                                                        <thead>
                                                             <tr>
                                                                  <th style={noOutlineHead}>
-                                                                      <Box
-                                                                           sx={{
-                                                                                display: "flex",
-                                                                                alignItems: "center",
-                                                                                justifyContent: "center",
-                                                                           }}
-                                                                      >
-                                                                           <span
-                                                                                style={{
-                                                                                     fontWeight: "bold",
-                                                                                }}
-                                                                           > Cyl.</span>
-                                                                      </Box>
-
+                                                                      <span className="font-bold" > Cyl.</span>
                                                                  </th>
                                                                  <th style={noOutlineHead}>
-
-
-                                                                      <Box
-                                                                           sx={{
-                                                                                display: "flex",
-                                                                                alignItems: "center",
-                                                                                justifyContent: "center",
-                                                                           }}
-                                                                      >
-                                                                           <span
-                                                                                style={{
-                                                                                     fontWeight: "bold",
-                                                                                }}
-                                                                           > </span>
-                                                                      </Box>
-
+                                                                      <span
+                                                                           className="font-bold"
+                                                                      > </span>
                                                                  </th>
                                                                  <th style={noOutlineHead}>
-                                                                      <Box
-                                                                           sx={{
-                                                                                display: "flex",
-                                                                                alignItems: "center",
-                                                                                justifyContent: "center",
-                                                                           }}
-                                                                      >
-                                                                           <span
-                                                                                style={{
-                                                                                     fontWeight: "bold",
-                                                                                }}
-                                                                           > Qty.</span>
-                                                                      </Box>
+                                                                      <span
+                                                                           className="font-bold"
+                                                                      > Qty.</span>
+                                                                 </th>
+                                                                 <th style={{ ...noOutlineHead, textAlign: "end" }}>
+                                                                      <span className="font-bold"
+                                                                      >Total Kg</span>
                                                                  </th>
                                                                  <th style={noOutlineHead}>
-                                                                      <Box
-                                                                           sx={{
-                                                                                display: "flex",
-                                                                                alignItems: "center",
-                                                                                justifyContent: "center",
-                                                                           }}
-                                                                      >
-                                                                           <span
-                                                                                style={{
-                                                                                     fontWeight: "bold",
-                                                                                }}
-                                                                           >Total Kg</span>
-                                                                      </Box>
+                                                                      <span
+                                                                           className="font-bold"
+                                                                      >Rate</span>
                                                                  </th>
-                                                                 <th style={noOutlineHead}>
-                                                                      <Box
-                                                                           sx={{
-                                                                                display: "flex",
-                                                                                alignItems: "center",
-                                                                                justifyContent: "center",
-                                                                           }}
-                                                                      >
-                                                                           <span
-                                                                                style={{
-                                                                                     fontWeight: "bold",
-                                                                                }}
-                                                                           >Rate</span>
-                                                                      </Box>
+                                                                 <th style={{ ...noOutlineHead, textAlign: "end" }}>
+                                                                      <span
+                                                                           className="font-bold"
+                                                                      >Total Amt</span>
                                                                  </th>
-                                                                 <th style={noOutlineHead}>
-                                                                      <Box
-                                                                           sx={{
-                                                                                display: "flex",
-                                                                                alignItems: "center",
-                                                                                justifyContent: "center",
-                                                                           }}
-                                                                      >
-                                                                           <span
-                                                                                style={{
-                                                                                     fontWeight: "bold",
-                                                                                }}
-                                                                           >Total Amt</span>
-                                                                      </Box></th>
 
                                                                  <th style={noOutlineHead}>
-                                                                      <Box
-                                                                           sx={{
-                                                                                display: "flex",
-                                                                                alignItems: "center",
-                                                                                justifyContent: "center",
-                                                                           }}
-                                                                      >
-                                                                           <span
-                                                                                style={{
-                                                                                     fontWeight: "bold",
-                                                                                }}
-                                                                           >Return Cyl. Qty.</span>
-                                                                      </Box>
+                                                                      <span
+                                                                           className="font-bold"
+                                                                      >Return Cyl. Qty.</span>
                                                                  </th>
-                                                                 <th style={noOutlineHead}>Total</th>
+                                                                 <th style={{ ...noOutlineHead, textAlign: "center" }}>Total</th>
 
                                                             </tr>
-                                                            <tr>
-                                                                 <th colSpan={8}
-                                                                      style={
-                                                                           {
-                                                                                borderWidth: 0, width: 1,
-                                                                                height: 1,
-                                                                           }
-                                                                      }
-                                                                 >
-                                                                      <Divider orientation="horizontal" />
-                                                                 </th>
-                                                            </tr>
+
                                                        </thead>
                                                        <tbody>
+                                                            {orderItems.map((item, index) => (
+                                                                 <OrderItemRow
+                                                                      key={`order-item-${item.id}-${index}`}
+                                                                      item={item}
+                                                                      index={index}
+                                                                      gaslistData={gaslistData}
+                                                                      gasListMap={gasListMap}
+                                                                      orderItems={orderItems}
+                                                                      handleItemChange={handleItemChange}
+                                                                      removeItem={removeItem}
+                                                                      noOutline={noOutline}
+                                                                      nc={false}
+                                                                 />
+                                                            ))}
                                                             {
-                                                                 orderItems.map((item, index) => {
-                                                                      console.log(item)
-                                                                      return (
-                                                                           <tr key={`order-item-${item.id}-${index}`}>
-                                                                                <td style={
-                                                                                     {
-                                                                                          borderWidth: 0,
-                                                                                     }
-                                                                                }
-                                                                                     colSpan={2}>
-                                                                                     <Select
-                                                                                          color="neutral"
-                                                                                          placeholder="select Gas"
-                                                                                          size="sm"
-                                                                                          variant="outlined"
-                                                                                          name="gas_id"
-                                                                                          defaultValue={item.gas_id}
-                                                                                          onChange={(event, newValue) => {
-                                                                                               //console.log(orderItems.find(item => item.gas_id === newValue) == null)
-                                                                                               if (orderItems.find(item => item.gas_id === newValue) != null) {
-                                                                                                    alert("Gas already added")
-                                                                                                    return
-                                                                                               }
-                                                                                               handleItemChange(index, 'gas_id', newValue)
-
-                                                                                          }}
-                                                                                          required
-                                                                                          sx={{
-                                                                                               flexGrow: 1,
-                                                                                               width: "100%",
-                                                                                          }}
-                                                                                     >
-                                                                                          {gaslistData.map(gas => {
-                                                                                               if (gas.company_name === "GO GAS") return (
-                                                                                                    <Option
-                                                                                                         key={gas.id}
-                                                                                                         value={gas.id}
-                                                                                                         label={`${gas.company_name} : ${gas.kg} KG`}
-                                                                                                         sx={{
-                                                                                                              backgroundColor: "transparent",
-                                                                                                              color: "black",
-
-                                                                                                         }}
-                                                                                                         onClick={() => {
-                                                                                                              // handleItemChange(index, 'gas_id', gas.id)
-                                                                                                         }}
-                                                                                                    >
-                                                                                                         {`${gas.company_name} : ${gas.kg} KG`}
-                                                                                                    </Option>)
-                                                                                          })}
-                                                                                     </Select>
-
-                                                                                </td>
-                                                                                <td colSpan={2} style={noOutline}>
-                                                                                     <Input
-                                                                                          placeholder="Quantity"
-                                                                                          type="text"
-                                                                                          name="qty"
-                                                                                          size="sm"
-                                                                                          sx={{
-                                                                                               flexGrow: 1,
-                                                                                               width: "100%",
-                                                                                          }}
-                                                                                          required
-                                                                                          value={item.qty}
-                                                                                          onChange={(e) => handleItemChange(index, 'qty', e.target.value)}
-                                                                                          endDecorator={
-                                                                                               <Chip
-                                                                                                    style={{
-
-                                                                                                         fontWeight: "bold",
-                                                                                                         backgroundColor: "#474747",
-                                                                                                         color: "white",
-                                                                                                    }}
-                                                                                               >
-                                                                                                    {`Total : ${parseInt((item.qty) * (gasListMap.get(item.gas_id).kg))} KG`}
-                                                                                               </Chip>
-                                                                                          }
-                                                                                     />
-                                                                                </td>
-
-                                                                                <td colSpan={2} style={noOutline}>
-                                                                                     <Input
-                                                                                          placeholder="Rate"
-                                                                                          type="text"
-                                                                                          name="rate"
-                                                                                          size="sm"
-                                                                                          sx={{
-                                                                                               flexGrow: 1,
-                                                                                               width: "100%",
-                                                                                          }}
-                                                                                          required
-                                                                                          endDecorator={
-                                                                                               <Chip
-                                                                                                    style={{
-
-                                                                                                         fontWeight: "bold",
-                                                                                                         backgroundColor: "#0A6847",
-                                                                                                         color: "white",
-                                                                                                    }}
-                                                                                               >
-                                                                                                    {`Total : ₹${((gasListMap.get(item.gas_id).kg) * item.qty * (item.rate)).toFixed(2)
-                                                                                                         }`}
-                                                                                               </Chip>
-                                                                                          }
-                                                                                          value={item.rate}
-                                                                                          onChange={(e) => handleItemChange(index, 'rate', e.target.value)}
-
-                                                                                     />
-                                                                                </td>
-                                                                                <td colSpan={2} style={noOutline}>
-                                                                                     <Stack
-                                                                                          direction="row"
-                                                                                          gap={1}
-                                                                                     >
-                                                                                          <Input
-                                                                                               placeholder="Return Qty"
-                                                                                               type="text"
-                                                                                               name="return_cyl_qty"
-                                                                                               size="sm"
-                                                                                               sx={{
-                                                                                                    flexGrow: 1,
-                                                                                               }}
-                                                                                               required
-                                                                                               value={item.return_cyl_qty}
-                                                                                               onChange={(e) => {
-                                                                                                    console.log(item.qty, e.target.value)
-                                                                                                    if (item.qty < e.target.value) {
-                                                                                                         alert("Return qty should be less than qty")
-                                                                                                         return
-                                                                                                    }
-                                                                                                    handleItemChange(index, 'return_cyl_qty', e.target.value)
-                                                                                               }}
-                                                                                               endDecorator={
-                                                                                                    <Chip
-                                                                                                         style={{
-
-                                                                                                              fontWeight: "bold",
-                                                                                                              backgroundColor: "#474747",
-                                                                                                              color: "white",
-                                                                                                         }}
-                                                                                                    >
-                                                                                                         {`Total : ${parseInt((item.return_cyl_qty) * (gasListMap.get(item.gas_id).kg) + "")} KG`}
-                                                                                                    </Chip>
-                                                                                               }
-                                                                                          />
-                                                                                          <Button
-                                                                                               variant="outlined"
-                                                                                               color="danger"
-
-                                                                                               onClick={() => {
-                                                                                                    const confirm = window.confirm("Are you sure you want to delete this item?");
-                                                                                                    if (confirm) {
-                                                                                                         removeItem(index);
-                                                                                                    }
-                                                                                               }}
-                                                                                          >
-                                                                                               <CgTrash />
-                                                                                          </Button>
-                                                                                     </Stack>
-                                                                                </td>
-                                                                           </tr>
-
-                                                                      )
-                                                                 })}
+                                                                 ncOrderItems.length > 0 && <tr>
+                                                                      <td style={{ ...noOutline }} colSpan={3}>
+                                                                           <Divider className="my-1" />
+                                                                      </td>
+                                                                      <td style={{ ...noOutline, textAlign: "center" }} colSpan={2}>
+                                                                           New Connection
+                                                                      </td>
+                                                                      <td style={{ ...noOutline }} colSpan={3}>
+                                                                           <Divider className="my-1" />
+                                                                      </td>
+                                                                 </tr>
+                                                            }
+                                                            {ncOrderItems.map((item, index) => (
+                                                                 <OrderItemRow
+                                                                      key={`order-nc-item-${item.id}-${index}`}
+                                                                      item={item}
+                                                                      index={index}
+                                                                      gaslistData={gaslistData}
+                                                                      gasListMap={gasListMap}
+                                                                      orderItems={ncOrderItems}
+                                                                      handleItemChange={handleItemChange}
+                                                                      removeItem={removeItem}
+                                                                      noOutline={noOutline}
+                                                                      nc={true}
+                                                                 />
+                                                            ))}
                                                             <tr>
                                                                  <td style={noOutline} colSpan={8}>
-                                                                      <Button
-                                                                           startDecorator={
-                                                                                <FaRegPlusSquare />
-                                                                           }
-                                                                           variant="outlined"
-                                                                           sx={{
-                                                                                marginTop: 1,
-                                                                                width: "100%",
-                                                                           }}
-                                                                           onClick={() => addEmptyItem()}
+                                                                      <Stack
+                                                                           direction="row"
+                                                                           gap={1}
+                                                                           className="w-full"
+                                                                           alignContent={"end"}
+                                                                           justifyContent={"end"}
                                                                       >
-                                                                           Add
-                                                                      </Button>
+                                                                           <Button
+                                                                                startDecorator={
+                                                                                     <FaRegPlusSquare />
+                                                                                }
+                                                                                variant="soft"
+                                                                                color="success"
+                                                                                className="mt-1 w-40"
+                                                                                onClick={() => addEmptyItem(true)}
+                                                                           >
+                                                                                Add NC
+                                                                           </Button>
+                                                                           <Button
+                                                                                startDecorator={
+                                                                                     <FaRegPlusSquare />
+                                                                                }
+                                                                                variant="soft"
+                                                                                className="mt-1 w-40"
+                                                                                onClick={() => addEmptyItem()}
+                                                                           >
+                                                                                Add
+                                                                           </Button>
+                                                                      </Stack>
                                                                  </td>
                                                             </tr>
                                                             <tr>
-                                                                 <td style={noOutline} colSpan={8}>
-                                                                      <Button
-                                                                           startDecorator={
-                                                                                <FaRegPlusSquare />
-                                                                           }
-                                                                           variant="outlined"
-                                                                           sx={{
-                                                                                marginTop: 1,
-                                                                                width: "100%",
-                                                                           }}
-                                                                           onClick={() => addEmptyItem(true)}
-                                                                      >
-                                                                           Add NC
-                                                                      </Button>
-                                                                 </td>
                                                             </tr>
                                                        </tbody>
                                                   </Table>
@@ -727,22 +500,11 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
                                         <Stack
                                              direction="row"
                                              gap={1}
-                                             alignContent="center"
+                                             className="items-center"
                                         >
-                                             <Box
-                                                  sx={
-                                                       {
-                                                            display: "flex",
-                                                            alignItems: "center",
-                                                            justifyContent: "center",
-                                                       }
-                                                  }
-                                             >
+                                             <Box className="flex items-center justify-center">
                                                   <span
-                                                       style={{
-
-                                                            fontWeight: "bold",
-                                                       }}
+                                                       className="font-bold"
                                                   >TCS&nbsp;:</span>
                                              </Box>
                                              <Input
@@ -755,29 +517,18 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
                                                   endDecorator={
                                                        <Chip
                                                             variant="outlined"
-                                                            style={{
-                                                                 fontWeight: "bold",
-                                                                 backgroundColor: "#47474721",
-                                                            }}>
+                                                            className="font-bold bg-gray-100"
+                                                       >
                                                             ₹{totalTcs.toFixed(2)}
                                                        </Chip>
                                                   }
                                              />
                                              <Divider orientation="vertical" />
                                              <Box
-                                                  sx={
-                                                       {
-                                                            display: "flex",
-                                                            alignItems: "center",
-                                                            justifyContent: "center",
-                                                       }
-                                                  }
+                                                  className="flex items-center justify-center"
                                              >
                                                   <span
-                                                       style={{
-
-                                                            fontWeight: "bold",
-                                                       }}
+                                                       className="font-bold"
                                                   >FOR&nbsp;:</span>
                                              </Box>
                                              <Input
@@ -790,29 +541,18 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
                                                   endDecorator={
                                                        <Chip
                                                             variant="outlined"
-                                                            style={{
-                                                                 fontWeight: "bold",
-                                                                 backgroundColor: "#47474721",
-                                                            }}>
+                                                            className="font-bold bg-gray-100"
+                                                       >
                                                             ₹{totalFor.toFixed(2)}
                                                        </Chip>
                                                   }
                                              />
                                              <Divider orientation="vertical" />
                                              <Box
-                                                  sx={
-                                                       {
-                                                            display: "flex",
-                                                            alignItems: "center",
-                                                            justifyContent: "center",
-                                                       }
-                                                  }
+                                                  className="flex items-center justify-center"
                                              >
                                                   <span
-                                                       style={{
-
-                                                            fontWeight: "bold",
-                                                       }}
+                                                       className="font-bold"
                                                   >Defective Amount&nbsp;:</span>
                                              </Box>
                                              <Input
@@ -829,19 +569,10 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
                                              />
                                              <Divider orientation="vertical" />
                                              <Box
-                                                  sx={
-                                                       {
-                                                            display: "flex",
-                                                            alignItems: "center",
-                                                            justifyContent: "center",
-                                                       }
-                                                  }
+                                                  className="flex items-center justify-center"
                                              >
                                                   <span
-                                                       style={{
-
-                                                            fontWeight: "bold",
-                                                       }}
+                                                       className="font-bold"
                                                   >Paid&nbsp;:</span>
                                              </Box>
                                              <Input
@@ -855,30 +586,29 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
                                                   }}
                                              />
                                         </Stack>
-
-                                        <Divider sx={{
-                                             my: 1
-                                        }} />
-                                        <Stack
-                                             direction="row"
-                                        >
-                                             <Table
-                                                  sx={{
+                                        <Divider className="my-1" />
+                                        <Stack direction="row">
+                                             <table
+                                                  style={{
                                                        tableLayout: "auto",
-                                                       fontWeight: "bold",
+                                                       textAlign: "end",
+                                                       backgroundColor: "white",
                                                   }}
-                                                  size="sd"
-                                                  borderAxis="none"
                                              >
-                                                  <tbody>
+                                                  <tbody
+                                                       style={{
+                                                            textAlign: "end",
+                                                            backgroundColor: "white",
+                                                       }}
+                                                  >
                                                        <tr>
-                                                            <th style={{ width: 1, borderWidth: 0 }}>Billing Amt</th>
-                                                            <td style={{ borderWidth: 0, width: 1, }}>&nbsp;:&nbsp;</td>
-                                                            <td style={{ borderWidth: 0 }}>
+                                                            <th className="border-0 bg-white p-0 m-0">Billing Amt</th>
+                                                            <td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
+                                                            <td className="border-0 bg-white  p-0 m-0">
                                                                  <Stack
                                                                       direction="row"
                                                                       gap={1}
-                                                                      alignItems={"center"}
+                                                                      className="items-center"
                                                                  >
                                                                       <Tooltip
                                                                            placement="right"
@@ -889,23 +619,17 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
                                                                            title={`${totalAmt.toFixed(2)} + ${totalTcs.toFixed(2)} + ${totalFor.toFixed(2)} - ${totalScheme.toFixed(2)} - ${defective_amount}`}
                                                                       >
                                                                            <span
-                                                                                style={{
-                                                                                     color: "green",
-                                                                                     fontWeight: "bold",
-                                                                                }}
+                                                                                className="text-green-600 font-bold"
                                                                            >{`₹${billing.toFixed(2)}`}</span>
                                                                       </Tooltip>
-                                                                      {/* <span style={{
-                                                                           color: "grey",
-                                                                           fontSize: "12px",
-                                                                      }}>({totalAmt.toFixed(2)} - {totalScheme.toFixed(2)} of Scheme)</span> */}
+                                                                      {/* <span className="text-gray-500 text-xs">({totalAmt.toFixed(2)} - {totalScheme.toFixed(2)} of Scheme)</span> */}
                                                                  </Stack>
                                                             </td>
                                                        </tr>
                                                        <tr>
-                                                            <th style={{ width: 1, borderWidth: 0 }}>Ballance</th>
-                                                            <td style={{ borderWidth: 0, width: 1, }}>&nbsp;:&nbsp;</td>
-                                                            <td style={{ borderWidth: 0 }}>
+                                                            <th className="border-0 bg-white  p-0 m-0 w-40">Balance</th>
+                                                            <td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
+                                                            <td className="border-0 bg-white  p-0 m-0">
                                                                  <Tooltip
                                                                       placement="right"
                                                                       size="lg"
@@ -913,43 +637,37 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
                                                                       variant="outlined"
                                                                       title={`${billing.toFixed(2)} - ${paid_val}`}
                                                                  >
-                                                                      <span
-                                                                           style={{
-                                                                                fontWeight: "bold",
-                                                                           }}
-                                                                      >
+                                                                      <span className="font-bold">
                                                                            ₹{ballance.toFixed(2)}
                                                                       </span>
                                                                  </Tooltip>
                                                             </td>
                                                        </tr>
                                                        <tr>
-                                                            <th style={{ width: 1, borderWidth: 0 }}>Total Qty</th>
-                                                            <td style={{ borderWidth: 0, width: 1, }}>&nbsp;:&nbsp;</td>
-                                                            <td style={{ borderWidth: 0 }}>{totalQty}</td>
+                                                            <th className="border-0 bg-white  p-0 m-0  w-40">Total Qty</th>
+                                                            <td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
+                                                            <td className="border-0 bg-white  p-0 m-0 font-bold">{totalQty}</td>
                                                        </tr>
                                                        <tr>
-                                                            <th style={{ width: 1, borderWidth: 0 }}>Total Kg</th>
-                                                            <td style={{ borderWidth: 0, width: 1, }}>&nbsp;:&nbsp;</td>
-                                                            <td style={{ borderWidth: 0 }}>{totalKg}</td>
+                                                            <th className="border-0 bg-white  p-0 m-0  w-40">Total Kg</th>
+                                                            <td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
+                                                            <td className="border-0 bg-white  p-0 m-0 font-bold">{totalKg}</td>
                                                        </tr>
                                                        <tr>
-                                                            <th style={{ width: 1, borderWidth: 0 }}>Total Return Qty</th>
-                                                            <td style={{ borderWidth: 0, width: 1, }}>&nbsp;:&nbsp;</td>
-                                                            <td style={{ borderWidth: 0 }}>{totalReturnQty}</td>
+                                                            <th className="border-0 bg-white  p-0 m-0  w-40">Total Return Qty</th>
+                                                            <td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
+                                                            <td className="border-0 bg-white  p-0 m-0 font-bold">{totalReturnQty}</td>
                                                        </tr>
                                                        <tr>
-                                                            <th style={{ width: 1, borderWidth: 0 }}>Total Return Kg</th>
-                                                            <td style={{ borderWidth: 0, width: 1, }}>&nbsp;:&nbsp;</td>
-                                                            <td style={{ borderWidth: 0 }}>{totalReturnKg}</td>
+                                                            <th className="border-0 bg-white  p-0 m-0  w-40">Total Return Kg</th>
+                                                            <td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
+                                                            <td className="border-0 bg-white  p-0 m-0 font-bold">{totalReturnKg}</td>
                                                        </tr>
                                                   </tbody>
-                                             </Table>
+                                             </table>
+                                             <span className="flex-grow"></span>
                                              <Box
-                                                  sx={{
-                                                       display: "flex",
-                                                       alignItems: "center",
-                                                  }}
+                                                  className="flex place-items-end"
                                              >
                                                   <Button
                                                        variant="outlined"
@@ -958,7 +676,7 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
                                                        Cancel
                                                   </Button>
                                                   <span
-                                                       style={{ width: "10px" }}
+                                                       className="w-2.5"
                                                   />
                                                   <Button
                                                        startDecorator={
@@ -979,62 +697,148 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
      );
 }
 
-function calculatePurchaseSummary(items, tcsRate, forChargePerItem, paid) {
-     // Initialize totals
-     let totalAmt = 0;
-     let totalQty = 0;
-     let totalKg = 0;
-     let totalReturnQty = 0;
-     let totalReturnKg = 0;
+function OrderItemRow({
+     item,
+     index,
+     gaslistData,
+     gasListMap,
+     orderItems,
+     handleItemChange,
+     removeItem,
+     noOutline,
+     nc
+}) {
+     let totalAmt = 0
+     let totalKg = 0
+     let totalReturnKg = 0
+     const gas = gasListMap.get(item.gas_id)
+     totalKg = (item.qty) * (gas.kg)
+     totalReturnKg = (item.return_cyl_qty) * (gas.kg)
+     if (nc) {
+          totalAmt = item.qty * item.rate
+     } else {
+          totalAmt = item.qty * gas.kg * item.rate
+     }
 
-     // Array to store minimal calculations for each item
-     const itemCalculations = [];
+     const handleGasChange = (newValue) => {
+          let ok = true;
+          if (orderItems.find(item => item.gas_id === newValue) != null) {
+               alert("Gas already added");
+               ok = false;
+               return;
+          }
+          if (ok) {
+               handleItemChange(index, 'gas_id', newValue, nc);
+          }
+     }
 
-     // Loop through each item to calculate individual and total values
-     items.forEach(item => {
-          const { qty, kg, rate, return_cyl_qty } = item;
+     const gasList = gaslistData.map(gas => {
+          if (gas.company_name === "GO GAS") return (
+               <Option
+                    key={gas.id}
+                    value={gas.id}
+                    label={`${gas.company_name} : ${gas.kg} KG`}
+                    className="bg-transparent text-black"
+               >
+                    {`${gas.company_name} : ${gas.kg} KG`}
+               </Option>
+          );
+     })
 
-          // Calculate minimal item values
-          const itemTotalKg = qty * kg;
-          const itemTotalAmt = qty * rate;
-          const itemReturnKg = return_cyl_qty * kg;
-
-          // Add minimal item calculations to the array
-          itemCalculations.push({
-               itemTotalKg,
-               itemTotalAmt,
-               itemReturnKg
-          });
-
-          // Accumulate totals
-          totalAmt += itemTotalAmt;
-          totalQty += qty;
-          totalKg += itemTotalKg;
-          totalReturnQty += return_cyl_qty;
-          totalReturnKg += itemReturnKg;
-     });
-
-     // Calculate TCS as a flat rate (e.g., 0.01 of total amount)
-     const tcs = totalAmt * tcsRate;
-
-     // Calculate FOR as a fixed charge per item
-     const forCharge = items.length * forChargePerItem;
-
-     // Calculate the final billing amount
-     const billingAmt = totalAmt + tcs + forCharge;
-     const balance = billingAmt - paid;
-
-     // Return all calculations as an object
-     return {
-          itemCalculations, // Minimal calculations for each item
-          totalAmt,
-          totalQty,
-          totalKg,
-          totalReturnQty,
-          totalReturnKg,
-          tcs,
-          forCharge,
-          billingAmt,
-          balance
-     };
+     return (
+          <tr key={`order-${nc ? 'nc-' : ''}item-${item.id}-${index}`}>
+               <td style={{ borderWidth: 0 }} colSpan={2}>
+                    <Select
+                         color="neutral"
+                         placeholder="select Gas"
+                         size="sm"
+                         variant="outlined"
+                         name="gas_id"
+                         required
+                         className="flex-grow w-full"
+                         //defaultValue={item.gas_id}
+                         value={item.gas_id}
+                         onChange={(event, newValue) => {
+                              handleGasChange(newValue);
+                         }}
+                    >
+                         {gasList}
+                    </Select>
+               </td>
+               <td colSpan={2} style={noOutline}>
+                    <Input
+                         placeholder="Quantity"
+                         type="text"
+                         name="qty"
+                         size="sm"
+                         className="flex-grow w-full"
+                         required
+                         value={item.qty}
+                         onChange={(e) => handleItemChange(index, 'qty', e.target.value, nc)}
+                         endDecorator={
+                              <Chip className="font-bold bg-gray-700 text-white">
+                                   {`Total : ${totalKg} KG`}
+                              </Chip>
+                         }
+                    />
+               </td>
+               <td colSpan={2} style={noOutline}>
+                    <Input
+                         placeholder="Rate"
+                         type="text"
+                         name="rate"
+                         size="sm"
+                         className="flex-grow w-full"
+                         required
+                         endDecorator={
+                              <Chip className="font-bold bg-green-700 text-white">
+                                   {`Total : ₹${totalAmt.toFixed(2)}`}
+                              </Chip>
+                         }
+                         value={item.rate}
+                         onChange={(e) => handleItemChange(index, 'rate', e.target.value, nc)}
+                    />
+               </td>
+               <td colSpan={2} style={noOutline}>
+                    <Stack direction="row" gap={1}>
+                         {
+                              (!nc ? <Input
+                                   placeholder="Return Qty"
+                                   type="text"
+                                   name="return_cyl_qty"
+                                   size="sm"
+                                   className="flex-grow"
+                                   required
+                                   value={item.return_cyl_qty}
+                                   onChange={(e) => {
+                                        console.log(item.qty, e.target.value);
+                                        if (item.qty < e.target.value) {
+                                             alert("Return qty should be less than qty");
+                                             return;
+                                        }
+                                        handleItemChange(index, 'return_cyl_qty', e.target.value, nc);
+                                   }}
+                                   endDecorator={
+                                        <Chip className="font-bold bg-gray-700 text-white">
+                                             {`Total : ${totalReturnKg} KG`}
+                                        </Chip>
+                                   }
+                              /> : <></>)
+                         }
+                         <Button
+                              variant="outlined"
+                              color="danger"
+                              onClick={() => {
+                                   const confirm = window.confirm("Are you sure you want to delete this item?");
+                                   if (confirm) {
+                                        removeItem(index, nc);
+                                   }
+                              }}
+                         >
+                              <CgTrash />
+                         </Button>
+                    </Stack>
+               </td>
+          </tr>
+     );
 }
