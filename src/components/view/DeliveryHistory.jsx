@@ -22,7 +22,6 @@ import ExportCSV from "../ExportCSV.jsx";
 import { updateGas } from "../../state/UpdateGas.jsx";
 import { updateOrCreateCustomerPayments } from "../../redux/customerPaymentsUpdateOrCreate.js";
 import Switch, { switchClasses } from '@mui/joy/Switch';
-import { C } from "../../../dist/assets/@mui-dce3b57d.js";
 const COLORS = {
      WHITE: "#ffffff",
      KG_4: "#fde3e3",
