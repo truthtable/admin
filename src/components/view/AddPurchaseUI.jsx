@@ -148,7 +148,7 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
                console.warn(e);
           }
      };
-     const addEmptyItem = () => {
+     const addEmptyItem = (nc = false) => {
           try {
                // const goGasId = gaslistData.find(
                //      gas => (gas.company_name === "GO GAS")
@@ -169,7 +169,8 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
                     gas_id: availableGas.id,
                     qty: 0,
                     rate: 0,
-                    return_cyl_qty: 0
+                    return_cyl_qty: 0,
+                    nc: nc
                }];
                setOrderItems(updatedItems);
 
@@ -521,6 +522,7 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
                                                        <tbody>
                                                             {
                                                                  orderItems.map((item, index) => {
+                                                                      console.log(item)
                                                                       return (
                                                                            <tr key={`order-item-${item.id}-${index}`}>
                                                                                 <td style={
@@ -629,8 +631,6 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
 
                                                                                      />
                                                                                 </td>
-
-
                                                                                 <td colSpan={2} style={noOutline}>
                                                                                      <Stack
                                                                                           direction="row"
@@ -700,6 +700,23 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
                                                                            onClick={() => addEmptyItem()}
                                                                       >
                                                                            Add
+                                                                      </Button>
+                                                                 </td>
+                                                            </tr>
+                                                            <tr>
+                                                                 <td style={noOutline} colSpan={8}>
+                                                                      <Button
+                                                                           startDecorator={
+                                                                                <FaRegPlusSquare />
+                                                                           }
+                                                                           variant="outlined"
+                                                                           sx={{
+                                                                                marginTop: 1,
+                                                                                width: "100%",
+                                                                           }}
+                                                                           onClick={() => addEmptyItem(true)}
+                                                                      >
+                                                                           Add NC
                                                                       </Button>
                                                                  </td>
                                                             </tr>

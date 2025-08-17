@@ -22,6 +22,7 @@ import ExportCSV from "../ExportCSV.jsx";
 import { updateGas } from "../../state/UpdateGas.jsx";
 import { updateOrCreateCustomerPayments } from "../../redux/customerPaymentsUpdateOrCreate.js";
 import Switch, { switchClasses } from '@mui/joy/Switch';
+import { C } from "../../../dist/assets/@mui-dce3b57d.js";
 const COLORS = {
      WHITE: "#ffffff",
      KG_4: "#fde3e3",
@@ -74,6 +75,13 @@ const columns = [
 const CUSTOMER_LIST = []
 let gasList = new Map();
 let deleveryGasEditUiGasList = [];
+let ncGasDeliveryList = {};
+function setGasDeliveryList(parentKey, childKey, value) {
+     if (!ncGasDeliveryList[parentKey]) {
+          ncGasDeliveryList[parentKey] = {};
+     }
+     ncGasDeliveryList[parentKey][childKey] = value;
+}
 export default function deliveryHistory() {
 
      const dispatch = useDispatch();
@@ -259,17 +267,14 @@ export default function deliveryHistory() {
      // First, let's add a helper function to calculate gas group totals
 
      // Update the createData function to be more organized
-     function createData(date, info, gasInfo, kg4Data, kg12Data, kg15Data, kg17Data, kg21Data, received) {
+     function createData(date, info, gasInfo, kg4Data, kg12Data, kg15Data, kg21Data, received, ncToatl) {
 
           const kg4 = calculateGasGroup(kg4Data.cylinders, kg4Data.mt, kg4Data.rate);
-          //console.log("4kg", kg4);
-
           const kg12 = calculateGasGroup(kg12Data.cylinders, kg12Data.mt, kg12Data.rate);
           const kg15 = calculateGasGroup(kg15Data.cylinders, kg15Data.mt, kg15Data.rate);
-          const kg17 = calculateGasGroup(kg17Data.cylinders, kg17Data.mt, kg17Data.rate);
           const kg21 = calculateGasGroup(kg21Data.cylinders, kg21Data.mt, kg21Data.rate);
 
-          const subTotal = kg12.total + kg15.total + kg17.total + kg21.total;
+          const subTotal = kg4.total + kg12.total + kg15.total + kg21.total + ncToatl;
 
           return {
                date,
@@ -279,7 +284,6 @@ export default function deliveryHistory() {
                kg4,
                kg12,
                kg15,
-               kg17,
                kg21,
                subTotal,
                received
@@ -292,29 +296,34 @@ export default function deliveryHistory() {
 
      if (deliveries != null || deliveries != undefined) {
           if (!deliveries.noData) {
+               ncGasDeliveryList = {}
                rows = deliveries.map((delivery) => {
                     let totalCash = 0
                     let totalOnline = 0
 
                     let cyl4KgQty = 0
+                    let cyl4KgNcQty = 0
                     let cyl4KgMt = 0
                     let cyl4KgRate = 0
+                    let cyl4KgNcRate = 0
 
                     let cyl12KgQty = 0
+                    let cyl12KgNcQty = 0
                     let cyl12KgMt = 0
                     let cyl12KgRate = 0
+                    let cyl12KgNcRate = 0
 
                     let cyl15KgQty = 0
+                    let cyl15KgNcQty = 0
                     let cyl15KgMt = 0
                     let cyl15KgRate = 0
-
-                    let cyl17KgQty = 0
-                    let cyl17KgMt = 0
-                    let cyl17KgRate = 0
+                    let cyl15KgNcRate = 0
 
                     let cyl21KgQty = 0
+                    let cyl21KgNcQty = 0
                     let cyl21KgMt = 0
                     let cyl21KgRate = 0
+                    let cyl21KgNcRate = 0
 
                     delivery.payments.forEach((payment) => {
                          if (payment.method == 0) {
@@ -324,9 +333,26 @@ export default function deliveryHistory() {
                          }
                     })
                     const cylinder_list = delivery.gas_deliveries.map((gas) => {
-
+                         if (gas.nc) {
+                              //console.log(gas);
+                              setGasDeliveryList("d_" + delivery.id, "kg_" + gas.kg, gas)
+                              if (gas.kg == 4) {
+                                   cyl12KgNcQty = gas.quantity
+                                   cyl12KgNcRate = gas.gas_price
+                              } else if (gas.kg == 12) {
+                                   cyl15KgNcQty = gas.quantity
+                                   cyl15KgNcRate = gas.gas_price
+                              } else if (gas.kg == 15) {
+                                   cyl21KgNcQty = gas.quantity
+                                   cyl21KgNcRate = gas.gas_price
+                              } else if (gas.kg == 21) {
+                                   cyl4KgNcQty = gas.quantity
+                                   cyl4KgNcRate = gas.gas_price
+                              }
+                              //dont add in nc gas return
+                              return
+                         }
                          if (gas.kg == 4) {
-
                               if (!gas.is_empty) {
                                    cyl4KgQty = gas.quantity
                                    cyl4KgRate = gas.gas_price
@@ -334,7 +360,6 @@ export default function deliveryHistory() {
                                    cyl4KgMt += gas.quantity
                               }
                          }
-
                          if (gas.kg == 12) {
                               if (!gas.is_empty) {
                                    cyl12KgQty = gas.quantity
@@ -351,16 +376,6 @@ export default function deliveryHistory() {
                                    cyl15KgMt += gas.quantity
                               }
                          }
-                         // 17KG Group
-                         if (gas.kg == 17) {
-                              if (!gas.is_empty) {
-                                   cyl17KgQty = gas.quantity
-                                   cyl17KgRate = gas.gas_price
-                              } else {
-                                   cyl17KgMt += gas.quantity
-                              }
-                         }
-                         //21KG Group
                          if (gas.kg == 21) {
                               if (!gas.is_empty) {
                                    cyl21KgQty = gas.quantity
@@ -377,17 +392,17 @@ export default function deliveryHistory() {
                     })
                     const date = formatDateToDDMMYY_HHMM(delivery.created_at)
                     let total4Kg = cyl4KgQty * cyl4KgRate
+                    let total4KgNc = cyl4KgNcQty * cyl4KgNcRate
                     let total12Kg = cyl12KgQty * cyl12KgRate
+                    let total12KgNc = cyl12KgNcQty * cyl12KgNcRate
                     let total15Kg = cyl15KgQty * cyl15KgRate
-                    let total17Kg = cyl17KgQty * cyl17KgRate
+                    let total15KgNc = cyl15KgNcQty * cyl15KgNcRate
                     let total21Kg = cyl21KgQty * cyl21KgRate
-                    let totalTotal = total12Kg + total15Kg + total17Kg + total21Kg + total4Kg
+                    let total21KgNc = cyl21KgNcQty * cyl21KgNcRate
+                    let ncTotal = total4KgNc + total12KgNc + total15KgNc + total21KgNc
+                    let totalTotal = total12Kg + total15Kg + total21Kg + total4Kg + ncTotal
                     let received = totalCash + totalOnline
                     let balance = totalTotal - received
-                    //console.log({ cyl4KgMt, cyl4KgRate, cyl4KgQty, total4Kg, received, balance });
-                    // if (balance < 0) {
-                    //      balance = 0
-                    // }
                     csvData.push([
                          //"Date",
                          date,
@@ -417,14 +432,6 @@ export default function deliveryHistory() {
                          cyl15KgRate,
                          //"Total",
                          total15Kg,
-                         //"17KG CYL",
-                         cyl17KgQty,
-                         //"MT",
-                         cyl17KgMt,
-                         //"Rate",
-                         cyl17KgRate,
-                         //"Total",
-                         total17Kg,
                          //"21KG CYL",
                          cyl21KgQty,
                          //"MT",
@@ -468,16 +475,19 @@ export default function deliveryHistory() {
                          { cylinders: cyl12KgQty, mt: cyl12KgMt, rate: cyl12KgRate },
                          // 15KG Group
                          { cylinders: cyl15KgQty, mt: cyl15KgMt, rate: cyl15KgRate },
-                         // 17KG Group
-                         { cylinders: cyl17KgQty, mt: cyl17KgMt, rate: cyl17KgRate },
                          // 21KG Group
                          { cylinders: cyl21KgQty, mt: cyl21KgMt, rate: cyl21KgRate },
                          // received amount
-                         (totalCash + totalOnline)
+                         (totalCash + totalOnline),
+                         // nc total
+                         ncTotal
                     )
                });
           }
      }
+
+     //console.log(ncGasDeliveryList);
+
      const headers = columns.map((col) => col.column);
 
      return <Stack
@@ -659,56 +669,78 @@ function Row({
      }
 
      // Define the cell groups for easier mapping
+
+     const Cell = (cell, id, kg, type) => {
+          let nc = false;
+          let data = null;
+          try {
+               nc = true
+               data = ncGasDeliveryList["d_" + id]["kg_" + kg]
+               console.log("ncGasDeliveryList", data);
+               if (type == "total") {
+                    data = data.gas_price * data.quantity
+               } else {
+                    data = data[type]
+               }
+               if (type == "total" || type == "gas_price") {
+                    data = decimalFix(data, true)
+               }
+               console.log("ncGasDeliveryList", data);
+          } catch (e) {
+               nc = false
+          }
+          return <Stack
+               direction="column"
+          >
+               <span>{cell}</span>
+               {
+                    nc ? <>
+                         <Divider orientation="horizontal" sx={{ flexGrow: 1 }} />
+                         <span className="b" style={{ color: "#093FB4" }}>{data}</span>
+                    </> : null
+               }
+          </Stack>
+     }
+     //console.log(row.info.dileveryId);
+     const did = row.info.dileveryId;
      const cellGroups = [
           {
                key: 'info', cells: [
                     { value: row.date },
-                    {
-                         value: row.info.customer
-                    }
+                    { value: row.info.customer }
                ], color: COLORS.WHITE
           },
           {
                key: 'kg4', cells: [
-                    { value: decimalFix(row.kg4.cylinders) },
+                    { value: Cell(decimalFix(row.kg4.cylinders), did, 4, "quantity") },
                     { value: decimalFix(row.kg4.mt) },
-                    { value: decimalFix(row.kg4.rate, true) },
-                    { value: decimalFix(row.kg4.total, true) }
+                    { value: Cell(decimalFix(row.kg4.rate, true), did, 4, "gas_price") },
+                    { value: Cell(decimalFix(row.kg4.total, true), did, 4, "total") }
                ],
                color: COLORS.KG_4
           },
           {
                key: 'kg12', cells: [
-                    {
-                         value: decimalFix(row.kg12.cylinders)
-                    },
+                    { value: Cell(decimalFix(row.kg12.cylinders), did, 12, "quantity") },
                     { value: decimalFix(row.kg12.mt) },
-                    { value: decimalFix(row.kg12.rate, true) },
-                    { value: decimalFix(row.kg12.total, true) }
+                    { value: Cell(decimalFix(row.kg12.rate, true), did, 12, "gas_price") },
+                    { value: Cell(decimalFix(row.kg12.total, true), did, 12, "total") }
                ], color: COLORS.KG_12
           },
           {
                key: 'kg15', cells: [
-                    { value: decimalFix(row.kg15.cylinders) },
+                    { value: Cell(decimalFix(row.kg15.cylinders), did, 15, "quantity") },
                     { value: decimalFix(row.kg15.mt) },
-                    { value: decimalFix(row.kg15.rate, true) },
-                    { value: decimalFix(row.kg15.total, true) }
+                    { value: Cell(decimalFix(row.kg15.rate, true), did, 15, "gas_price") },
+                    { value: Cell(decimalFix(row.kg15.total, true), did, 15, "total") }
                ], color: COLORS.KG_15
           },
-          // {
-          //      key: 'kg17', cells: [
-          //           { value: decimalFix(row.kg17.cylinders) },
-          //           { value: decimalFix(row.kg17.mt) },
-          //           { value: decimalFix(row.kg17.rate, true) },
-          //           { value: decimalFix(row.kg17.total, true) }
-          //      ], color: COLORS.KG_17
-          // },
           {
                key: 'kg21', cells: [
-                    { value: decimalFix(row.kg21.cylinders) },
+                    { value: Cell(decimalFix(row.kg21.cylinders), did, 21, "quantity") },
                     { value: decimalFix(row.kg21.mt) },
-                    { value: decimalFix(row.kg21.rate, true) },
-                    { value: decimalFix(row.kg21.total, true) }
+                    { value: Cell(decimalFix(row.kg21.rate, true), did, 21, "gas_price") },
+                    { value: Cell(decimalFix(row.kg21.total, true), did, 21, "total") }
                ], color: COLORS.KG_21
           },
           {
@@ -1018,8 +1050,8 @@ const GasEditUi = ({
           setCashAmountState({ id: cashPayment.id, amount: amount, method: cashPayment.method })
      }
 
-     console.log(cashPayment);
-     console.log(onlinePayment);
+     //console.log(cashPayment);
+     // console.log(onlinePayment);
 
      const [edit, setEdit] = useState(openEdit);
      const [editName, setEditName] = useState("");
@@ -1039,7 +1071,8 @@ const GasEditUi = ({
      }
      const handleAddGasData = (gasId) => {
           let tempGas = new Map(gasData);
-          tempGas.set("new_" + gasData.size + 1, { id: "new_" + gasData.size + 1, is_empty: false, quantity: 0, price: 0, gas_id: + gasId })
+          //check if gas is already added
+          tempGas.set("new_" + gasData.size + 1, { id: "new_" + gasData.size + 1, is_empty: false, quantity: 0, price: 0, gas_id: gasId })
           setGasData(tempGas)
      }
      const handleDeleteGasData = (gasId) => {
@@ -1176,8 +1209,9 @@ const GasEditUi = ({
                                                             <span>NC</span>
                                                             <Switch
                                                                  checked={data.nc}
-                                                                 onChange={() => {
-                                                                      handleSetGasData(data.id, "nc", !data.nc);
+                                                                 onChange={(event) => {
+                                                                      //console.log(event.target.checked)
+                                                                      handleSetGasData(data.id, "nc", event.target.checked);
                                                                  }}
 
                                                             />
