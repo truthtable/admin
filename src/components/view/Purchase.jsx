@@ -66,20 +66,10 @@ export default function Purchase() {
      const { plants, plantsLoading, plantsError, plantsUpdateSuccess } = useSelector(state => state.plants);
      const { updateOrderSuccsess, orders, loading, error } = useSelector(state => state.purchaseOrders);
 
-     //console.log(orders);
-
-     if (error) {
-          console.warn(error);
-     }
-
+     if (error) { console.warn(error); }
      const { itemLoading, items, itemError, itemUpdateSuccess } = useSelector(state => state.purchaseOrderItems);
 
-     //console.log(itemLoading, items, itemError, itemUpdateSuccess);
-
-     if (itemError) {
-          console.warn(itemError);
-     }
-
+     if (itemError) { console.warn(itemError); }
 
      let grandTotalBallance = 0
      let grandTotalPayAmt = 0
@@ -651,8 +641,6 @@ export const Cell = ({ id, data, tableName, column, editable = true, nc = false 
                     whiteSpace: "nowrap",
                     transition: "background-color 0.3s",
                     fontWeight: "bold",
-                    flexGrow: 1,
-                    width: "100%",
                     height: "100%",
                     "&:hover": {
                          backgroundColor: (editable) ? "#c1ebd4" : "transparent",
@@ -668,14 +656,7 @@ export const Cell = ({ id, data, tableName, column, editable = true, nc = false 
                          setEditMode(true)
                }}
           >
-               <div
-                    style={{
-                         display: "flex",
-                         fontWeight: "bold",
-                    }}
-               >
-                    {data}
-               </div>
+               {data}
           </Box>
      }
      const gas = data
@@ -694,99 +675,79 @@ export const Cell = ({ id, data, tableName, column, editable = true, nc = false 
           || column === "for_charges"
           || column === "defective_amount"
      ) {
-          return (!editMode) ? (<Box>
-               <Stack direction="row" alignContent="center" justifyContent="center" alignItems={"center"}
-                    sx={{ width: "100%" }}>
-                    <DataDisplay />
-                    <Stack sx={
-                         {
-                              color: "black",
-                              padding: 1,
-                              borderRadius: "md",
-                              "&:hover": {
-                                   backgroundColor: "#a33e23",
-                                   color: "white",
-                              },
-                         }
-                    } direction="row"
-                         onClick={() => {
-                              setEditMode(true)
-                         }}
-                    >
-                         <MdModeEditOutline style={{ fontSize: "25px" }} />
-                    </Stack>
-               </Stack>
-          </Box>) : <Input
-               sx={{
-                    color: "black",
-                    flexGrow: 1,
-
-               }}
-               type="number"
-               value={editValue}
-               onChange={(e) => {
-                    setEditValue(e.target.value)
-               }}
-               endDecorator={
-                    <Stack direction="row"
-                         sx={{
-                              padding: 0,
-                         }}
-                    >
-                         <Box
+          return (!editMode) ? (
+               <DataDisplay />
+          ) : <>
+               <Input
+                    sx={{
+                         color: "black",
+                    }}
+                    type="number"
+                    value={editValue}
+                    onChange={(e) => {
+                         setEditValue(e.target.value)
+                    }}
+                    endDecorator={
+                         <Stack direction="row"
                               sx={{
-                                   display: "flex",
-                                   alignItems: "center",
-                                   justifyContent: "center",
-                                   p: 1,
-                                   m: 0,
-                                   transition: "all 0.3s",
-                                   cursor: "pointer",
-                                   color: "#b34349",
-                                   borderRadius: "md",
-                                   "&:hover": {
-                                        backgroundColor: "#b34349",
-                                        color: "white",
-                                   },
-                              }}
-                              onClick={() => {
-                                   setEditMode(false)
+                                   padding: 0,
                               }}
                          >
-                              <ImCross />
-                         </Box>
-                         <Box
-                              sx={{
-                                   display: "flex",
-                                   alignItems: "center",
-                                   justifyContent: "center",
-                                   p: 1,
-                                   m: 0,
-                                   transition: "all 0.3s",
-                                   cursor: "pointer",
-                                   color: "#0a6847",
-                                   borderRadius: "md",
-                                   "&:hover": {
-                                        backgroundColor: "#0a6847",
-                                        color: "white",
-                                   },
-                              }}
-                              onClick={() => {
-                                   setEditMode(false)
-                                   //console.log(id, tableName, column, editValue)
-                                   if (tableName === "purchase_orders") {
-                                        dispatch(updateOrder(id, { [column]: editValue }))
-                                   }
-                                   if (tableName === "purchase_order_items") {
-                                        dispatch(updateItem(id, { [column]: editValue }))
-                                   }
-                              }}
-                         >
-                              <ImCheckmark />
-                         </Box>
-                    </Stack>
-               }
-          />
+                              <Box
+                                   sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        p: 1,
+                                        m: 0,
+                                        transition: "all 0.3s",
+                                        cursor: "pointer",
+                                        color: "#b34349",
+                                        borderRadius: "md",
+                                        "&:hover": {
+                                             backgroundColor: "#b34349",
+                                             color: "white",
+                                        },
+                                   }}
+                                   onClick={() => {
+                                        setEditMode(false)
+                                   }}
+                              >
+                                   <ImCross />
+                              </Box>
+                              <Box
+                                   sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        p: 1,
+                                        m: 0,
+                                        transition: "all 0.3s",
+                                        cursor: "pointer",
+                                        color: "#0a6847",
+                                        borderRadius: "md",
+                                        "&:hover": {
+                                             backgroundColor: "#0a6847",
+                                             color: "white",
+                                        },
+                                   }}
+                                   onClick={() => {
+                                        setEditMode(false)
+                                        //console.log(id, tableName, column, editValue)
+                                        if (tableName === "purchase_orders") {
+                                             dispatch(updateOrder(id, { [column]: editValue }))
+                                        }
+                                        if (tableName === "purchase_order_items") {
+                                             dispatch(updateItem(id, { [column]: editValue }))
+                                        }
+                                   }}
+                              >
+                                   <ImCheckmark />
+                              </Box>
+                         </Stack>
+                    }
+               />
+          </>
      }
      if (!editMode) {
           return <>
@@ -881,83 +842,83 @@ export const Cell = ({ id, data, tableName, column, editable = true, nc = false 
                type = "date"
                break;
      }
-     return <>{editMode ? (
-          <Stack direction="row" sx={{ width: "100%" }}>
-               <Input
-                    sx={{
-                         color: "black",
-                         // backgroundColor: "#c1ebd4",
-                         flexGrow: 1,
-                    }}
-                    name={column}
-                    size="sm"
-                    type={type}
-                    value={(editMode) ? editValue : ""}
-                    onChange={(e) => {
-                         setEditValue(e.target.value)
-                    }}
-                    endDecorator={
-                         <Stack direction="row"
-                              sx={{
-                                   padding: 0,
-                              }}
-                         >
-                              <Box
+     return <>
+          {editMode ? (
+               <Stack direction="row" sx={{ width: "100%" }}>
+                    <Input
+                         sx={{
+                              color: "black",
+                              flexGrow: 1,
+                         }}
+                         name={column}
+                         size="sm"
+                         type={type}
+                         value={(editMode) ? editValue : ""}
+                         onChange={(e) => {
+                              setEditValue(e.target.value)
+                         }}
+                         endDecorator={
+                              <Stack direction="row"
                                    sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        p: 1,
-                                        m: 0,
-                                        transition: "all 0.3s",
-                                        cursor: "pointer",
-                                        color: "#b34349",
-                                        borderRadius: "md",
-                                        "&:hover": {
-                                             backgroundColor: "#b34349",
-                                             color: "white",
-                                        },
-                                   }}
-                                   onClick={() => {
-                                        setEditMode(false)
+                                        padding: 0,
                                    }}
                               >
-                                   <ImCross />
-                              </Box>
-                              <Box
-                                   sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        p: 1,
-                                        m: 0,
-                                        transition: "all 0.3s",
-                                        cursor: "pointer",
-                                        color: "#0a6847",
-                                        borderRadius: "md",
-                                        "&:hover": {
-                                             backgroundColor: "#0a6847",
-                                             color: "white",
-                                        },
-                                   }}
-                                   onClick={() => {
-                                        setEditMode(false)
-                                        //console.log(id, tableName, column, editValue)
-                                        if (tableName === "purchase_orders") {
-                                             dispatch(updateOrder(id, { [column]: editValue }))
-                                        }
-                                        if (tableName === "purchase_order_items") {
-                                             dispatch(updateItem(id, { [column]: editValue }))
-                                        }
-                                   }}
-                              >
-                                   <ImCheckmark />
-                              </Box>
-                         </Stack>
-                    }
-               />
-          </Stack>
-     ) : <DataDisplay />}
+                                   <Box
+                                        sx={{
+                                             display: "flex",
+                                             alignItems: "center",
+                                             justifyContent: "center",
+                                             p: 1,
+                                             m: 0,
+                                             transition: "all 0.3s",
+                                             cursor: "pointer",
+                                             color: "#b34349",
+                                             borderRadius: "md",
+                                             "&:hover": {
+                                                  backgroundColor: "#b34349",
+                                                  color: "white",
+                                             },
+                                        }}
+                                        onClick={() => {
+                                             setEditMode(false)
+                                        }}
+                                   >
+                                        <ImCross />
+                                   </Box>
+                                   <Box
+                                        sx={{
+                                             display: "flex",
+                                             alignItems: "center",
+                                             justifyContent: "center",
+                                             p: 1,
+                                             m: 0,
+                                             transition: "all 0.3s",
+                                             cursor: "pointer",
+                                             color: "#0a6847",
+                                             borderRadius: "md",
+                                             "&:hover": {
+                                                  backgroundColor: "#0a6847",
+                                                  color: "white",
+                                             },
+                                        }}
+                                        onClick={() => {
+                                             setEditMode(false)
+                                             //console.log(id, tableName, column, editValue)
+                                             if (tableName === "purchase_orders") {
+                                                  dispatch(updateOrder(id, { [column]: editValue }))
+                                             }
+                                             if (tableName === "purchase_order_items") {
+                                                  dispatch(updateItem(id, { [column]: editValue }))
+                                             }
+                                        }}
+                                   >
+                                        <ImCheckmark />
+                                   </Box>
+                              </Stack>
+                         }
+                    />
+               </Stack>
+          ) : <DataDisplay />}
      </>
 }
 const TotalRow = ({ children, data, order }) => {
@@ -1065,7 +1026,6 @@ const AddGas = ({ order }) => {
      const [open, setOpen] = React.useState(false);
      //console.log(order)
      const dispatch = useDispatch();
-
      const [gas_id, setGasId] = useState(0);
      const [qty, setQty] = useState(0);
      const [rate, setRate] = useState(0);
