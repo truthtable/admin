@@ -30,6 +30,7 @@ import { FaRegPlusSquare } from "react-icons/fa";
 import { set } from "firebase/database";
 import { Form } from "react-router-dom";
 import { all } from "axios";
+import { decimalFix } from "../../Tools";
 
 export default function AddPurchaseUI({ gaslistData, plants }) {
 
@@ -39,7 +40,6 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
      const [tcs, setTcs] = useState(0.01);
      const [for_charges, setFor_charges] = useState(0.01);
      const [scheme_rate, setSchemeRate] = useState(0);
-     const [defective_amount, setDefectiveAmount] = useState(0);
 
      const [addPurchaseModel, setAddPurchaseModel] = useState(false);
      const [orderItems, setOrderItems] = useState([]);
@@ -65,13 +65,17 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
      let ballance = 0
      let totalReturnQty = 0
      let totalReturnKg = 0
+     let defective_amount = 0
 
      orderItems.forEach(item => {
           totalQty += Number(item.qty)
           totalKg += Number(item.qty) * Number(gasListMap.get(item.gas_id).kg)
           totalAmt += Number(item.qty) * Number(gasListMap.get(item.gas_id).kg) * Number(item.rate)
           totalReturnQty += Number(item.return_cyl_qty)
-          totalReturnKg += Number(item.return_cyl_qty) * Number(gasListMap.get(item.gas_id).kg)
+          const gas = gasListMap.get(item.gas_id)
+          const trkg = Number(item.return_cyl_qty) * Number(gas.kg)
+          totalReturnKg += trkg
+          defective_amount += (trkg * Number(item.rate))
      })
 
      ncOrderItems.forEach(item => {
@@ -518,7 +522,7 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
                                                             variant="outlined"
                                                             className="font-bold bg-gray-100"
                                                        >
-                                                            ₹{totalTcs.toFixed(2)}
+                                                            <span className="font-bold">₹{totalTcs.toFixed(2)}</span>
                                                        </Chip>
                                                   }
                                              />
@@ -542,12 +546,12 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
                                                             variant="outlined"
                                                             className="font-bold bg-gray-100"
                                                        >
-                                                            ₹{totalFor.toFixed(2)}
+                                                            <span className="font-bold">₹{totalFor.toFixed(2)}</span>
                                                        </Chip>
                                                   }
                                              />
                                              <Divider orientation="vertical" />
-                                             <Box
+                                             {/* <Box
                                                   className="flex items-center justify-center"
                                              >
                                                   <span
@@ -565,8 +569,7 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
                                                             e.target.value
                                                        )
                                                   }}
-                                             />
-                                             <Divider orientation="vertical" />
+                                             /> */}
                                              <Box
                                                   className="flex items-center justify-center"
                                              >
@@ -776,7 +779,7 @@ function OrderItemRow({
                          onChange={(e) => handleItemChange(index, 'qty', e.target.value, nc)}
                          endDecorator={
                               <Chip className="font-bold bg-gray-700 text-white">
-                                   {`Total : ${totalKg} KG`}
+                                   <span className="font-bold">{`Total : ${totalKg} KG`}</span>
                               </Chip>
                          }
                     />
@@ -791,7 +794,7 @@ function OrderItemRow({
                          required
                          endDecorator={
                               <Chip className="font-bold bg-green-700 text-white">
-                                   {`Total : ₹${totalAmt.toFixed(2)}`}
+                                   <span className="font-bold"> {`Total : ₹${totalAmt.toFixed(2)}`}</span>
                               </Chip>
                          }
                          value={item.rate}
@@ -819,7 +822,7 @@ function OrderItemRow({
                                    }}
                                    endDecorator={
                                         <Chip className="font-bold bg-gray-700 text-white">
-                                             {`Total : ${totalReturnKg} KG`}
+                                             <span className="font-bold">{`Total : ${totalReturnKg} KG | Amt : ${decimalFix(totalReturnKg * item.rate, true)}`}</span>
                                         </Chip>
                                    }
                               /> : <></>)

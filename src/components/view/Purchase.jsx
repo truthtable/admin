@@ -5,6 +5,7 @@ import {
      Button,
      Card,
      CardContent,
+     Checkbox,
      Chip,
      CircularProgress,
      Container,
@@ -124,7 +125,7 @@ export default function Purchase() {
           gasList = allGases.data.data
      }
      console.log({ orders });
-     if (allGases.data != null && orders != null && orders.length > 0) {
+     if (allGases.data != null && orders != null && orders.length > 0 && plants != null && plants.length > 0) {
           orders.forEach((order, index) => {
 
                const orderNumber = order.order_no;
@@ -135,8 +136,8 @@ export default function Purchase() {
                const orderFOR = Number(order.for_charges);
                const orderSchemeRate = Number(order.scheme);
                const orderPlant = plants.filter(plant => plant.id === order.plant_id)[0]
-               const orderTotalDefectiveAmount = Number(order.defective_amount);
 
+               let orderTotalDefectiveAmount = 0;
                let orderTotalQty = 0;
                let orderTotalKg = 0;
                let orderTotalAmt = 0;
@@ -191,6 +192,8 @@ export default function Purchase() {
                     const totalReturnKg = kg * returnQty
                     const totalAmt = item.nc ? qty * rate : totalKg * rate
 
+
+                    orderTotalDefectiveAmount += totalReturnKg * rate
 
                     orderTotalQty += qty
                     orderTotalKg += totalKg
@@ -299,12 +302,7 @@ export default function Purchase() {
                                                   { label: "Total Return Kg", value: orderTotalReturnKg },
                                                   { label: "Total Return Qty", value: orderTotalReturnQty },
                                                   {
-                                                       label: "Defective Amount", value: <React.Fragment> <Cell
-                                                            column="defective_amount"
-                                                            id={order.id}
-                                                            data={orderTotalDefectiveAmount}
-                                                            tableName="purchase_orders"
-                                                       /></React.Fragment>
+                                                       label: "Defective Amount", value: decimalFix(orderTotalDefectiveAmount, true)
                                                   },
                                                   //TODO FIX THIS td in span
                                                   {
@@ -754,12 +752,17 @@ export const Cell = ({ id, data, tableName, column, editable = true, nc = false 
                <DataDisplay />
           </>
      }
-
+     //const [gasNc, setGasNc] = useState(false);
      if (column === "gas_id") {
           return <>
                <Stack alignContent="center"
                     justifyContent="center"
                     alignItems="center" direction="row" sx={{ width: "100%", minWidth: "200px" }}>
+                    {/* <Checkbox label="NC"
+                         defaultChecked
+                         onChange={(e) => () => {
+                              console.log(e.target.checked)
+                         }} /> */}
                     <Select
                          defaultValue={gas.id}
                          size="sm"
