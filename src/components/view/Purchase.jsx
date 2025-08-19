@@ -691,6 +691,7 @@ export const Cell = ({ id, data, tableName, column, editable = true, nc = false 
                                    padding: 0,
                               }}
                          >
+
                               <Box
                                    sx={{
                                         display: "flex",
