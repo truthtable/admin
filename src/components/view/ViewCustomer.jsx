@@ -24,7 +24,9 @@ import {
      Table,
      FormControl,
      FormLabel,
-     Checkbox
+     Checkbox,
+     Radio,
+     RadioGroup
 } from "@mui/joy";
 import TableHead from "../table/TableHead.jsx";
 import axios from "axios";
@@ -62,6 +64,11 @@ const ViewCustomer = () => {
 
      const [customerDetailsModel, setCustomerDetailsModel] = useState(false);
 
+     const BALANCE_SORT = "balance";
+     const CUSTOMER_NAME_SORT = "customer_name";
+     const ADDRESS_SORT = "address";
+     const [sortBy, setSortBy] = useState(BALANCE_SORT);
+
      let [selectedCustomer, setSelectedCustomer] = useState(null);
      const connection = useSelector((state) => state.connections);
      let xcombineData = null
@@ -79,6 +86,18 @@ const ViewCustomer = () => {
      if (notNull(customerData.data)) {
           if (customerData.data.data.length > 0) {
                let temp = combineData(customerData.data.data, customerData.data.userdata);
+
+               //sort by Balance
+               if (sortBy == CUSTOMER_NAME_SORT) {
+                    temp.sort((a, b) => a.user.name.localeCompare(b.user.name));
+               } else if (sortBy == BALANCE_SORT) {
+                    temp.sort((a, b) => b.totalBalance - a.totalBalance);
+               } else if (sortBy == ADDRESS_SORT) {
+                    temp.sort((a, b) => a.user.address.localeCompare(b.user.address));
+               }
+
+
+
                xcombineData = temp
                if (searchText.length > 0) {
                     temp = temp.filter((item) => {
@@ -86,7 +105,7 @@ const ViewCustomer = () => {
                     });
                }
 
-               CUSTOMERS.push(...temp);
+               console.log(temp)
 
                temp.forEach((item) => {
                     data.push(makeRow(item, loadConnection));
@@ -589,6 +608,18 @@ const ViewCustomer = () => {
                               display: "flex",
                               alignItems: "center",
                          }}
+                    >Sort By</Typography>
+                    <Select defaultValue="balance">
+                         <Option value="balance" onClick={() => setSortBy(BALANCE_SORT)}>Balance</Option>
+                         <Option value="customer_name" onClick={() => setSortBy(CUSTOMER_NAME_SORT)}>Customer Name</Option>
+                         <Option value="address" onClick={() => setSortBy(ADDRESS_SORT)}>Address</Option>
+                    </Select>
+                    <Typography
+                         variant="h4"
+                         style={{
+                              display: "flex",
+                              alignItems: "center",
+                         }}
                     >Search Customer</Typography>
                     <Input
                          placeholder="Name"
@@ -691,32 +722,6 @@ const ViewCustomer = () => {
                                                        </ListItemContent>
                                                   </ListItem>
                                                   <Divider />
-                                                  {/* <ListItem>
-                                                       <ListItemContent>
-                                                            <Stack direction={"row"} spacing={1} >
-                                                                 <pre>New Connections</pre>
-                                                                 <List>
-                                                                      {
-                                                                           new_connection.map((item, index) => {
-                                                                                return <ListItem key={"new_connection_" + index}>
-                                                                                     <ListItemContent>
-                                                                                          <Stack direction={"row"} spacing={1} alignItems="center" justifyContent="flex-start">
-                                                                                               <pre>{
-                                                                                                    formatDateTDDMMYY(new Date(item.created_at))
-                                                                                               }</pre>
-                                                                                               <pre>Gas</pre>
-                                                                                               <pre>Price</pre>
-                                                                                               <pre>Qty</pre>
-                                                                                          </Stack>
-                                                                                     </ListItemContent>
-                                                                                </ListItem>
-                                                                           })
-                                                                      }
-                                                                 </List>
-                                                            </Stack>
-                                                       </ListItemContent>
-                                                  </ListItem>*/
-                                                  }
                                              </>
                                         }
                                    </List>

@@ -20,6 +20,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { updateCustomer } from "../../state/CustomerUpdate";
 import { notNull } from "../../helpers.jsx/Validation";
+import { titleCase } from "../../Tools";
 
 export const NAME = "name";
 export const ADDRESS = "address";
@@ -123,7 +124,7 @@ export default function UpdateCustomerCell({ userId, custId, text, type, name, v
                               setOpen(true);
                          }}
                     >
-                         {text}
+                         {titleCase(text)}
                     </Button>
                </Box>
                <Modal
