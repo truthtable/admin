@@ -71,7 +71,8 @@ const columns = [
      { column: "received", color: COLORS.WHITE },
      { column: "balance", color: COLORS.WHITE }
 ];
-const CUSTOMER_LIST = []
+const CUSTOMER_LIST = [];
+const DELIVERY_BOY_LIST = new Map();
 let gasList = new Map();
 let deleveryGasEditUiGasList = [];
 let ncGasDeliveryList = {};
@@ -101,12 +102,15 @@ export default function deliveryHistory() {
                deleveryGasEditUiGasList.push(<Option key={value.id} value={value.id}>{value.company_name} - {value.kg}KG</Option>)
           })
      }
-     //console.log(allGasData);
+     console.log(users);
 
      //clear customer list
      CUSTOMER_LIST.length = 0
      if (users != null && users != undefined) {
           const customerOptions = users.map((user) => {
+               if (user.courier_boys.length != 0) {
+                    DELIVERY_BOY_LIST.set(user.courier_boys[0].id, user)
+               }
                if (user.customers.length == 0) {
                     return null;
                }
@@ -124,7 +128,7 @@ export default function deliveryHistory() {
 
           CUSTOMER_LIST.push(...customerOptions); // Spread the array instead of nesting
      }
-     //console.log(CUSTOMER_LIST)
+     console.log(DELIVERY_BOY_LIST)
 
      const currentUrl = window.location.href;
      const hashIndex = currentUrl.indexOf('#');
@@ -248,7 +252,7 @@ export default function deliveryHistory() {
           });
      }, []);
 
-     console.log(gasDeliverysSucsess, updateSuccess)
+     //console.log(gasDeliverysSucsess, updateSuccess)
      if (gasDeliverysSucsess) {
           dispatch({
                type: UPDATE_GAS_DELIVERY_SUCCESS_RESET,
@@ -549,6 +553,12 @@ export default function deliveryHistory() {
                          opacity: 0,
                     }}
                />
+               <Select defaultValue="dog">
+                    <Option value="dog">Dog</Option>
+                    <Option value="cat">Cat</Option>
+                    <Option value="fish">Fish</Option>
+                    <Option value="bird">Bird</Option>
+               </Select>
                <Input
                     type="date"
                     defaultValue={dateStart}
@@ -675,7 +685,7 @@ function Row({
           try {
                nc = true
                data = ncGasDeliveryList["d_" + id]["kg_" + kg]
-               console.log("ncGasDeliveryList", data);
+               //console.log("ncGasDeliveryList", data);
                if (type == "total") {
                     data = data.gas_price * data.quantity
                } else {
@@ -684,7 +694,7 @@ function Row({
                if (type == "total" || type == "gas_price") {
                     data = decimalFix(data, true)
                }
-               console.log("ncGasDeliveryList", data);
+               //console.log("ncGasDeliveryList", data);
           } catch (e) {
                nc = false
           }
