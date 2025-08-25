@@ -50,7 +50,6 @@ import {
      resetConnection
 } from '../../redux/connectionSlice.js'
 import { set } from "firebase/database";
-import { B } from "../../../dist/assets/@mui-x21ppXGD.js";
 let CUSTOMERS = [];
 const ViewCustomer = () => {
 
