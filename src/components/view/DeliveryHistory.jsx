@@ -335,7 +335,11 @@ export default function deliveryHistory() {
                               totalOnline += payment.amount
                          }
                     })
+
+                    const date = formatDateToDDMMYY_HHMM(delivery.created_at)
+
                     const cylinder_list = delivery.gas_deliveries.map((gas) => {
+
                          if (gas.nc) {
                               //console.log(gas);
                               setGasDeliveryList("d_" + delivery.id, "kg_" + gas.kg, gas)
@@ -343,14 +347,14 @@ export default function deliveryHistory() {
                                    cyl12KgNcQty = gas.quantity
                                    cyl12KgNcRate = gas.gas_price
                               } else if (gas.kg == 12) {
+                                   cyl12KgNcQty = gas.quantity
+                                   cyl12KgNcRate = gas.gas_price
+                              } else if (gas.kg == 15) {
                                    cyl15KgNcQty = gas.quantity
                                    cyl15KgNcRate = gas.gas_price
-                              } else if (gas.kg == 15) {
+                              } else if (gas.kg == 21) {
                                    cyl21KgNcQty = gas.quantity
                                    cyl21KgNcRate = gas.gas_price
-                              } else if (gas.kg == 21) {
-                                   cyl4KgNcQty = gas.quantity
-                                   cyl4KgNcRate = gas.gas_price
                               }
                               //dont add in nc gas return
                               return
@@ -393,64 +397,130 @@ export default function deliveryHistory() {
                               kg: 15
                          }
                     })
-                    const date = formatDateToDDMMYY_HHMM(delivery.created_at)
+
                     let total4Kg = cyl4KgQty * cyl4KgRate
                     let total4KgNc = cyl4KgNcQty * cyl4KgNcRate
+
                     let total12Kg = cyl12KgQty * cyl12KgRate
                     let total12KgNc = cyl12KgNcQty * cyl12KgNcRate
+
                     let total15Kg = cyl15KgQty * cyl15KgRate
                     let total15KgNc = cyl15KgNcQty * cyl15KgNcRate
+
                     let total21Kg = cyl21KgQty * cyl21KgRate
                     let total21KgNc = cyl21KgNcQty * cyl21KgNcRate
-                    let ncTotal = total4KgNc + total12KgNc + total15KgNc + total21KgNc
-                    let totalTotal = total12Kg + total15Kg + total21Kg + total4Kg + ncTotal
-                    let received = totalCash + totalOnline
-                    let balance = totalTotal - received
-                    csvData.push([
-                         //"Date",
-                         date,
-                         //"Customer",
-                         titleCase(delivery.customer.name),
-                         //"4KG CYL",
-                         cyl4KgQty,
-                         //"MT",
-                         cyl4KgMt,
-                         //"Rate",
-                         cyl4KgRate,
-                         //"Total",
-                         total4Kg,
-                         //"12KG CYL",
-                         cyl12KgQty,
-                         //"MT",
-                         cyl12KgMt,
-                         //"Rate",
-                         cyl12KgRate,
-                         //"Total",
-                         total12Kg,
-                         //"15KG CYL",
-                         cyl15KgQty,
-                         //"MT",
-                         cyl15KgMt,
-                         //"Rate",
-                         cyl15KgRate,
-                         //"Total",
-                         total15Kg,
-                         //"21KG CYL",
-                         cyl21KgQty,
-                         //"MT",
-                         cyl21KgMt,
-                         //"Rate",
-                         cyl21KgRate,
-                         //"Total",
-                         total21Kg,
-                         //"Sub Total",
-                         totalTotal,
-                         //"Received",
-                         received,
-                         //"Balance"
-                         balance
 
-                    ])
+                    let ncTotal = total4KgNc + total12KgNc + total15KgNc + total21KgNc
+
+                    let totalTotal = total12Kg + total15Kg + total21Kg + total4Kg
+
+                    let received = totalCash + totalOnline
+                    let balance = totalTotal - received + ncTotal
+
+                    if (
+                         total4KgNc + total12KgNc + total15KgNc + total21KgNc > 0
+                    ) {
+                         csvData.push([
+                              //"Date",
+                              date + "",
+                              //"Customer",
+                              titleCase(delivery.customer.name) + "",
+
+
+                              //"4KG CYL",
+                              cyl4KgNcQty + "",
+                              //"MT",
+                              "",
+                              //"Rate",
+                              cyl4KgNcRate + "",
+                              //"Total",
+                              total4KgNc + "",
+
+
+                              //"12KG CYL",
+                              cyl12KgNcQty + "",
+                              //"MT",
+                              "",
+                              //"Rate",
+                              cyl12KgNcRate + "",
+                              //"Total",
+                              total12KgNc + "",
+
+
+                              //"15KG CYL",
+                              cyl15KgNcQty + "",
+                              //"MT",
+                              "",
+                              //"Rate",
+                              cyl15KgNcRate + "",
+                              //"Total",
+                              total15KgNc + "",
+
+
+                              //"21KG CYL",
+                              cyl21KgNcQty + "",
+                              //"MT",
+                              "",
+                              //"Rate",
+                              cyl21KgNcRate + "",
+                              //"Total",
+                              total21KgNc + "",
+                              //"Sub Total",
+
+
+                              ncTotal + "",
+                              //"Received",
+                              "",
+                              //"Balance"
+                              ncTotal + ""
+                         ])
+                    }
+                    if (total4Kg + total12Kg + total15Kg + total21Kg > 0) {
+                         csvData.push([
+                              //"Date",
+                              date + "",
+                              //"Customer",
+                              titleCase(delivery.customer.name) + "",
+                              //"4KG CYL",
+                              cyl4KgQty + "",
+                              //"MT",
+                              cyl4KgMt + "",
+                              //"Rate",
+                              cyl4KgRate + "",
+                              //"Total",
+                              total4Kg + "",
+                              //"12KG CYL",
+                              cyl12KgQty + "",
+                              //"MT",
+                              cyl12KgMt + "",
+                              //"Rate",
+                              cyl12KgRate + "",
+                              //"Total",
+                              total12Kg + "",
+                              //"15KG CYL",
+                              cyl15KgQty + "",
+                              //"MT",
+                              cyl15KgMt + "",
+                              //"Rate",
+                              cyl15KgRate + "",
+                              //"Total",
+                              total15Kg + "",
+                              //"21KG CYL",
+                              cyl21KgQty + "",
+                              //"MT",
+                              cyl21KgMt + "",
+                              //"Rate",
+                              cyl21KgRate + "",
+                              //"Total",
+                              total21Kg + "",
+                              //"Sub Total",
+                              totalTotal + "",
+                              //"Received",
+                              received + "",
+                              //"Balance"
+                              balance + ""
+                         ])
+                    }
                     return createData(
                          // date
                          date,
@@ -553,12 +623,12 @@ export default function deliveryHistory() {
                          opacity: 0,
                     }}
                />
-               <Select defaultValue="dog">
+               {/* <Select defaultValue="dog">
                     <Option value="dog">Dog</Option>
                     <Option value="cat">Cat</Option>
                     <Option value="fish">Fish</Option>
                     <Option value="bird">Bird</Option>
-               </Select>
+               </Select> */}
                <Input
                     type="date"
                     defaultValue={dateStart}

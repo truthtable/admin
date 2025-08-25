@@ -6,6 +6,7 @@ import { CSVLink } from 'react-csv';
 const ExportCSV = (props) => {
      //console.log(props);
      //replace 0 with empty
+     //console.log(props.data);
      props.data.forEach((row) => {
           row.forEach((cell, index) => {
                if (cell == 0) {

@@ -42,7 +42,7 @@ import { fetchGas } from "../../redux/actions/gasAction.js";
 import { CgClose, CgCross } from "react-icons/cg";
 import { IoMdClose } from "react-icons/io";
 import gasServices from "../../services/gas-services.jsx";
-import { formatDateTDDMMYY, urlDecodeAndParseJson } from "../../Tools.jsx";
+import { decimalFix, formatDateTDDMMYY, urlDecodeAndParseJson } from "../../Tools.jsx";
 import { FaInfoCircle } from "react-icons/fa";
 import { use } from "react";
 import {
@@ -50,6 +50,7 @@ import {
      resetConnection
 } from '../../redux/connectionSlice.js'
 import { set } from "firebase/database";
+import { B } from "../../../dist/assets/@mui-x21ppXGD.js";
 let CUSTOMERS = [];
 const ViewCustomer = () => {
 
@@ -67,6 +68,7 @@ const ViewCustomer = () => {
      const BALANCE_SORT = "balance";
      const CUSTOMER_NAME_SORT = "customer_name";
      const ADDRESS_SORT = "address";
+     const DIARY_SORT = "diary_no";
      const [sortBy, setSortBy] = useState(BALANCE_SORT);
 
      let [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -94,10 +96,15 @@ const ViewCustomer = () => {
                     temp.sort((a, b) => b.totalBalance - a.totalBalance);
                } else if (sortBy == ADDRESS_SORT) {
                     temp.sort((a, b) => a.user.address.localeCompare(b.user.address));
+               } else if (sortBy == DIARY_SORT) {
+                    temp.sort((a, b) => {
+                         const isSpecial = v => v === 0 || v === null || v === "";
+                         if (isSpecial(a.diaryNumber) && !isSpecial(b.diaryNumber)) return 1;   // a goes after b
+                         if (!isSpecial(a.diaryNumber) && isSpecial(b.diaryNumber)) return -1;  // b goes after a
+                         if (isSpecial(a.diaryNumber) && isSpecial(b.diaryNumber)) return 0;    // keep order among specials
+                         return a.diaryNumber - b.diaryNumber;
+                    });
                }
-
-
-
                xcombineData = temp
                if (searchText.length > 0) {
                     temp = temp.filter((item) => {
@@ -609,10 +616,11 @@ const ViewCustomer = () => {
                               alignItems: "center",
                          }}
                     >Sort By</Typography>
-                    <Select defaultValue="balance">
-                         <Option value="balance" onClick={() => setSortBy(BALANCE_SORT)}>Balance</Option>
-                         <Option value="customer_name" onClick={() => setSortBy(CUSTOMER_NAME_SORT)}>Customer Name</Option>
-                         <Option value="address" onClick={() => setSortBy(ADDRESS_SORT)}>Address</Option>
+                    <Select defaultValue={BALANCE_SORT}>
+                         <Option value={BALANCE_SORT} onClick={() => setSortBy(BALANCE_SORT)}>Balance</Option>
+                         <Option value={CUSTOMER_NAME_SORT} onClick={() => setSortBy(CUSTOMER_NAME_SORT)}>Customer Name</Option>
+                         <Option value={ADDRESS_SORT} onClick={() => setSortBy(ADDRESS_SORT)}>Address</Option>
+                         <Option value={DIARY_SORT} onClick={() => setSortBy(DIARY_SORT)}>Diary No.</Option>
                     </Select>
                     <Typography
                          variant="h4"
@@ -810,7 +818,7 @@ function makeRow(data, onAllDataClick) {
                value={data.user.phone_no}
                table={UPDATE_USER}
           />,
-          <span key="tb" className="b ps1">{`₹${data.totalBalance}`}</span>,
+          <Balance data={data} />,
           <Box
                key="chb"
                sx={{
@@ -889,4 +897,93 @@ function AllData({ data, onClick }) {
                <FaInfoCircle />
           </Button>
      </Box>
+}
+
+function Balance({ data }) {
+     const [showModal, setShowModal] = useState(false);
+     const [amount, setAmount] = useState(0);
+     if (showModal) {
+          return (
+               <Modal
+                    open={showModal}
+                    onClose={() => setShowModal(false)}
+                    title="Balance"
+                    sx={{
+                         display: "flex",
+                         flexDirection: "column",
+                         justifyContent: "center",
+                         alignItems: "center",
+                         gap: "10px",
+                    }}
+               >
+                    <Sheet
+                         sx={{
+                              padding: "20px",
+                              borderRadius: "10px",
+                              backgroundColor: "#fff",
+                              boxShadow: "0px 0px 10px 0px #0000001a",
+                              overflow: "auto",
+                         }}
+                    >
+                         <Stack
+                              direction={"column"}
+                              spacing={1}
+                              alignItems="start"
+                              justifyContent="flex-start">
+                              <ModalClose variant="outlined" />
+                              <Typography>Adjust Balance</Typography>
+                              <Divider sx={{ mb: 10 }} />
+                              <span>Balance</span>
+                              <pre>{decimalFix(data.totalBalance, true)}</pre>
+                              <span>Outstanding Balance</span>
+                              <Input
+                                   size="sm"
+                                   type="text"
+                                   inputMode="numeric"
+                                   pattern="\d*"
+                                   placeholder="Enter Amount"
+                                   value={amount}
+                                   onChange={(e) => {
+                                        // Only allow digits and empty string
+                                        const num = e.target.value.replace(/[^\d]/g, "");
+                                        setAmount(num);
+                                   }}
+                              />
+                              <Divider sx={{ mb: 10 }} />
+                              <Stack direction={"row"} gap={1} sx={{ display: "flex", width: "100%", justifyContent: "flex-end" }}>
+                                   <Button
+                                        onClick={() => {
+                                             setShowModal(false);
+                                        }}
+                                        variant="outlined"
+                                   >
+                                        Close
+                                   </Button>
+                                   <Button
+                                        onClick={() => {
+                                             setShowModal(false);
+                                        }}
+                                   >
+                                        Save
+                                   </Button>
+                              </Stack>
+                         </Stack>
+                    </Sheet>
+               </Modal>
+          )
+     }
+     return <div className="flex justify-center items-center">
+          <Button
+               variant="plain"
+               color="success"
+               sx={{
+                    color: "black",
+               }}
+               onClick={() => {
+                    setShowModal(true);
+               }}
+          >
+               {decimalFix(data.totalBalance, true)}
+          </Button>
+     </div >
 }
