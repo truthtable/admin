@@ -421,12 +421,13 @@ export default function deliveryHistory() {
                          total4KgNc + total12KgNc + total15KgNc + total21KgNc > 0
                     ) {
                          csvData.push([
+
                               //"Date",
                               date + "",
                               //"Customer",
                               titleCase(delivery.customer.name) + "",
 
-
+                              "NC",
                               //"4KG CYL",
                               cyl4KgNcQty + "",
                               //"MT",
@@ -477,10 +478,12 @@ export default function deliveryHistory() {
                     }
                     if (total4Kg + total12Kg + total15Kg + total21Kg > 0) {
                          csvData.push([
+
                               //"Date",
                               date + "",
                               //"Customer",
                               titleCase(delivery.customer.name) + "",
+                              "",
                               //"4KG CYL",
                               cyl4KgQty + "",
                               //"MT",
@@ -528,7 +531,7 @@ export default function deliveryHistory() {
                          {
                               dileveryId: delivery.id,
                               custId: delivery.customer.id,
-                              customer: delivery.customer.name,
+                              customer: titleCase(delivery.customer.name),
                               diaryNumber: delivery.customer.diaryNumber,
                               adress: delivery.customer.address,
                               deliveredBy: delivery.courier_boy.name,
@@ -562,6 +565,9 @@ export default function deliveryHistory() {
      //console.log(ncGasDeliveryList);
 
      const headers = columns.map((col) => col.column);
+
+     //add NC column at 3rd position
+     headers.splice(2, 0, "NC");
 
      return <Stack
           sx={{
