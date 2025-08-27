@@ -22,6 +22,7 @@ import ExportCSV from "../ExportCSV.jsx";
 import { updateGas } from "../../state/UpdateGas.jsx";
 import { updateOrCreateCustomerPayments } from "../../redux/customerPaymentsUpdateOrCreate.js";
 import Switch, { switchClasses } from '@mui/joy/Switch';
+import { C } from "../../../dist/assets/react-icons-B28u-0s0.js";
 const COLORS = {
      WHITE: "#ffffff",
      KG_4: "#fde3e3",
@@ -102,14 +103,16 @@ export default function deliveryHistory() {
                deleveryGasEditUiGasList.push(<Option key={value.id} value={value.id}>{value.company_name} - {value.kg}KG</Option>)
           })
      }
-     console.log(users);
+     //console.log(users);
 
      //clear customer list
      CUSTOMER_LIST.length = 0
      if (users != null && users != undefined) {
           const customerOptions = users.map((user) => {
                if (user.courier_boys.length != 0) {
-                    DELIVERY_BOY_LIST.set(user.courier_boys[0].id, user)
+                    if (user.courier_boys[0]?.login?.role == 2) {
+                         DELIVERY_BOY_LIST.set(user.courier_boys[0].id, user)
+                    }
                }
                if (user.customers.length == 0) {
                     return null;
@@ -128,7 +131,7 @@ export default function deliveryHistory() {
 
           CUSTOMER_LIST.push(...customerOptions); // Spread the array instead of nesting
      }
-     console.log(DELIVERY_BOY_LIST)
+     console.log(CUSTOMER_LIST)
 
      const currentUrl = window.location.href;
      const hashIndex = currentUrl.indexOf('#');
@@ -218,7 +221,6 @@ export default function deliveryHistory() {
           deliverBoyId
      )
 
-     //console.log(deliveries);
      useEffect(() => {
           loadData();
           if (
@@ -607,9 +609,10 @@ export default function deliveryHistory() {
                     display: loading ? "none" : "flex",
                     overflow: "auto",
                     flexGrow: 1,
+                    alignItems: "center",
                }}
                direction="row"
-               gap={.5}
+               gap={1}
                mt={.5}
                mb={.5}
                pr={.5}
@@ -629,12 +632,62 @@ export default function deliveryHistory() {
                          opacity: 0,
                     }}
                />
-               {/* <Select defaultValue="dog">
-                    <Option value="dog">Dog</Option>
-                    <Option value="cat">Cat</Option>
-                    <Option value="fish">Fish</Option>
-                    <Option value="bird">Bird</Option>
-               </Select> */}
+               <span
+                    style={{
+                         fontWeight: "bold",
+                         color: "black",
+                    }}
+               >Customer :</span>
+               <Select
+                    defaultValue={customerId ? customerId : null}
+                    placeholder="Select Customer"
+                    onChange={(event, value) => {
+                         if (value === "") {
+                              setCustomerId(null);
+                              return;
+                         }
+                         setCustomerId(value);
+                    }}
+               >
+                    <Option value="">Show All</Option>
+                    {
+                         CUSTOMER_LIST.map((user) => (
+                              <Option key={user.id} value={user.id}>
+                                   {titleCase(user.label)}
+                              </Option>
+                         ))
+                    }
+               </Select>
+               <span
+                    style={{
+                         fontWeight: "bold",
+                         color: "black",
+                    }}
+               >Delivery Boy :</span>
+               <Select
+                    defaultValue={deliverBoyId ? deliverBoyId : null}
+                    placeholder="Select Delivery Boy"
+                    onChange={(event, value) => {
+                         if (value === "") {
+                              setDeliverBoyId(null);
+                              return;
+                         }
+                         setDeliverBoyId(value);
+                    }}
+               >
+                    <Option value="">Show All</Option>
+                    {[...DELIVERY_BOY_LIST.entries()].map(([courierId, user]) => (
+                         <Option key={courierId} value={courierId}>
+                              {titleCase(user.name)}
+                         </Option>
+                    ))}
+               </Select>
+               <span
+                    style={{
+                         fontWeight: "bold",
+                         color: "black",
+                    }}
+               >Date :</span>
                <Input
                     type="date"
                     defaultValue={dateStart}
