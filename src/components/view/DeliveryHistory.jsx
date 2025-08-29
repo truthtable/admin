@@ -91,8 +91,6 @@ export default function deliveryHistory() {
      const allGasData = useSelector((state) => state.gas);
      const { gasDeliverysSucsess } = useSelector((state) => state.gasDelivery);
 
-
-
      deleveryGasEditUiGasList.length = 0;
      gasList.clear();
 
@@ -130,7 +128,7 @@ export default function deliveryHistory() {
 
           CUSTOMER_LIST.push(...customerOptions); // Spread the array instead of nesting
      }
-     console.log(CUSTOMER_LIST)
+     //console.log(CUSTOMER_LIST)
 
      const currentUrl = window.location.href;
      const hashIndex = currentUrl.indexOf('#');

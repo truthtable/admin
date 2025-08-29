@@ -61,26 +61,83 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
 
      let totalAmt = 0
      let totalQty = 0
+     let total4KgQty = 0
+     let total12KgQty = 0
+     let total15KgQty = 0
+     let total21KgQty = 0
      let totalKg = 0
+     let total4Kg = 0
+     let total12Kg = 0
+     let total15Kg = 0
+     let total21Kg = 0
      let ballance = 0
      let totalReturnQty = 0
+     let totalReturn4KgQty = 0
+     let totalReturn12KgQty = 0
+     let totalReturn15KgQty = 0
+     let totalReturn21KgQty = 0
      let totalReturnKg = 0
+     let totalReturn4Kg = 0
+     let totalReturn12Kg = 0
+     let totalReturn15Kg = 0
+     let totalReturn21Kg = 0
      let defective_amount = 0
 
      orderItems.forEach(item => {
-          totalQty += Number(item.qty)
-          totalKg += Number(item.qty) * Number(gasListMap.get(item.gas_id).kg)
-          totalAmt += Number(item.qty) * Number(gasListMap.get(item.gas_id).kg) * Number(item.rate)
-          totalReturnQty += Number(item.return_cyl_qty)
           const gas = gasListMap.get(item.gas_id)
+          if (gas.kg == 4) {
+               total4KgQty += Number(item.qty)
+               total4Kg += (Number(item.qty) * Number(gas.kg))
+               totalReturn4KgQty += Number(item.return_cyl_qty)
+               totalReturn4Kg += (Number(item.return_cyl_qty) * Number(gas.kg))
+          }
+          if (gas.kg == 12) {
+               total12KgQty += Number(item.qty)
+               total12Kg += (Number(item.qty) * Number(gas.kg))
+               totalReturn12KgQty += Number(item.return_cyl_qty)
+               totalReturn12Kg += (Number(item.return_cyl_qty) * Number(gas.kg))
+          }
+          if (gas.kg == 15) {
+               total15KgQty += Number(item.qty)
+               total15Kg += (Number(item.qty) * Number(gas.kg))
+               totalReturn15KgQty += Number(item.return_cyl_qty)
+               totalReturn15Kg += (Number(item.return_cyl_qty) * Number(gas.kg))
+          }
+          if (gas.kg == 21) {
+               total21KgQty += Number(item.qty)
+               total21Kg += (Number(item.qty) * Number(gas.kg))
+               totalReturn21KgQty += Number(item.return_cyl_qty)
+               totalReturn21Kg += (Number(item.return_cyl_qty) * Number(gas.kg))
+          }
+          totalQty += Number(item.qty)
+          totalKg += Number(item.qty) * Number(gas.kg)
+          totalAmt += Number(item.qty) * Number(gas.kg) * Number(item.rate)
+          totalReturnQty += Number(item.return_cyl_qty)
           const trkg = Number(item.return_cyl_qty) * Number(gas.kg)
           totalReturnKg += trkg
           defective_amount += (trkg * Number(item.rate))
      })
 
      ncOrderItems.forEach(item => {
+          const gas = gasListMap.get(item.gas_id)
+          if (gas.kg == 4) {
+               total4KgQty += Number(item.qty)
+               total4Kg += (Number(item.qty) * Number(gas.kg))
+          }
+          if (gas.kg == 12) {
+               total12KgQty += Number(item.qty)
+               total12Kg += (Number(item.qty) * Number(gas.kg))
+          }
+          if (gas.kg == 15) {
+               total15KgQty += Number(item.qty)
+               total15Kg += (Number(item.qty) * Number(gas.kg))
+          }
+          if (gas.kg == 21) {
+               total21KgQty += Number(item.qty)
+               total21Kg += (Number(item.qty) * Number(gas.kg))
+          }
           totalQty += Number(item.qty)
-          totalKg += Number(item.qty) * Number(gasListMap.get(item.gas_id).kg)
+          totalKg += Number(item.qty) * Number(gas.kg)
           totalAmt += Number(item.qty) * Number(item.rate)
      })
 
@@ -606,7 +663,7 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
                                                        <tr>
                                                             <th className="border-0 bg-white p-0 m-0">Billing Amt</th>
                                                             <td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
-                                                            <td className="border-0 bg-white  p-0 m-0">
+                                                            <td className="border-0 bg-white  p-0 m-0  text-left">
                                                                  <Stack
                                                                       direction="row"
                                                                       gap={1}
@@ -631,7 +688,7 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
                                                        <tr>
                                                             <th className="border-0 bg-white  p-0 m-0 w-40">Balance</th>
                                                             <td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
-                                                            <td className="border-0 bg-white  p-0 m-0">
+                                                            <td className="border-0 bg-white  p-0 m-0  text-left">
                                                                  <Tooltip
                                                                       placement="right"
                                                                       size="lg"
@@ -645,25 +702,117 @@ export default function AddPurchaseUI({ gaslistData, plants }) {
                                                                  </Tooltip>
                                                             </td>
                                                        </tr>
+                                                       <tr><th colSpan={4} className="border-0 bg-white  p-0 m-0  h-2"></th></tr>
                                                        <tr>
-                                                            <th className="border-0 bg-white  p-0 m-0  w-40">Total Qty</th>
-                                                            <td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
-                                                            <td className="border-0 bg-white  p-0 m-0 font-bold">{totalQty}</td>
-                                                       </tr>
-                                                       <tr>
-                                                            <th className="border-0 bg-white  p-0 m-0  w-40">Total Kg</th>
-                                                            <td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
-                                                            <td className="border-0 bg-white  p-0 m-0 font-bold">{totalKg}</td>
-                                                       </tr>
-                                                       <tr>
-                                                            <th className="border-0 bg-white  p-0 m-0  w-40">Total Return Qty</th>
-                                                            <td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
-                                                            <td className="border-0 bg-white  p-0 m-0 font-bold">{totalReturnQty}</td>
-                                                       </tr>
-                                                       <tr>
-                                                            <th className="border-0 bg-white  p-0 m-0  w-40">Total Return Kg</th>
-                                                            <td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
-                                                            <td className="border-0 bg-white  p-0 m-0 font-bold">{totalReturnKg}</td>
+                                                            <td className="border-0 bg-white  p-0 m-0 ">
+                                                                 <table className="table-auto text-right bg-white">
+                                                                      <tbody className="text-right bg-white">
+                                                                           <tr>
+                                                                                <td className="border-0 bg-white  p-0 m-0 ">Total&nbsp;4kg&nbsp;Qty</td>
+                                                                                <td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
+                                                                                <td className="border-0 bg-white  p-0 m-0  text-left">
+                                                                                     {total4KgQty}
+                                                                                </td>
+                                                                           </tr>
+                                                                           <tr>
+                                                                                <td className="border-0 bg-white  p-0 m-0 ">Total&nbsp;12kg&nbsp;Qty</td>
+                                                                                <td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
+                                                                                <td className="border-0 bg-white  p-0 m-0 text-left">
+                                                                                     {total12KgQty}
+                                                                                </td>
+                                                                           </tr>
+                                                                           <tr>
+                                                                                <td className="border-0 bg-white  p-0 m-0 ">Total&nbsp;15kg&nbsp;Qty</td>
+                                                                                <td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
+                                                                                <td className="border-0 bg-white  p-0 m-0 text-left">
+                                                                                     {total15KgQty}
+                                                                                </td>
+                                                                           </tr>
+                                                                           <tr>
+                                                                                <td className="border-0 bg-white  p-0 m-0 ">Total&nbsp;21kg&nbsp;Qty</td>
+                                                                                <td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
+                                                                                <td className="border-0 bg-white  p-0 m-0 text-left">
+                                                                                     {total21KgQty}
+                                                                                </td>
+                                                                           </tr>
+                                                                           <tr>
+                                                                                <th className="border-0 bg-white  p-0 m-0 ">Total&nbsp;Qty</th>
+                                                                                <td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
+                                                                                <td className="border-0 bg-white  p-0 m-0 font-bold  text-left">
+                                                                                     {totalQty}
+                                                                                </td>
+                                                                           </tr>
+                                                                      </tbody>
+                                                                 </table>
+                                                            </td>
+                                                            <td className="border-0 bg-white  p-0 m-0  w-1" />
+                                                            <td className="border-0 bg-white  p-0 m-0 ">
+                                                                 <table className="table-auto text-right bg-white">
+                                                                      <tbody className="text-right bg-white">
+                                                                           <tr>
+                                                                                <td className="border-0 bg-white  p-0 m-0 ">Total&nbsp;4kg</td><td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
+                                                                                <td className="border-0 bg-white  p-0 m-0 text-left">{total4Kg}</td>
+                                                                           </tr>
+                                                                           <tr>
+                                                                                <td className="border-0 bg-white  p-0 m-0 ">Total&nbsp;12kg</td><td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
+                                                                                <td className="border-0 bg-white  p-0 m-0 text-left">{total12Kg}</td>
+                                                                           </tr>
+                                                                           <tr>
+                                                                                <td className="border-0 bg-white  p-0 m-0 ">Total&nbsp;15kg</td><td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
+                                                                                <td className="border-0 bg-white  p-0 m-0 text-left">{total15Kg}</td>
+                                                                           </tr>
+                                                                           <tr>
+                                                                                <td className="border-0 bg-white  p-0 m-0 ">Total&nbsp;21kg</td><td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
+                                                                                <td className="border-0 bg-white  p-0 m-0 text-left">{total21Kg}</td>
+                                                                           </tr>
+                                                                           <tr>
+                                                                                <th className="border-0 bg-white  p-0 m-0 ">Total&nbsp;Kg</th>
+                                                                                <td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
+                                                                                <td className="border-0 bg-white  p-0 m-0 font-bold  text-left">{totalKg}</td>
+                                                                           </tr>
+                                                                      </tbody>
+                                                                 </table>
+                                                            </td>
+                                                            <td className="border-0 bg-white  p-0 m-0  w-10" />
+                                                            <td className="border-0 bg-white  p-0 m-0 ">
+                                                                 <table className="table-auto text-right bg-white">
+                                                                      <tbody className="text-right bg-white">
+                                                                           <tr><td className="border-0 bg-white  p-0 m-0 ">Total&nbsp;4kg&nbsp;Return&nbsp;Qty</td><td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
+                                                                                <td className="border-0 bg-white  p-0 m-0 text-left">{totalReturn4KgQty}</td></tr>
+                                                                           <tr><td className="border-0 bg-white  p-0 m-0 ">Total 12kg Return Qty</td><td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
+                                                                                <td className="border-0 bg-white  p-0 m-0 text-left">{totalReturn12KgQty}</td></tr>
+                                                                           <tr><td className="border-0 bg-white  p-0 m-0 ">Total 15kg Return Qty</td><td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
+                                                                                <td className="border-0 bg-white  p-0 m-0 text-left">{totalReturn15KgQty}</td></tr>
+                                                                           <tr><td className="border-0 bg-white  p-0 m-0 ">Total 21kg Return Qty</td><td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
+                                                                                <td className="border-0 bg-white  p-0 m-0 text-left">{totalReturn21KgQty}</td></tr>
+                                                                           <tr>
+                                                                                <th className="border-0 bg-white  p-0 m-0 ">Total&nbsp;Return&nbsp;Qty</th>
+                                                                                <td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
+                                                                                <td className="border-0 bg-white  p-0 m-0 font-bold  text-left">{totalReturnQty}</td>
+                                                                           </tr>
+                                                                      </tbody>
+                                                                 </table>
+                                                            </td>
+                                                            <td className="border-0 bg-white  p-0 m-0  w-10" />
+                                                            <td className="border-0 bg-white  p-0 m-0 ">
+                                                                 <table className="table-auto text-right bg-white">
+                                                                      <tbody className="text-right bg-white">
+                                                                           <tr><td className="border-0 bg-white  p-0 m-0 ">Total&nbsp;Return&nbsp;4kg</td><td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
+                                                                                <td className="border-0 bg-white  p-0 m-0 text-left">{totalReturn4Kg}</td></tr>
+                                                                           <tr><td className="border-0 bg-white  p-0 m-0 ">Total Return 12kg</td><td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
+                                                                                <td className="border-0 bg-white  p-0 m-0 text-left">{totalReturn12Kg}</td></tr>
+                                                                           <tr><td className="border-0 bg-white  p-0 m-0 ">Total Return 15kg</td><td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
+                                                                                <td className="border-0 bg-white  p-0 m-0 text-left">{totalReturn15Kg}</td></tr>
+                                                                           <tr><td className="border-0 bg-white  p-0 m-0 ">Total Return 21kg</td><td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
+                                                                                <td className="border-0 bg-white  p-0 m-0 text-left">{totalReturn21Kg}</td></tr>
+                                                                           <tr>
+                                                                                <th className="border-0 bg-white  p-0 m-0 ">Total&nbsp;Return&nbsp;Kg</th>
+                                                                                <td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
+                                                                                <td className="border-0 bg-white  p-0 m-0 font-bold text-left">{totalReturnKg}</td>
+                                                                           </tr>
+                                                                      </tbody>
+                                                                 </table>
+                                                            </td>
                                                        </tr>
                                                   </tbody>
                                              </table>
@@ -814,10 +963,10 @@ function OrderItemRow({
                                    value={item.return_cyl_qty}
                                    onChange={(e) => {
                                         console.log(item.qty, e.target.value);
-                                        if (item.qty < e.target.value) {
-                                             alert("Return qty should be less than qty");
-                                             return;
-                                        }
+                                        // if (item.qty < e.target.value) {
+                                        //      alert("Return qty should be less than qty");
+                                        //      return;
+                                        // }
                                         handleItemChange(index, 'return_cyl_qty', e.target.value, nc);
                                    }}
                                    endDecorator={
