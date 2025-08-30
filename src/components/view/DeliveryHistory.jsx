@@ -37,19 +37,19 @@ const columns = [
      { column: "customer", color: COLORS.WHITE },
 
      //4KG Group
-     { column: "4kg cyl", color: COLORS.KG_4 },
+     { column: "4kg\ncyl", color: COLORS.KG_4 },
      { column: "mt", color: COLORS.KG_4 },
      { column: "rate", color: COLORS.KG_4 },
      { column: "total", color: COLORS.KG_4 },
 
      // 12KG Group 
-     { column: "12kg cyl", color: COLORS.KG_12 },
+     { column: "12kg\ncyl", color: COLORS.KG_12 },
      { column: "mt", color: COLORS.KG_12 },
      { column: "rate", color: COLORS.KG_12 },
      { column: "total", color: COLORS.KG_12 },
 
      // 15KG Group
-     { column: "15kg cyl", color: COLORS.KG_15 },
+     { column: "15kg\ncyl", color: COLORS.KG_15 },
      { column: "mt", color: COLORS.KG_15 },
      { column: "rate", color: COLORS.KG_15 },
      { column: "total", color: COLORS.KG_15 },
@@ -61,7 +61,7 @@ const columns = [
      // { column: "total", color: COLORS.KG_17 },
 
      // 21KG Group
-     { column: "21kg cyl", color: COLORS.KG_21 },
+     { column: "21kg\ncyl", color: COLORS.KG_21 },
      { column: "mt", color: COLORS.KG_21 },
      { column: "rate", color: COLORS.KG_21 },
      { column: "total", color: COLORS.KG_21 },
@@ -780,10 +780,20 @@ export default function deliveryHistory() {
                     <Table
                          aria-label="collapsible table"
                          size="md"
+                         stickyHeader={true}
                          sx={{
                               wordBreak: "keep-all",
                               tableLayout: "auto",
                               fontWeight: "bold",
+                              //0px padding and margin in td and th and tr
+                              "& td, & tr": {
+                                   padding: 0,
+                                   margin: 0,
+                                   //important to override mui default border
+                                   borderBottomWidth: 0,
+                                   height: "unset",
+                                   verticalAlign: "middle",
+                              }
                          }}
                     >
                          <thead>
@@ -797,7 +807,9 @@ export default function deliveryHistory() {
                                                   key={index + "_" + col.column}
                                                   style={{
                                                        textAlign: "center",
-                                                       backgroundColor: col.color
+                                                       backgroundColor: col.color,
+                                                       //break word
+                                                       wordBreak: "break-space",
                                                   }}
                                              >
                                                   {col.column}
@@ -1064,6 +1076,7 @@ function Row({
                                              }
                                              correction={row.info.correction}
                                              openEdit={openEdit}
+                                             isOutstanding={row.isOutstanding}
                                         />
                                    </td>
                               </tr>
@@ -1123,13 +1136,15 @@ function Row({
                          -
                     </td>
                </tr>
-               <tr>
-                    <td style={{ height: 0, padding: 0 }} colSpan={columns.length + 1}>
-                         {open && (
+               {open && (
+                    <tr>
+                         <td style={{ height: 0, padding: 0 }} colSpan={columns.length + 1}>
+
                               <DropSheet />
-                         )}
-                    </td>
-               </tr>
+
+                         </td>
+                    </tr>
+               )}
           </>
           )
      }
@@ -1164,13 +1179,13 @@ function Row({
                          ))
                     ))}
                </tr>
-               <tr>
-                    <td style={{ height: 0, padding: 0 }} colSpan={columns.length + 1}>
-                         {open && (
+               {open && (
+                    <tr>
+                         <td style={{ height: 0, padding: 0 }} colSpan={columns.length + 1}>
                               <DropSheet />
-                         )}
-                    </td>
-               </tr>
+                         </td>
+                    </tr>
+               )}
           </React.Fragment>
      );
 }
@@ -1272,9 +1287,10 @@ const GasEditUi = ({
      deleveryId,
      payments,
      correction,
-     openEdit
+     openEdit,
+     isOutstanding
 }) => {
-
+     //console.log("isOutstanding", isOutstanding)
      const dispatch = useDispatch();
      let onlinePayment = { id: null, amount: null, method: null };
      let cashPayment = { id: null, amount: null, method: null };
@@ -1453,111 +1469,115 @@ const GasEditUi = ({
                                    }}
                               />
                          </Stack>
-                         <span className="b">&nbsp;Gas List</span>
-                         <List
-                              sx={{
-                                   backgroundColor: "#FFF1DB"
-                              }}
-                         >
-                              {
-                                   [...gasData.values()].map((data) => {
-                                        console.log("nc", data.nc);
-                                        return <ListItem key={data.id} sx={{ width: "100%" }}>
-                                             <ListItemContent sx={{ color: "black", fontWeight: "bold" }}>
-                                                  {/* {gas.company_name} - {gas.kg}KG {data.quantity}Qty ₹{data.price} */}
+                         {
+                              !isOutstanding ? (<>
+                                   <span className="b">&nbsp;Gas List</span>
+                                   <List
+                                        sx={{
+                                             backgroundColor: "#FFF1DB"
+                                        }}
+                                   >
+                                        {
+                                             [...gasData.values()].map((data) => {
+                                                  console.log("nc", data.nc);
+                                                  return <ListItem key={data.id} sx={{ width: "100%" }}>
+                                                       <ListItemContent sx={{ color: "black", fontWeight: "bold" }}>
+                                                            {/* {gas.company_name} - {gas.kg}KG {data.quantity}Qty ₹{data.price} */}
 
-                                                  <Stack direction="row" spacing={1} alignItems={"center"} >
-                                                       {(!data.is_empty) ? <>
-                                                            <span>NC</span>
-                                                            <Switch
-                                                                 checked={data.nc}
-                                                                 onChange={(event) => {
-                                                                      //console.log(event.target.checked)
-                                                                      handleSetGasData(data.id, "nc", event.target.checked);
-                                                                 }}
-
-                                                            />
-                                                       </> : null}
-                                                       <RadioGroup
-                                                            value={data.is_empty == true ? 1 : 0} // Ensure a fallback value if data.is_empty is undefined
-                                                            name="radio-buttons-group"
-                                                            orientation="horizontal"
-                                                            required
-                                                            onChange={(event) => {
-                                                                 handleSetGasData(data.id, "is_empty", event.target.value == 1); // Update gasData with the selected value
-                                                            }}
-                                                       >
-                                                            <Radio value={0} label="Delivered" variant="outlined" color="success" />
-                                                            <Radio value={1} label="Received" variant="outlined" color="danger" />
-                                                       </RadioGroup>
-                                                       <Select required sx={{ width: "220px", ml: 2 }} defaultValue={data.gas_id}
-                                                            onChange={(event, value) => {
-                                                                 handleSetGasData(data.id, "gas_id", value);
-                                                            }}
-                                                       >
-                                                            {
-                                                                 deleveryGasEditUiGasList
-                                                            }
-                                                       </Select>
-                                                       <Input required sx={{ width: "168px" }} type="number" value={data.quantity} startDecorator={<span>Qty : </span>}
-                                                            onChange={(event) => {
-                                                                 handleSetGasData(data.id, "quantity", event.target.value);
-                                                            }}
-                                                       />
-                                                       <Input required={(!data.is_empty)} sx={{ width: "168px", visibility: (!data.is_empty) ? "visible" : "hidden" }} type="number" value={data.gas_price} startDecorator={<span>Amt : </span>} onChange={(event) => {
-                                                            handleSetGasData(data.id, "gas_price", event.target.value);
-                                                       }} />
-                                                       <Box
-                                                            onClick={() => {
-                                                                 handleDeleteGasData(data.id)
-                                                            }}
-                                                            sx={{
-                                                                 padding: "6px",
-                                                                 backgroundColor: "#e34a4c",
-                                                                 color: "white",
-                                                                 borderRadius: "16px",
-                                                            }}
-                                                       ><ImCross /></Box>
-                                                  </Stack>
+                                                            <Stack direction="row" spacing={1} alignItems={"center"} >
+                                                                 {(!data.is_empty) ? <>
+                                                                      <span>NC</span>
+                                                                      <Switch
+                                                                           checked={data.nc}
+                                                                           onChange={(event) => {
+                                                                                //console.log(event.target.checked)
+                                                                                handleSetGasData(data.id, "nc", event.target.checked);
+                                                                           }}
+                                                                      />
+                                                                 </> : null}
+                                                                 <RadioGroup
+                                                                      value={data.is_empty == true ? 1 : 0} // Ensure a fallback value if data.is_empty is undefined
+                                                                      name="radio-buttons-group"
+                                                                      orientation="horizontal"
+                                                                      required
+                                                                      onChange={(event) => {
+                                                                           handleSetGasData(data.id, "is_empty", event.target.value == 1); // Update gasData with the selected value
+                                                                      }}
+                                                                 >
+                                                                      <Radio value={0} label="Delivered" variant="outlined" color="success" />
+                                                                      <Radio value={1} label="Received" variant="outlined" color="danger" />
+                                                                 </RadioGroup>
+                                                                 <Select required sx={{ width: "220px", ml: 2 }} defaultValue={data.gas_id}
+                                                                      onChange={(event, value) => {
+                                                                           handleSetGasData(data.id, "gas_id", value);
+                                                                      }}
+                                                                 >
+                                                                      {
+                                                                           deleveryGasEditUiGasList
+                                                                      }
+                                                                 </Select>
+                                                                 <Input required sx={{ width: "168px" }} type="number" value={data.quantity} startDecorator={<span>Qty : </span>}
+                                                                      onChange={(event) => {
+                                                                           handleSetGasData(data.id, "quantity", event.target.value);
+                                                                      }}
+                                                                 />
+                                                                 <Input required={(!data.is_empty)} sx={{ width: "168px", visibility: (!data.is_empty) ? "visible" : "hidden" }} type="number" value={data.gas_price} startDecorator={<span>Amt : </span>} onChange={(event) => {
+                                                                      handleSetGasData(data.id, "gas_price", event.target.value);
+                                                                 }} />
+                                                                 <Box
+                                                                      onClick={() => {
+                                                                           handleDeleteGasData(data.id)
+                                                                      }}
+                                                                      sx={{
+                                                                           padding: "6px",
+                                                                           backgroundColor: "#e34a4c",
+                                                                           color: "white",
+                                                                           borderRadius: "16px",
+                                                                      }}
+                                                                 ><ImCross /></Box>
+                                                            </Stack>
+                                                       </ListItemContent>
+                                                  </ListItem>
+                                             })
+                                        }
+                                        <ListItem>
+                                             <ListItemContent>
+                                                  <Input value={editName} onChange={(event) => { setEditName(event.target.value) }} placeholder="Add Gas" />
                                              </ListItemContent>
                                         </ListItem>
-                                   })
-                              }
-                              <ListItem>
-                                   <ListItemContent>
-                                        <Input value={editName} onChange={(event) => { setEditName(event.target.value) }} placeholder="Add Gas" />
-                                   </ListItemContent>
-                              </ListItem>
-                         </List>
-                         <span className="b">&nbsp;Correction</span>
-                         <Stack direction="row" gap={1} alignContent={"center"} sx={{ mb: 1 }}>
-                              <Switch
-                                   checked={checked}
-                                   onChange={(event) => setChecked(event.target.checked)}
-                                   sx={(theme) => ({
-                                        '--Switch-thumbShadow': '0 3px 7px 0 rgba(0 0 0 / 0.12)',
-                                        '--Switch-thumbSize': '27px',
-                                        '--Switch-trackWidth': '51px',
-                                        '--Switch-trackHeight': '31px',
-                                        '--Switch-trackBackground': 'rgb(48 209 88)', // Green color for off state
-                                        [`& .${switchClasses.thumb}`]: {
-                                             transition: 'width 0.2s, left 0.2s',
-                                        },
-                                        '&:hover': {
-                                             '--Switch-trackBackground': 'rgb(48 209 88)', // Green color on hover when off
-                                        },
-                                        '&:active': {
-                                             '--Switch-thumbWidth': '32px',
-                                        },
-                                        [`&.${switchClasses.checked}`]: {
-                                             '--Switch-trackBackground': 'rgb(220 53 69)', // Red color for on state
-                                             '&:hover': {
-                                                  '--Switch-trackBackground': 'rgb(220 53 69)', // Red color on hover when on
-                                             },
-                                        },
-                                   })}
-                              />
-                         </Stack>
+                                   </List>
+                                   <span className="b">&nbsp;Correction</span>
+                                   <Stack direction="row" gap={1} alignContent={"center"} sx={{ mb: 1 }}>
+                                        <Switch
+                                             checked={checked}
+                                             onChange={(event) => setChecked(event.target.checked)}
+                                             sx={(theme) => ({
+                                                  '--Switch-thumbShadow': '0 3px 7px 0 rgba(0 0 0 / 0.12)',
+                                                  '--Switch-thumbSize': '27px',
+                                                  '--Switch-trackWidth': '51px',
+                                                  '--Switch-trackHeight': '31px',
+                                                  '--Switch-trackBackground': 'rgb(48 209 88)', // Green color for off state
+                                                  [`& .${switchClasses.thumb}`]: {
+                                                       transition: 'width 0.2s, left 0.2s',
+                                                  },
+                                                  '&:hover': {
+                                                       '--Switch-trackBackground': 'rgb(48 209 88)', // Green color on hover when off
+                                                  },
+                                                  '&:active': {
+                                                       '--Switch-thumbWidth': '32px',
+                                                  },
+                                                  [`&.${switchClasses.checked}`]: {
+                                                       '--Switch-trackBackground': 'rgb(220 53 69)', // Red color for on state
+                                                       '&:hover': {
+                                                            '--Switch-trackBackground': 'rgb(220 53 69)', // Red color on hover when on
+                                                       },
+                                                  },
+                                             })}
+                                        />
+                                   </Stack>
+                              </>) : ""
+                         }
+
                     </Sheet>
                     <Sheet sx={{
                          overflow: "auto",
@@ -1639,7 +1659,6 @@ const GasEditUi = ({
                               const deleteDeliveryGasIds = [...deletedGasData.values()].map((gas) => {
                                    return gas.id
                               })
-
 
                               //remove id fied or key from each gas and add delivery id
                               const newGasDataNoIds = newGasAdded.map(

@@ -605,6 +605,13 @@ export default function Purchase() {
                               sx={{
                                    tableLayout: "auto",
                                    fontWeight: "bold",
+                                   "& td, & tr": {
+                                        padding: 0,
+                                        margin: 0,
+                                        //important to override mui default border
+                                        borderBottomWidth: 0,
+                                        height: "unset",
+                                   }
                               }}
 
                          >

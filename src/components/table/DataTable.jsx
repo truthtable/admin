@@ -17,6 +17,13 @@ export default function DataTable(props) {
                <Table aria-label="striped table" stripe="odd"
                     sx={{
                          tableLayout: "auto!important",
+                         "& td, & tr": {
+                              padding: 0,
+                              margin: 0,
+                              //important to override mui default border
+                              borderBottomWidth: 0,
+                              height: "unset",
+                         }
                     }}
                >
                     {/* <table className="hidden md:block lg:block w-full"> */}

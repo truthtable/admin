@@ -184,6 +184,14 @@ const Warehouse = () => {
                     sx={{
                          fontWeight: "bold",
                          tableLayout: "fixed",
+                         "& td, & tr": {
+                              padding: .5,
+                              paddingLeft: 1,
+                              margin: 0,
+                              //important to override mui default border
+                              borderBottomWidth: 0,
+                              height: "unset",
+                         }
                     }}
                >
                     <thead>
