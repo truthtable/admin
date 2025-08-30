@@ -25,6 +25,8 @@ export const UPDATE_COURIER_BOY = URL + "api/update_courier_boy/";
 export const UPDATE_CREATE_DELETE = URL + "api/updateOrCreateOrDelete/";
 //customer_payments_update_or_create
 export const UPDATE_CUSTOMER_PAYMENTS = URL + "api/customer_payments_update_or_create";
+//adjustBalance
+export const ADJUST_BALANCE = URL + "api/adjustBalance";
 
 export const getUserDataFromCookie = () => {
      let data = null;

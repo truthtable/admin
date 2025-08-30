@@ -1,5 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import {
+     ADJUST_BALANCE,
      axiosInstance as axios,
      UPDATE_CUSTOMER_PAYMENTS,
 } from "../services/Api";
@@ -45,6 +46,23 @@ export const updateOrCreateCustomerPayments = (payload) => async (dispatch) => {
                UPDATE_CUSTOMER_PAYMENTS,
                payload,
           );
+          console.log(response.data);
+          dispatch(customerPaymentsUpdateOrCreateSuccess());
+     } catch (error) {
+          console.log(error);
+          dispatch(
+               customerPaymentsUpdateOrCreateError(
+                    error.message ||
+                         "Failed to update or create customer payments",
+               ),
+          );
+     }
+};
+
+export const adjustBalance = (payload) => async (dispatch) => {
+     dispatch(customerPaymentsUpdateOrCreateLoading());
+     try {
+          const response = await axios().post(ADJUST_BALANCE, payload);
           console.log(response.data);
           dispatch(customerPaymentsUpdateOrCreateSuccess());
      } catch (error) {

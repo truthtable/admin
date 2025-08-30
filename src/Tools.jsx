@@ -67,19 +67,24 @@ export const updateUrlParams = (dateStart, dateEnd, customerId, deliverBoyId) =>
 }
 
 export const decimalFix = (value, money = false) => {
-     let num = value.toFixed(2);
-     //if end with .00 remove it
+     const temp = Number(value);
+     let num = temp.toFixed(2);
+
+     // if ends with .00, remove it
      if (num.endsWith(".00")) {
           num = num.slice(0, -3);
      }
-     //if 0 then -
-     const temp = Number(num);
-     if (temp == 0) {
+
+     // if 0 then -
+     if (temp === 0) {
           num = "-";
      }
-     if (money && temp > 0) {
-          num = "₹" + num;
+
+     // preserve negative sign for money
+     if (money && temp !== 0) {
+          num = `₹${num}`;
      }
+
      return num;
 }
 

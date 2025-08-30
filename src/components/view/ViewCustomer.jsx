@@ -50,6 +50,7 @@ import {
      resetConnection
 } from '../../redux/connectionSlice.js'
 import { set } from "firebase/database";
+import { adjustBalance, customerPaymentsUpdateOrCreateReset } from "../../redux/customerPaymentsUpdateOrCreate.js";
 let CUSTOMERS = [];
 const ViewCustomer = () => {
 
@@ -58,7 +59,8 @@ const ViewCustomer = () => {
      const updateCustomer = useSelector((state) => state.updateCustomer);
 
      const { gasLoading, gasList, gasError } = useSelector((state) => state.gasList);
-     //console.log({gasLoading, gasList, gasError})
+     const { isCustomerPaymentsUpdateOrCreateLoading, isCustomerPaymentsUpdateOrCreateError, customerPaymentsUpdateOrCreateErrorMessage, isCustomerPaymentsUpdateOrCreateSuccess } = useSelector((state) => state.customerPaymentsUpdateOrCreate);
+     //console.log({ isCustomerPaymentsUpdateOrCreateLoading, isCustomerPaymentsUpdateOrCreateError, customerPaymentsUpdateOrCreateErrorMessage, isCustomerPaymentsUpdateOrCreateSuccess })
 
      const [searchText, setSearchText] = useState("");
 
@@ -111,7 +113,7 @@ const ViewCustomer = () => {
                     });
                }
 
-               console.log(temp)
+               //console.log(temp)
 
                temp.forEach((item) => {
                     data.push(makeRow(item, loadConnection));
@@ -129,6 +131,10 @@ const ViewCustomer = () => {
      });
      useEffect(() => {
           if (updateCustomer.isSuccessful) {
+               dispatch(fetchCustomerData());
+          }
+          if (isCustomerPaymentsUpdateOrCreateSuccess) {
+               dispatch(customerPaymentsUpdateOrCreateReset())
                dispatch(fetchCustomerData());
           }
      });
@@ -736,6 +742,9 @@ const ViewCustomer = () => {
                          </Container>
                     </Modal>
                </>
+               {
+                    isCustomerPaymentsUpdateOrCreateLoading ? <LinearProgress /> : <></>
+               }
                <DataTable
                     thead={[
                          <TableHead key={"all_data"}><FaInfoCircle /></TableHead>,
@@ -899,6 +908,7 @@ function AllData({ data, onClick }) {
 }
 
 function Balance({ data }) {
+     const dispatch = useDispatch();
      const [showModal, setShowModal] = useState(false);
      const [amount, setAmount] = useState(0);
      if (showModal) {
@@ -943,8 +953,8 @@ function Balance({ data }) {
                                    placeholder="Enter Amount"
                                    value={amount}
                                    onChange={(e) => {
-                                        // Only allow digits and empty string
-                                        const num = e.target.value.replace(/[^\d]/g, "");
+                                        // Only allow digits and empty string except - and .
+                                        const num = e.target.value.replace(/[^\d\-\.]/g, "");
                                         setAmount(num);
                                    }}
                               />
@@ -960,6 +970,15 @@ function Balance({ data }) {
                                    </Button>
                                    <Button
                                         onClick={() => {
+                                             let amt = Number(amount);
+                                             amt = amt * -1;
+                                             console.log(amt)
+                                             dispatch(
+                                                  adjustBalance({
+                                                       customerId: data.id,
+                                                       amount: amt
+                                                  })
+                                             );
                                              setShowModal(false);
                                         }}
                                    >

@@ -72,6 +72,7 @@ const columns = [
      { column: "balance", color: COLORS.WHITE }
 ];
 const CUSTOMER_LIST = [];
+const ADMIN_LIST = new Map();
 const DELIVERY_BOY_LIST = new Map();
 let gasList = new Map();
 let deleveryGasEditUiGasList = [];
@@ -109,6 +110,8 @@ export default function deliveryHistory() {
                if (user.courier_boys.length != 0) {
                     if (user.courier_boys[0]?.login?.role == 2) {
                          DELIVERY_BOY_LIST.set(user.courier_boys[0].id, user)
+                    } else {
+                         ADMIN_LIST.set(user.courier_boys[0].id, user)
                     }
                }
                if (user.customers.length == 0) {
@@ -269,7 +272,7 @@ export default function deliveryHistory() {
      // First, let's add a helper function to calculate gas group totals
 
      // Update the createData function to be more organized
-     function createData(date, info, gasInfo, kg4Data, kg12Data, kg15Data, kg21Data, received, ncToatl) {
+     function createData(date, info, gasInfo, kg4Data, kg12Data, kg15Data, kg21Data, received, ncToatl, isOutstanding) {
 
           const kg4 = calculateGasGroup(kg4Data.cylinders, kg4Data.mt, kg4Data.rate);
           const kg12 = calculateGasGroup(kg12Data.cylinders, kg12Data.mt, kg12Data.rate);
@@ -288,18 +291,73 @@ export default function deliveryHistory() {
                kg15,
                kg21,
                subTotal,
-               received
+               received,
+               isOutstanding
           };
      }
 
      // Update the rows data with the new structure
      let rows = []
      let csvData = []
-
+     //console.log(ADMIN_LIST)
      if (deliveries != null || deliveries != undefined) {
           if (!deliveries.noData) {
                ncGasDeliveryList = {}
                rows = deliveries.map((delivery) => {
+                    let isAdmin = false
+                    const date = formatDateToDDMMYY_HHMM(delivery.created_at)
+                    if (ADMIN_LIST.get(delivery.courier_boy.id)) {
+                         isAdmin = true
+                         //console.log(delivery.payments)
+                         delivery.payments.forEach((payment) => {
+                              csvData.push([
+                                   //"Date",
+                                   date + "",
+                                   //"Customer",
+                                   titleCase(delivery.customer.name) + "",
+                                   "Outstanding",
+                                   //"4KG CYL",
+                                   "",
+                                   //"MT",
+                                   "",
+                                   //"Rate",
+                                   "",
+                                   //"Total",
+                                   "",
+                                   //"12KG CYL",
+                                   "",
+                                   //"MT",
+                                   "",
+                                   //"Rate",
+                                   "",
+                                   //"Total",
+                                   "",
+                                   //"15KG CYL",
+                                   "",
+                                   //"MT",
+                                   "",
+                                   //"Rate",
+                                   "",
+                                   //"Total",
+                                   "",
+                                   //"21KG CYL",
+                                   "",
+                                   //"MT",
+                                   "",
+                                   //"Rate",
+                                   "",
+                                   //"Total",
+                                   "",
+                                   //"Sub Total",
+                                   "",
+                                   //"Received",
+                                   payment.amount + "",
+                                   //"Balance"
+                                   ""
+                              ])
+                         })
+                    }
+
                     let totalCash = 0
                     let totalOnline = 0
 
@@ -334,8 +392,6 @@ export default function deliveryHistory() {
                               totalOnline += payment.amount
                          }
                     })
-
-                    const date = formatDateToDDMMYY_HHMM(delivery.created_at)
 
                     const cylinder_list = delivery.gas_deliveries.map((gas) => {
 
@@ -414,7 +470,16 @@ export default function deliveryHistory() {
                     let totalTotal = total12Kg + total15Kg + total21Kg + total4Kg
 
                     let received = totalCash + totalOnline
-                    let balance = totalTotal - received + ncTotal
+
+                    let balance = 0
+
+                    if ((ncTotal + totalTotal > 0)) {
+                         balance = totalTotal - received + ncTotal
+                    }
+
+                    // if (isAdmin) {
+                    //      console.log(ncTotal + totalTotal, balance, isAdmin)
+                    // }
 
                     if (
                          total4KgNc + total12KgNc + total15KgNc + total21KgNc > 0
@@ -436,7 +501,6 @@ export default function deliveryHistory() {
                               //"Total",
                               total4KgNc + "",
 
-
                               //"12KG CYL",
                               cyl12KgNcQty + "",
                               //"MT",
@@ -446,7 +510,6 @@ export default function deliveryHistory() {
                               //"Total",
                               total12KgNc + "",
 
-
                               //"15KG CYL",
                               cyl15KgNcQty + "",
                               //"MT",
@@ -455,7 +518,6 @@ export default function deliveryHistory() {
                               cyl15KgNcRate + "",
                               //"Total",
                               total15KgNc + "",
-
 
                               //"21KG CYL",
                               cyl21KgNcQty + "",
@@ -467,7 +529,6 @@ export default function deliveryHistory() {
                               total21KgNc + "",
                               //"Sub Total",
 
-
                               ncTotal + "",
                               //"Received",
                               "",
@@ -477,7 +538,6 @@ export default function deliveryHistory() {
                     }
                     if (total4Kg + total12Kg + total15Kg + total21Kg > 0) {
                          csvData.push([
-
                               //"Date",
                               date + "",
                               //"Customer",
@@ -555,7 +615,9 @@ export default function deliveryHistory() {
                          // received amount
                          (totalCash + totalOnline),
                          // nc total
-                         ncTotal
+                         ncTotal,
+                         // is outstanding
+                         isAdmin
                     )
                });
           }
@@ -566,7 +628,7 @@ export default function deliveryHistory() {
      const headers = columns.map((col) => col.column);
 
      //add NC column at 3rd position
-     headers.splice(2, 0, "NC");
+     headers.splice(2, 0, "remark");
 
      return <Stack
           sx={{
@@ -799,7 +861,7 @@ function Row({
 
      let balance = row.subTotal - row.received
      //o if nagative
-     if (balance < 0) {
+     if (row.subTotal == 0) {
           balance = 0
      }
 
@@ -889,7 +951,188 @@ function Row({
                ], color: COLORS.WHITE
           }
      ];
-     //console.log(row);
+     const DropEditor = () => {
+          return (<Box>
+               <IconButton
+                    aria-label="expand row"
+                    variant="plain"
+                    color="neutral"
+                    size="sm"
+                    onClick={() => setOpen(!open)}
+               >
+                    {open ? <MdKeyboardArrowUp /> : <MdKeyboardArrowDown />}
+               </IconButton>
+          </Box>)
+     }
+     const DropSheet = () => {
+          return (
+               <Sheet
+                    variant="soft"
+                    sx={{ p: 1, pl: 6, boxShadow: 'inset 0 3px 6px 0 rgba(0 0 0 / 0.08)', m: 0 }}
+               >
+                    <Typography level="body-lg" component="div">
+                         Details
+                    </Typography>
+                    <Table
+                         borderAxis="bothBetween"
+                         size="md"
+                         stickyFooter={false}
+                         stickyHeader={false}
+                         stripe="even"
+                         sx={{
+                              fontWeight: "bold",
+                              tableLayout: "auto",
+                              '& thead td:nth-child(1)': { width: '256px' },
+                              // '& thead td:nth-child(2)': { width: '80%' }
+                         }}
+                    >
+                         <thead>
+                              <tr>
+                                   <td>Diary Number</td>
+                                   <td>
+                                        {row.info.diaryNumber}
+                                   </td>
+                              </tr>
+                              <tr>
+                                   <td>Date</td>
+                                   <td>
+                                        {row.date}
+                                   </td>
+                              </tr>
+                              <tr>
+                                   <td>Customer</td>
+                                   <td>
+                                        {/* {titleCase(row.info.customer)} */}
+                                        <UpdateCell
+                                             value={{
+                                                  cust_id: row.info.custId,
+                                                  name: row.info.customer
+                                             }}
+                                             onChange={(customer) => {
+                                                  return updateCustomer(customer)
+                                             }}
+                                        />
+                                   </td>
+                              </tr>
+                              <tr>
+                                   <td>Address</td>
+                                   <td>
+                                        {titleCase(row.info.adress)}
+                                   </td>
+                              </tr>
+                              <tr>
+                                   <td>Delivered By</td>
+                                   <td>
+                                        {titleCase(row.info.deliveredBy)}
+                                   </td>
+                              </tr>
+                              <tr>
+                                   <td>Cash</td>
+                                   <td>
+                                        {decimalFix(row.info.cash)}
+                                   </td>
+                              </tr>
+                              <tr>
+                                   <td>Online</td>
+                                   <td>
+                                        {
+                                             decimalFix(row.info.online)
+                                        }
+                                   </td>
+                              </tr>
+                              <tr>
+                                   <td>Correction</td>
+                                   <td>
+                                        {row.info.correction ? "Yes" : "No"}
+                                   </td>
+                              </tr>
+                              <tr>
+                                   <td
+                                        colSpan={2}
+                                   >
+                                        <GasEditUi
+                                             selectedGasList={row.info.gasList}
+                                             customer={
+                                                  row.info.custId
+                                             }
+                                             deliveryBoy={
+                                                  row.info.deliverBoyId
+                                             }
+                                             deleveryId={row.info.dileveryId}
+                                             payments={
+                                                  row.info.payments
+                                             }
+                                             correction={row.info.correction}
+                                             openEdit={openEdit}
+                                        />
+                                   </td>
+                              </tr>
+                         </thead>
+                         <tbody>
+
+                         </tbody>
+                    </Table>
+               </Sheet>
+          )
+     }
+     if (row.isOutstanding) {
+          //console.log(row);
+          return (<>
+               <tr>
+                    <td
+                         style={{
+                              textAlign: "center",
+                         }}
+                    >
+                         <DropEditor />
+                    </td>
+                    <td
+                         style={{
+                              textAlign: "center",
+                         }}
+                    >
+                         {row.date}
+                    </td>
+                    <td
+                         style={{
+                              textAlign: "center",
+                         }}
+                    >
+                         {row.info.customer}
+                    </td>
+                    <td
+                         colSpan={columns.length + 1 - 5}
+                         style={{
+                              textAlign: "center",
+                         }}
+                    >
+                         Outstanding
+                    </td>
+                    <td
+                         style={{
+                              textAlign: "center",
+                         }}
+                    >
+                         {decimalFix(row.received, true)}
+                    </td>
+                    <td
+                         style={{
+                              textAlign: "center",
+                         }}
+                    >
+                         -
+                    </td>
+               </tr>
+               <tr>
+                    <td style={{ height: 0, padding: 0 }} colSpan={columns.length + 1}>
+                         {open && (
+                              <DropSheet />
+                         )}
+                    </td>
+               </tr>
+          </>
+          )
+     }
      return (
           <React.Fragment>
                <tr style={{
@@ -902,17 +1145,7 @@ function Row({
                          borderTopColor: (row.info.correction == true) ? "red" : "",
                          borderBottomColor: (row.info.correction == true) ? "red" : ""
                     }}>
-                         <Box>
-                              <IconButton
-                                   aria-label="expand row"
-                                   variant="plain"
-                                   color="neutral"
-                                   size="sm"
-                                   onClick={() => setOpen(!open)}
-                              >
-                                   {open ? <MdKeyboardArrowUp /> : <MdKeyboardArrowDown />}
-                              </IconButton>
-                         </Box>
+                         <DropEditor />
                     </td>
 
                     {cellGroups.map(group => (
@@ -934,113 +1167,7 @@ function Row({
                <tr>
                     <td style={{ height: 0, padding: 0 }} colSpan={columns.length + 1}>
                          {open && (
-                              <Sheet
-                                   variant="soft"
-                                   sx={{ p: 1, pl: 6, boxShadow: 'inset 0 3px 6px 0 rgba(0 0 0 / 0.08)', m: 0 }}
-                              >
-                                   <Typography level="body-lg" component="div">
-                                        Details
-                                   </Typography>
-                                   <Table
-                                        borderAxis="bothBetween"
-                                        size="md"
-                                        stickyFooter={false}
-                                        stickyHeader={false}
-                                        stripe="even"
-                                        sx={{
-                                             fontWeight: "bold",
-                                             tableLayout: "auto",
-                                             '& thead td:nth-child(1)': { width: '256px' },
-                                             // '& thead td:nth-child(2)': { width: '80%' }
-                                        }}
-                                   >
-                                        <thead>
-                                             <tr>
-                                                  <td>Diary Number</td>
-                                                  <td>
-                                                       {row.info.diaryNumber}
-                                                  </td>
-                                             </tr>
-                                             <tr>
-                                                  <td>Date</td>
-                                                  <td>
-                                                       {row.date}
-                                                  </td>
-                                             </tr>
-                                             <tr>
-                                                  <td>Customer</td>
-                                                  <td>
-                                                       {/* {titleCase(row.info.customer)} */}
-                                                       <UpdateCell
-                                                            value={{
-                                                                 cust_id: row.info.custId,
-                                                                 name: row.info.customer
-                                                            }}
-                                                            onChange={(customer) => {
-                                                                 return updateCustomer(customer)
-                                                            }}
-                                                       />
-                                                  </td>
-                                             </tr>
-                                             <tr>
-                                                  <td>Address</td>
-                                                  <td>
-                                                       {titleCase(row.info.adress)}
-                                                  </td>
-                                             </tr>
-                                             <tr>
-                                                  <td>Delivered By</td>
-                                                  <td>
-                                                       {titleCase(row.info.deliveredBy)}
-                                                  </td>
-                                             </tr>
-                                             <tr>
-                                                  <td>Cash</td>
-                                                  <td>
-                                                       {decimalFix(row.info.cash)}
-                                                  </td>
-                                             </tr>
-                                             <tr>
-                                                  <td>Online</td>
-                                                  <td>
-                                                       {
-                                                            decimalFix(row.info.online)
-                                                       }
-                                                  </td>
-                                             </tr>
-                                             <tr>
-                                                  <td>Correction</td>
-                                                  <td>
-                                                       {row.info.correction ? "Yes" : "No"}
-                                                  </td>
-                                             </tr>
-                                             <tr>
-                                                  <td
-                                                       colSpan={2}
-                                                  >
-                                                       <GasEditUi
-                                                            selectedGasList={row.info.gasList}
-                                                            customer={
-                                                                 row.info.custId
-                                                            }
-                                                            deliveryBoy={
-                                                                 row.info.deliverBoyId
-                                                            }
-                                                            deleveryId={row.info.dileveryId}
-                                                            payments={
-                                                                 row.info.payments
-                                                            }
-                                                            correction={row.info.correction}
-                                                            openEdit={openEdit}
-                                                       />
-                                                  </td>
-                                             </tr>
-                                        </thead>
-                                        <tbody>
-
-                                        </tbody>
-                                   </Table>
-                              </Sheet>
+                              <DropSheet />
                          )}
                     </td>
                </tr>
