@@ -468,9 +468,9 @@ export const Report = ({ isLogged }) => {
                                                        }
                                                        {
                                                             report.deliveries.map((delivery, index1) => {
-                                                                 if (delivery.cleared) {
-                                                                      return
-                                                                 }
+                                                                 // if (delivery.cleared) {
+                                                                 //      return
+                                                                 // }
                                                                  let subTotal = 0;
                                                                  let onlinePaymet = 0
                                                                  let cashPayment = 0

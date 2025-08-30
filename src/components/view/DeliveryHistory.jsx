@@ -591,7 +591,7 @@ export default function deliveryHistory() {
                               dileveryId: delivery.id,
                               custId: delivery.customer.id,
                               customer: titleCase(delivery.customer.name),
-                              diaryNumber: delivery.customer.diaryNumber,
+                              //diaryNumber: delivery.customer.diaryNumber,
                               adress: delivery.customer.address,
                               deliveredBy: delivery.courier_boy.name,
                               deliverBoyId: delivery.courier_boy.id,
@@ -987,12 +987,12 @@ function Row({
                          }}
                     >
                          <thead>
-                              <tr>
+                              {/* <tr>
                                    <td>Diary Number</td>
                                    <td>
                                         {row.info.diaryNumber}
                                    </td>
-                              </tr>
+                              </tr> */}
                               <tr>
                                    <td>Date</td>
                                    <td>
