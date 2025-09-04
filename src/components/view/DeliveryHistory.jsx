@@ -1,5 +1,6 @@
 /* eslint-disable react/prop-types */
 import React, { useEffect, useState } from "react";
+import { useRef } from "react";
 import { Box, Chip, Divider, LinearProgress, Select, Stack, Tab, Table, TabList, TabPanel, Tabs, Option, Button, Modal, Sheet, ModalClose, Typography, Input, List, ListItem, ListItemButton, ListItemDecorator, ListItemContent, FormControl, FormLabel, RadioGroup, Radio, Card, IconButton, CircularProgress, Autocomplete, TextField } from "@mui/joy";
 import { useDispatch, useSelector } from "react-redux";
 import { deleteDeliveryById, fetchDeliveries, UPDATE_DELIVERY_SUCCESS_RESET, updateDelivery, updateDeliverySuccess } from "../../redux/actions/deliveryActions.js";
@@ -22,6 +23,8 @@ import ExportCSV from "../ExportCSV.jsx";
 import { updateGas } from "../../state/UpdateGas.jsx";
 import { updateOrCreateCustomerPayments } from "../../redux/customerPaymentsUpdateOrCreate.js";
 import Switch, { switchClasses } from '@mui/joy/Switch';
+import { BsCalendar } from "react-icons/bs";
+import { FaCalendarAlt } from "react-icons/fa";
 const COLORS = {
      WHITE: "#ffffff",
      KG_4: "#fde3e3",
@@ -37,31 +40,25 @@ const columns = [
      { column: "customer", color: COLORS.WHITE },
 
      //4KG Group
-     { column: "4kg\ncyl", color: COLORS.KG_4 },
+     { column: "4kg cyl", color: COLORS.KG_4 },
      { column: "mt", color: COLORS.KG_4 },
      { column: "rate", color: COLORS.KG_4 },
      { column: "total", color: COLORS.KG_4 },
 
      // 12KG Group 
-     { column: "12kg\ncyl", color: COLORS.KG_12 },
+     { column: "12kg cyl", color: COLORS.KG_12 },
      { column: "mt", color: COLORS.KG_12 },
      { column: "rate", color: COLORS.KG_12 },
      { column: "total", color: COLORS.KG_12 },
 
      // 15KG Group
-     { column: "15kg\ncyl", color: COLORS.KG_15 },
+     { column: "15kg cyl", color: COLORS.KG_15 },
      { column: "mt", color: COLORS.KG_15 },
      { column: "rate", color: COLORS.KG_15 },
      { column: "total", color: COLORS.KG_15 },
 
-     // 17KG Group
-     // { column: "17kg cyl", color: COLORS.KG_17 },
-     // { column: "mt", color: COLORS.KG_17 },
-     // { column: "rate", color: COLORS.KG_17 },
-     // { column: "total", color: COLORS.KG_17 },
-
      // 21KG Group
-     { column: "21kg\ncyl", color: COLORS.KG_21 },
+     { column: "21kg cyl", color: COLORS.KG_21 },
      { column: "mt", color: COLORS.KG_21 },
      { column: "rate", color: COLORS.KG_21 },
      { column: "total", color: COLORS.KG_21 },
@@ -387,9 +384,9 @@ export default function deliveryHistory() {
 
                     delivery.payments.forEach((payment) => {
                          if (payment.method == 0) {
-                              totalCash += payment.amount
+                              totalCash += Number(payment.amount)
                          } else {
-                              totalOnline += payment.amount
+                              totalOnline += Number(payment.amount)
                          }
                     })
 
@@ -399,77 +396,77 @@ export default function deliveryHistory() {
                               //console.log(gas);
                               setGasDeliveryList("d_" + delivery.id, "kg_" + gas.kg, gas)
                               if (gas.kg == 4) {
-                                   cyl12KgNcQty = gas.quantity
-                                   cyl12KgNcRate = gas.gas_price
+                                   cyl12KgNcQty = Number(gas.quantity)
+                                   cyl12KgNcRate = Number(gas.gas_price)
                               } else if (gas.kg == 12) {
-                                   cyl12KgNcQty = gas.quantity
-                                   cyl12KgNcRate = gas.gas_price
+                                   cyl12KgNcQty = Number(gas.quantity)
+                                   cyl12KgNcRate = Number(gas.gas_price)
                               } else if (gas.kg == 15) {
-                                   cyl15KgNcQty = gas.quantity
-                                   cyl15KgNcRate = gas.gas_price
+                                   cyl15KgNcQty = Number(gas.quantity)
+                                   cyl15KgNcRate = Number(gas.gas_price)
                               } else if (gas.kg == 21) {
-                                   cyl21KgNcQty = gas.quantity
-                                   cyl21KgNcRate = gas.gas_price
+                                   cyl21KgNcQty = Number(gas.quantity)
+                                   cyl21KgNcRate = Number(gas.gas_price)
                               }
                               //dont add in nc gas return
                               return
                          }
                          if (gas.kg == 4) {
                               if (!gas.is_empty) {
-                                   cyl4KgQty = gas.quantity
-                                   cyl4KgRate = gas.gas_price
+                                   cyl4KgQty = Number(gas.quantity)
+                                   cyl4KgRate = Number(gas.gas_price)
                               } else {
-                                   cyl4KgMt += gas.quantity
+                                   cyl4KgMt += Number(gas.quantity)
                               }
                          }
                          if (gas.kg == 12) {
                               if (!gas.is_empty) {
-                                   cyl12KgQty = gas.quantity
-                                   cyl12KgRate = gas.gas_price
+                                   cyl12KgQty = Number(gas.quantity)
+                                   cyl12KgRate = Number(gas.gas_price)
                               } else {
-                                   cyl12KgMt += gas.quantity
+                                   cyl12KgMt += Number(gas.quantity)
                               }
                          }
                          if (gas.kg == 15) {
                               if (!gas.is_empty) {
-                                   cyl15KgQty = gas.quantity
-                                   cyl15KgRate = gas.gas_price
+                                   cyl15KgQty = Number(gas.quantity)
+                                   cyl15KgRate = Number(gas.gas_price)
                               } else {
-                                   cyl15KgMt += gas.quantity
+                                   cyl15KgMt += Number(gas.quantity)
                               }
                          }
                          if (gas.kg == 21) {
                               if (!gas.is_empty) {
-                                   cyl21KgQty = gas.quantity
-                                   cyl21KgRate = gas.gas_price
+                                   cyl21KgQty = Number(gas.quantity)
+                                   cyl21KgRate = Number(gas.gas_price)
                               } else {
-                                   cyl21KgMt += gas.quantity
+                                   cyl21KgMt += Number(gas.quantity)
                               }
                          }
                          return {
                               cylinder: gas.brand,
-                              qty: gas.quantity,
+                              qty: Number(gas.quantity),
                               kg: 15
                          }
                     })
 
-                    let total4Kg = cyl4KgQty * cyl4KgRate
-                    let total4KgNc = cyl4KgNcQty * cyl4KgNcRate
+                    let total4Kg = Number(cyl4KgQty) * Number(cyl4KgRate)
+                    let total4KgNc = Number(cyl4KgNcQty) * Number(cyl4KgNcRate)
 
-                    let total12Kg = cyl12KgQty * cyl12KgRate
-                    let total12KgNc = cyl12KgNcQty * cyl12KgNcRate
+                    let total12Kg = Number(cyl12KgQty) * Number(cyl12KgRate)
+                    let total12KgNc = Number(cyl12KgNcQty) * Number(cyl12KgNcRate)
 
-                    let total15Kg = cyl15KgQty * cyl15KgRate
-                    let total15KgNc = cyl15KgNcQty * cyl15KgNcRate
+                    let total15Kg = Number(cyl15KgQty) * Number(cyl15KgRate)
+                    let total15KgNc = Number(cyl15KgNcQty) * Number(cyl15KgNcRate)
 
-                    let total21Kg = cyl21KgQty * cyl21KgRate
-                    let total21KgNc = cyl21KgNcQty * cyl21KgNcRate
+                    let total21Kg = Number(cyl21KgQty) * Number(cyl21KgRate)
+                    let total21KgNc = Number(cyl21KgNcQty) * Number(cyl21KgNcRate)
 
-                    let ncTotal = total4KgNc + total12KgNc + total15KgNc + total21KgNc
+                    let ncTotal = Number(total4KgNc) + Number(total12KgNc) + Number(total15KgNc) + Number(total21KgNc)
 
-                    let totalTotal = total12Kg + total15Kg + total21Kg + total4Kg
+                    let totalTotal = Number(total12Kg) + Number(total15Kg) + Number(total21Kg) + Number(total4Kg)
 
-                    let received = totalCash + totalOnline
+                    let received = Number(totalCash) + Number(totalOnline)
 
                     let balance = 0
 
@@ -868,6 +865,9 @@ function Row({
      initialOpen = false,
      updateCustomer,
 }) {
+
+     const dispatch = useDispatch();
+
      const [open, setOpen] = React.useState(initialOpen);
      const [openEdit, setOpenEdit] = React.useState(false);
 
@@ -977,6 +977,86 @@ function Row({
           </Box>)
      }
      const DropSheet = () => {
+
+          function toDateTimeLocal(str) {
+               // str = "04/09/25 - 05:44 PM"
+               const [datePart, timePart] = str.split(" - ");
+               const [day, month, year2] = datePart.split("/");
+               let [time, ampm] = timePart.split(" ");
+               let [hours, minutes] = time.split(":").map(Number);
+
+               if (ampm.toUpperCase() === "PM" && hours < 12) hours += 12;
+               if (ampm.toUpperCase() === "AM" && hours === 12) hours = 0;
+
+               const date = new Date(
+                    2000 + Number(year2),   // 25 → 2025
+                    Number(month) - 1,      // JS months 0-indexed
+                    Number(day),
+                    hours,
+                    minutes
+               );
+
+               const pad = (n) => String(n).padStart(2, "0");
+               return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+          }
+
+          function DateTimeInputToggle({ initialDate }) {
+               const [value, setValue] = useState(toDateTimeLocal(initialDate));
+               const inputRef = useRef(null);
+               const [dateUpdated, setDateUpdated] = useState(false);
+
+               const handleClick = () => {
+                    if (inputRef.current) {
+                         if (inputRef.current.showPicker) {
+                              inputRef.current.showPicker();
+                         } else {
+                              inputRef.current.click();
+                         }
+                    }
+               };
+
+               return (
+                    <Box sx={{ position: "relative" }}>
+                         <Button
+                              startDecorator={<FaCalendarAlt />}
+                              variant="soft"
+                              color="success"
+                              onClick={handleClick}>
+                              {value
+                                   ? new Date(value).toLocaleString("en-GB", {
+                                        day: "2-digit",
+                                        month: "2-digit",
+                                        year: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                   })
+                                   : "Select Date & Time"}
+                         </Button>
+                         <input
+                              ref={inputRef}
+                              type="datetime-local"
+                              value={value}
+                              onChange={(e) => {
+                                   setDateUpdated(true);
+                                   setValue(e.target.value)
+                              }}
+                              style={{
+                                   position: "absolute",
+                                   opacity: 0,
+                                   pointerEvents: "none",
+                              }}
+                         />
+                         {dateUpdated && (
+                              <Button
+                                   onClick={() => {
+                                        setDateUpdated(false);
+                                        dispatch(updateDelivery({ id: row.info.dileveryId, created_at: value }))
+                                   }}
+                              >Save</Button>
+                         )}
+                    </Box>
+               );
+          }
           return (
                <Sheet
                     variant="soft"
@@ -1006,9 +1086,9 @@ function Row({
                                    </td>
                               </tr> */}
                               <tr>
-                                   <td>Date</td>
+                                   <td>Date & Time</td>
                                    <td>
-                                        {row.date}
+                                        <DateTimeInputToggle initialDate={row.date} />
                                    </td>
                               </tr>
                               <tr>
@@ -1273,11 +1353,14 @@ const formatDate = (date) => {
 };
 
 function calculateGasGroup(cylinders, mt, rate) {
+     rate = Number(rate)
+     cylinders = Number(cylinders)
+     mt = Number(mt)
      return {
           cylinders,
           mt,
           rate,
-          total: cylinders * rate
+          total: Number(cylinders) * Number(rate)
      };
 }
 const GasEditUi = ({
@@ -1292,8 +1375,8 @@ const GasEditUi = ({
 }) => {
      //console.log("isOutstanding", isOutstanding)
      const dispatch = useDispatch();
-     let onlinePayment = { id: null, amount: null, method: null };
-     let cashPayment = { id: null, amount: null, method: null };
+     let onlinePayment = { id: null, amount: 0, method: null };
+     let cashPayment = { id: null, amount: 0, method: null };
 
      const [checked, setChecked] = useState(correction);
 
@@ -1301,13 +1384,13 @@ const GasEditUi = ({
           if (payment.method == 0) {
                cashPayment = {
                     id: payment.id,
-                    amount: payment.amount,
+                    amount: Number(payment.amount),
                     method: payment.method
                }
           } else {
                onlinePayment = {
                     id: payment.id,
-                    amount: payment.amount,
+                    amount: Number(payment.amount),
                     method: payment.method
                }
           }
@@ -1320,12 +1403,12 @@ const GasEditUi = ({
      let cash = 0
 
      const setOnlineAmount = (amount) => {
-          online = amount
-          setOnlineAmountState({ id: onlinePayment.id, amount: amount, method: onlinePayment.method })
+          online = Number(amount)
+          setOnlineAmountState({ id: onlinePayment.id, amount: Number(amount), method: onlinePayment.method })
      }
      const setCashAmount = (amount) => {
-          cash = amount
-          setCashAmountState({ id: cashPayment.id, amount: amount, method: cashPayment.method })
+          cash = Number(amount)
+          setCashAmountState({ id: cashPayment.id, amount: Number(amount), method: cashPayment.method })
      }
 
      //console.log(cashPayment);

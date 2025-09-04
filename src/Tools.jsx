@@ -69,6 +69,7 @@ export const updateUrlParams = (dateStart, dateEnd, customerId, deliverBoyId) =>
 export const decimalFix = (value, money = false) => {
      const temp = Number(value);
      let num = temp.toFixed(2);
+     //console.log(value, temp, num);
 
      // if ends with .00, remove it
      if (num.endsWith(".00")) {
