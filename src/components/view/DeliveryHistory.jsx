@@ -23,8 +23,8 @@ import ExportCSV from "../ExportCSV.jsx";
 import { updateGas } from "../../state/UpdateGas.jsx";
 import { updateOrCreateCustomerPayments } from "../../redux/customerPaymentsUpdateOrCreate.js";
 import Switch, { switchClasses } from '@mui/joy/Switch';
-import { BsCalendar } from "react-icons/bs";
-import { FaCalendarAlt } from "react-icons/fa";
+import { BsArrowDown, BsCalendar } from "react-icons/bs";
+import { FaArrowDown, FaCalendarAlt } from "react-icons/fa";
 const COLORS = {
      WHITE: "#ffffff",
      KG_4: "#fde3e3",
@@ -148,13 +148,8 @@ export default function deliveryHistory() {
 
      //console.log([{ urlCustomerId, tempUrlCustomerId }, { urlCourierBoyId, tempUrlCourierBoyId }]);
 
-     const [customerId, setCustomerId] = useState(tempUrlCustomerId);
-     const [deliverBoyId, setDeliverBoyId] = useState(tempUrlCourierBoyId);
-
-     const setDateStart = (date) => {
-          setDateStartState(date);
-          updateUrlParams(date, dateEnd, customerId, deliverBoyId);
-     }
+     const [customerId, setTheCustomerId] = useState(tempUrlCustomerId);
+     const [deliverBoyId, setDeliverTheBoyId] = useState(tempUrlCourierBoyId);
      const [dateStart, setDateStartState] = useState(
           () => {
                if (date_start) {
@@ -163,10 +158,6 @@ export default function deliveryHistory() {
                return formatDate(new Date(new Date().getFullYear(), new Date().getMonth(), 1))
           }
      );
-     const setDateEnd = (date) => {
-          setDateEndState(date);
-          updateUrlParams(dateStart, date, customerId, deliverBoyId);
-     }
      const [dateEnd, setDateEndState] = useState(
           () => {
                if (date_end) {
@@ -177,6 +168,23 @@ export default function deliveryHistory() {
                return formatDate(date)
           }
      );
+
+     const setCustomerId = (customerId) => {
+          setTheCustomerId(customerId);
+          loadData(true);
+     }
+     const setDeliverBoyId = (deliverBoyId) => {
+          setDeliverTheBoyId(deliverBoyId);
+          loadData(true);
+     }
+     const setDateStart = (date) => {
+          setDateStartState(date);
+          loadData(true);
+     }
+     const setDateEnd = (date) => {
+          setDateEndState(date);
+          loadData(true);
+     }
 
      const loadData = (force = false) => {
           const fetchDeliveriesParams = { dateStart: dateStart, dateEnd: dateEnd, customer_id: customerId, courier_boy_id: deliverBoyId, page }
@@ -307,8 +315,6 @@ export default function deliveryHistory() {
      if (deliveries != null || deliveries != undefined) {
           if (!deliveries.noData) {
 
-               let filterDeliveries = deliveries
-
                // if (deliverBoyId != null || deliverBoyId != undefined) {
                //      filterDeliveries = deliveries.filter((delivery) => {
                //           return delivery.courier_boy.id == deliverBoyId
@@ -316,7 +322,7 @@ export default function deliveryHistory() {
                // }
 
                ncGasDeliveryList = {}
-               rows = filterDeliveries.map((delivery) => {
+               rows = deliveries.map((delivery) => {
 
                     if (deliverBoyId != null || deliverBoyId != undefined) {
                          if (delivery.courier_boy.id != deliverBoyId) {
@@ -328,6 +334,17 @@ export default function deliveryHistory() {
                               return;
                          }
                     }
+
+                    if (
+                         (date_start && date_end) &&
+                         (
+                              new Date(delivery.created_at) < new Date(date_start) ||
+                              new Date(delivery.created_at) > new Date(date_end)
+                         )
+                    ) {
+                         return;
+                    }
+
 
                     let isAdmin = false
                     const date = formatDateToDDMMYY_HHMM(delivery.created_at)
@@ -781,11 +798,11 @@ export default function deliveryHistory() {
                          setDateEnd(event.target.value);
                     }}
                />
-               <Button
+               {/* <Button
                     sx={{
                          borderRadius: "md",
                     }}
-                    onClick={() => { loadData(true) }}>Load</Button>
+                    onClick={() => { loadData(true) }}>Load</Button> */}
           </Stack>
           <Stack sx={{ backgroundColor: "lightblue", width: "100%", flexGrow: 1, }}>
                <Sheet
@@ -890,7 +907,28 @@ export default function deliveryHistory() {
                                                   onClick={() => {
                                                        loadMore()
                                                   }}
-                                             >Load More</Button>
+                                             >
+                                                  <Stack
+                                                       direction="row"
+                                                       gap={1}
+                                                       alignItems="center"
+                                                       justifyContent="center"
+
+                                                  >
+                                                       {
+                                                            loading ? <CircularProgress
+                                                                 sx={{
+                                                                      width: "1.5em",
+                                                                      height: "1.5em",
+                                                                      borderRadius: "50%",
+                                                                      color: "white",
+                                                                 }}
+                                                            /> : <FaArrowDown />
+                                                       }
+                                                       <span className="b">Load Mores</span>
+                                                  </Stack>
+
+                                             </Button>
                                         </td>
                                    </tr> : null
                                    )
