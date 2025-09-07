@@ -67,7 +67,6 @@ export const fetchDeliveries = (params) => {
                const response = await axios().get(API, {
                     params: params,
                });
-
                // try {
                //      // let logs = response.headers["x-log-data"];
                //      //  logs = decodeURIComponent(logs);
@@ -76,7 +75,12 @@ export const fetchDeliveries = (params) => {
                // } catch (e) {
                //      console.log(e);
                // }
-               const deliveries = response.data;
+               let deliveries = response.data;
+               //check if data has noData field
+               if (deliveries.noData) {
+                    deliveries = [];
+               }
+               console.log("deliveries", deliveries);
                dispatch(fetchDeliveriesSuccess(deliveries));
           } catch (error) {
                console.log("error", error);

@@ -88,6 +88,7 @@ export default function deliveryHistory() {
      const { userDataLoading, users, userDataError } = useSelector((state) => state.user);
      const allGasData = useSelector((state) => state.gas);
      const { gasDeliverysSucsess } = useSelector((state) => state.gasDelivery);
+     const [page, setPage] = useState(1);
 
      deleveryGasEditUiGasList.length = 0;
      gasList.clear();
@@ -178,13 +179,19 @@ export default function deliveryHistory() {
      );
 
      const loadData = (force = false) => {
+          const fetchDeliveriesParams = { dateStart: dateStart, dateEnd: dateEnd, customer_id: customerId, courier_boy_id: deliverBoyId, page }
           if (force) {
-               dispatch(fetchDeliveries({ dateStart: dateStart, dateEnd: dateEnd, customer_id: customerId, courier_boy_id: deliverBoyId }));
+               dispatch(fetchDeliveries(fetchDeliveriesParams));
           } else if (
                ((deliveries == null || deliveries == undefined) && loading == false)
           ) {
-               dispatch(fetchDeliveries({ dateStart: dateStart, dateEnd: dateEnd, customer_id: customerId, courier_boy_id: deliverBoyId }));
+               dispatch(fetchDeliveries(fetchDeliveriesParams));
           }
+     }
+
+     const loadMore = () => {
+          setPage(page + 1);
+          loadData(true);
      }
 
      const updateUrlParams = (dateStart, dateEnd, customerId, deliverBoyId) => {
@@ -299,13 +306,33 @@ export default function deliveryHistory() {
      //console.log(ADMIN_LIST)
      if (deliveries != null || deliveries != undefined) {
           if (!deliveries.noData) {
+
+               let filterDeliveries = deliveries
+
+               // if (deliverBoyId != null || deliverBoyId != undefined) {
+               //      filterDeliveries = deliveries.filter((delivery) => {
+               //           return delivery.courier_boy.id == deliverBoyId
+               //      })
+               // }
+
                ncGasDeliveryList = {}
-               rows = deliveries.map((delivery) => {
+               rows = filterDeliveries.map((delivery) => {
+
+                    if (deliverBoyId != null || deliverBoyId != undefined) {
+                         if (delivery.courier_boy.id != deliverBoyId) {
+                              return;
+                         }
+                    }
+                    if (customerId != null || customerId != undefined) {
+                         if (delivery.customer.id != customerId) {
+                              return;
+                         }
+                    }
+
                     let isAdmin = false
                     const date = formatDateToDDMMYY_HHMM(delivery.created_at)
                     if (ADMIN_LIST.get(delivery.courier_boy.id)) {
                          isAdmin = true
-                         //console.log(delivery.payments)
                          delivery.payments.forEach((payment) => {
                               csvData.push([
                                    //"Date",
@@ -644,25 +671,17 @@ export default function deliveryHistory() {
           <Box
                sx={{
                     width: "100%",
-                    height: "100vh",
-                    flexGrow: 1,
                     display: loading ? "flex" : "none",
                     justifyContent: "center",
                     alignItems: "center",
                }}
           >
-               <CircularProgress
-                    sx={{
-                         backgroundColor: "transparent",
-                         display: loading ? "flex" : "none"
-                    }}
-               />
+               <LinearProgress />
           </Box>
 
           <Stack
                sx={{
                     width: "100%",
-                    display: loading ? "none" : "flex",
                     overflow: "auto",
                     flexGrow: 1,
                     alignItems: "center",
@@ -768,7 +787,7 @@ export default function deliveryHistory() {
                     }}
                     onClick={() => { loadData(true) }}>Load</Button>
           </Stack>
-          <Stack sx={{ backgroundColor: "lightblue", width: "100%", flexGrow: 1, display: loading ? "none" : "flex" }}>
+          <Stack sx={{ backgroundColor: "lightblue", width: "100%", flexGrow: 1, }}>
                <Sheet
                     sx={{
                          flexGrow: 1
@@ -816,41 +835,63 @@ export default function deliveryHistory() {
                               </tr>
                          </thead>
                          <tbody>
-                              {rows.map((row, index) => (
-                                   <Row
-                                        key={row.date + "_" + index}
-                                        row={row}
-                                        initialOpen={false}
-                                        updateCustomer={(customer) => {
-                                             console.log(customer);
-                                             const ok = window.confirm("Please Confirm Change");
-                                             if (ok) {
-                                                  dispatch(updateDelivery({ id: row.info.dileveryId, customer_id: customer.id }))
-                                             }
-                                             return ok;
-                                        }}
-                                        deleteDelivery={() => {
-                                             const id = window.prompt(`Please Input ${row.info.dileveryId} to Delete`);
-                                             const ok = id == row.info.dileveryId
-                                             if (ok) {
-                                                  //console.log("id", id);
-                                                  dispatch(deleteDeliveryById(row.info.dileveryId))
-                                             }
-                                             return ok;
-                                        }}
-                                        updateGas={(payload) => {
-                                             console.log("updateGas : ", payload);
-                                             dispatch(
-                                                  updateCreateDelete(
-                                                       payload
+                              {rows.map((row, index) => {
+                                   if (row == null || row == undefined) {
+                                        return null;
+                                   }
+                                   return (
+                                        <Row
+                                             key={row.date + "_" + index}
+                                             row={row}
+                                             initialOpen={false}
+                                             updateCustomer={(customer) => {
+                                                  console.log(customer);
+                                                  const ok = window.confirm("Please Confirm Change");
+                                                  if (ok) {
+                                                       dispatch(updateDelivery({ id: row.info.dileveryId, customer_id: customer.id }))
+                                                  }
+                                                  return ok;
+                                             }}
+                                             deleteDelivery={() => {
+                                                  const id = window.prompt(`Please Input ${row.info.dileveryId} to Delete`);
+                                                  const ok = id == row.info.dileveryId
+                                                  if (ok) {
+                                                       //console.log("id", id);
+                                                       dispatch(deleteDeliveryById(row.info.dileveryId))
+                                                  }
+                                                  return ok;
+                                             }}
+                                             updateGas={(payload) => {
+                                                  console.log("updateGas : ", payload);
+                                                  dispatch(
+                                                       updateCreateDelete(
+                                                            payload
+                                                       )
                                                   )
-                                             )
-                                        }}
-                                   />
-                              ))}
+                                             }}
+                                        />
+                                   )
+                              })}
                               {
                                    ((rows.length == 0) ? <tr>
                                         <td colSpan={columns.length + 1} style={{ textAlign: "center", fontWeight: "bold", fontSize: "1.8em" }}>No Data</td>
+                                   </tr> : null
+                                   )
+                              }
+                              {
+                                   (!(rows.length == 0) ? <tr>
+                                        <td colSpan={columns.length + 1} style={{ textAlign: "center", fontWeight: "bold", fontSize: "1.8em" }}>
+                                             <Button
+                                                  sx={{
+                                                       borderRadius: "md",
+                                                       mb: 1,
+                                                       mt: 1,
+                                                  }}
+                                                  onClick={() => {
+                                                       loadMore()
+                                                  }}
+                                             >Load More</Button>
+                                        </td>
                                    </tr> : null
                                    )
                               }
@@ -877,6 +918,7 @@ function Row({
           balance = 0
      }
 
+     console.log("rendering");
      // Define the cell groups for easier mapping
 
      const Cell = (cell, id, kg, type) => {
@@ -977,7 +1019,6 @@ function Row({
           </Box>)
      }
      const DropSheet = () => {
-
           function toDateTimeLocal(str) {
                // str = "04/09/25 - 05:44 PM"
                const [datePart, timePart] = str.split(" - ");
@@ -1351,7 +1392,6 @@ const formatDate = (date) => {
      const day = String(date.getDate()).padStart(2, '0');
      return `${year}-${month}-${day}`;
 };
-
 function calculateGasGroup(cylinders, mt, rate) {
      rate = Number(rate)
      cylinders = Number(cylinders)

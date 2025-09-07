@@ -34,13 +34,23 @@ const deliverysReducer = (state = initialState, action) => {
                     updateSuccess: false,
                     error: false,
                };
-          case FETCH_DELIVERIES_SUCCESS:
+          case FETCH_DELIVERIES_SUCCESS: {
+               // Merge and remove duplicates by 'id'
+               const merged = [
+                    ...(state.deliveries ? state.deliveries : []),
+                    ...action.payload,
+               ];
+               const uniqueDeliveries = merged.filter(
+                    (delivery, index, self) =>
+                         index === self.findIndex((d) => d.id === delivery.id),
+               );
                return {
                     loading: false,
-                    deliveries: action.payload,
+                    deliveries: uniqueDeliveries,
                     error: false,
                     updateSuccess: false,
                };
+          }
           case UPDATE_DELIVERY_SUCCESS_RESET:
                return {
                     ...state,
