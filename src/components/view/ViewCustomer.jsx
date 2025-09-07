@@ -172,7 +172,8 @@ const ViewCustomer = () => {
                //console.log(id, qty);
                setGasIdList((prevList) => [...prevList, { id: id, qty: qty, price: price }]);
           };
-          console.log(gasIdList)
+
+          //console.log(gasIdList)
           const removeGasItem = (index) => {
                setGasIdList((prevList) => {
                     let temp = [...prevList];
@@ -197,7 +198,7 @@ const ViewCustomer = () => {
                setAccessory("");
                setPrice("");
           };
-          console.log(accessoryList)
+          //console.log(accessoryList)
           const removeAccessory = (index) => {
                setAccessoryList((prevList) => {
                     let temp = [...prevList];
@@ -274,7 +275,7 @@ const ViewCustomer = () => {
                                              "aadhar_card_no": t.aadhar_card_no,
                                              "accessories": noAccessory ? [] : accessoryList
                                         });
-                                        console.log(data)
+                                        //console.log(data)
 
                                         const token = sessionStorage.getItem("authToken");
                                         let config = {
@@ -290,14 +291,14 @@ const ViewCustomer = () => {
 
                                         axios.request(config)
                                              .then((response) => {
-                                                  console.log(JSON.stringify(response.data));
+                                                  //console.log(JSON.stringify(response.data));
                                                   if (response.data.success == true) {
                                                        dispatch(fetchCustomerData());
                                                        setOpenNewConnection(false);
                                                        setLoadingSubmit(false);
                                                   } else {
                                                        alert("Error Adding Customer");
-                                                       console.log(response.data);
+                                                       //console.log(response.data);
                                                        setLoadingSubmit(false);
                                                   }
 
@@ -972,7 +973,7 @@ function Balance({ data }) {
                                         onClick={() => {
                                              let amt = Number(amount);
                                              amt = amt * -1;
-                                             console.log(amt)
+                                             //console.log(amt)
                                              dispatch(
                                                   adjustBalance({
                                                        customerId: data.id,
