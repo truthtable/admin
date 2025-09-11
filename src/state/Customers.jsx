@@ -1,10 +1,10 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { CUSTOMER_DATA, getLoginData } from "../services/Api";
 import { localDB, storeCustomer } from "../db/db";
-
+import { useDispatch } from "react-redux";
 export const fetchCustomerData = createAsyncThunk(
      "customer/fetchCustomerData",
-     async () => {
+     async (_, { dispatch }) => {
           let error = true;
           let data = null;
           let errorMessage = "";
@@ -20,19 +20,17 @@ export const fetchCustomerData = createAsyncThunk(
                data = await response.json();
                //check if data.data and data.userdata is not null, undefined or not an array
                if ((data.data != null || data.userdata == null || data.data.length != 0 || data.userdata.length != 0)) {
-                    console.log(data);
+                    //console.log(data);
                     try {
                          /*
 {id: 1, user_id: 1, diaryNumber: 2, aadhar_card_no: '437567655333', totalBalance: '103772'}
                          */
                          const customers = data.data;
                          /*
-
 {id: 102, name: 'UMASHANKAR', address: 'ROHITVASH', phone_no: '9998259700'}
                          */
                          const users = data.userdata;
                          //customer-user_id = user-id
-
                          customers.forEach((customer) => {
                               const user = users.find((user) => user.id == customer.user_id);
                               storeCustomer(
@@ -46,10 +44,6 @@ export const fetchCustomerData = createAsyncThunk(
                                    customer.totalBalance
                               )
                          });
-
-                         storeCustomer(
-                              1, 2, "gfx", 90234, 23, "silv", "9876543210", 1000
-                         )
                     } catch (e) {
                          console.log(e)
                     }

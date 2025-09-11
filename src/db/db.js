@@ -68,7 +68,7 @@ export const storeCustomer = async (
           totalBalance,
      });
 };
-
-export const getCustomers = async () => {
-     return await localDB.customer.toArray();
+export const getLocalCustomers = async () => {
+     const customers = await localDB.customer.toArray();
+     return customers || [];
 };

@@ -28,7 +28,6 @@ import authReducer from "../redux/authSlice.js";
 import connectionReducer from "../redux/connectionSlice.js";
 import billReducer from "../redux/billSlice.js";
 import customerPaymentsUpdateOrCreateSliceReducer from "../redux/customerPaymentsUpdateOrCreate.js";
-
 export const store = configureStore({
      reducer: {
           login: loginReducer,

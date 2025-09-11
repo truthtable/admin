@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "../../crud/crud-css/read.css";
-import { BsSearch, } from "react-icons/bs";
+import { BsSearch } from "react-icons/bs";
 import gasDataService from "../../services/gas-services.jsx";
 import DataTable from "../table/DataTable.jsx";
 import {
@@ -39,7 +39,7 @@ import { getLoginData, UPDATE_CUSTOMER, UPDATE_USER, URL } from "../../services/
 
 import { TbHomePlus } from "react-icons/tb";
 import { fetchGas } from "../../redux/actions/gasAction.js";
-import { CgClose, CgCross } from "react-icons/cg";
+import { CgClose } from "react-icons/cg";
 import { IoMdClose } from "react-icons/io";
 import gasServices from "../../services/gas-services.jsx";
 import { decimalFix, formatDateTDDMMYY, urlDecodeAndParseJson } from "../../Tools.jsx";
@@ -49,78 +49,65 @@ import {
      fetchConnectionByCustomerId,
      resetConnection
 } from '../../redux/connectionSlice.js'
-import { set } from "firebase/database";
+import { get, set } from "firebase/database";
 import { adjustBalance, customerPaymentsUpdateOrCreateReset } from "../../redux/customerPaymentsUpdateOrCreate.js";
+import { getLocalCustomers } from "../../db/db.js";
 let CUSTOMERS = [];
 const ViewCustomer = () => {
-
      const dispatch = useDispatch();
      const customerData = useSelector((state) => state.customers);
      const updateCustomer = useSelector((state) => state.updateCustomer);
-
      const { gasLoading, gasList, gasError } = useSelector((state) => state.gasList);
      const { isCustomerPaymentsUpdateOrCreateLoading, isCustomerPaymentsUpdateOrCreateError, customerPaymentsUpdateOrCreateErrorMessage, isCustomerPaymentsUpdateOrCreateSuccess } = useSelector((state) => state.customerPaymentsUpdateOrCreate);
-     //console.log({ isCustomerPaymentsUpdateOrCreateLoading, isCustomerPaymentsUpdateOrCreateError, customerPaymentsUpdateOrCreateErrorMessage, isCustomerPaymentsUpdateOrCreateSuccess })
-
      const [searchText, setSearchText] = useState("");
-
      const [customerDetailsModel, setCustomerDetailsModel] = useState(false);
-
      const BALANCE_SORT = "balance";
      const CUSTOMER_NAME_SORT = "customer_name";
      const ADDRESS_SORT = "address";
      const DIARY_SORT = "diary_no";
      const [sortBy, setSortBy] = useState(BALANCE_SORT);
-
      let [selectedCustomer, setSelectedCustomer] = useState(null);
      const connection = useSelector((state) => state.connections);
      let xcombineData = null
      const loadConnection = (id) => {
-          //console.log(id)
           const customer = xcombineData.find((user) => user.id == id)
           setSelectedCustomer(customer)
           setCustomerDetailsModel(true);
-          dispatch(resetConnection());
-          //dispatch(fetchConnectionByCustomerId(id));
      };
-     //console.log(connection);
-     //console.log(selectedCustomer)
-     const data = [];
-     if (notNull(customerData.data)) {
-          if (customerData.data.data.length > 0) {
-               let temp = combineData(customerData.data.data, customerData.data.userdata);
-
-               //sort by Balance
-               if (sortBy == CUSTOMER_NAME_SORT) {
-                    temp.sort((a, b) => a.user.name.localeCompare(b.user.name));
-               } else if (sortBy == BALANCE_SORT) {
-                    temp.sort((a, b) => b.totalBalance - a.totalBalance);
-               } else if (sortBy == ADDRESS_SORT) {
-                    temp.sort((a, b) => a.user.address.localeCompare(b.user.address));
-               } else if (sortBy == DIARY_SORT) {
-                    temp.sort((a, b) => {
-                         const isSpecial = v => v === 0 || v === null || v === "";
-                         if (isSpecial(a.diaryNumber) && !isSpecial(b.diaryNumber)) return 1;   // a goes after b
-                         if (!isSpecial(a.diaryNumber) && isSpecial(b.diaryNumber)) return -1;  // b goes after a
-                         if (isSpecial(a.diaryNumber) && isSpecial(b.diaryNumber)) return 0;    // keep order among specials
-                         return a.diaryNumber - b.diaryNumber;
-                    });
-               }
-               xcombineData = temp
-               if (searchText.length > 0) {
-                    temp = temp.filter((item) => {
-                         return item.user.name.toLowerCase().includes(searchText.toLowerCase());
-                    });
-               }
-
-               //console.log(temp)
-
-               temp.forEach((item) => {
-                    data.push(makeRow(item, loadConnection));
-               });
-
+     const [localCustomers, setLocalCustomers] = useState([]);
+     useEffect(() => {
+          async function fetchLocal() {
+               const customers = await getLocalCustomers();
+               setLocalCustomers(customers);
           }
+          fetchLocal();
+     }, []);
+     const data = [];
+     let temp = localCustomers;
+     if (sortBy == CUSTOMER_NAME_SORT) {
+          temp.sort((a, b) => a.name.localeCompare(b.name));
+     } else if (sortBy == BALANCE_SORT) {
+          temp.sort((a, b) => b.totalBalance - a.totalBalance);
+     } else if (sortBy == ADDRESS_SORT) {
+          temp.sort((a, b) => a.address.localeCompare(b.address));
+     } else if (sortBy == DIARY_SORT) {
+          temp.sort((a, b) => {
+               const isSpecial = v => v === 0 || v === null || v === "";
+               if (isSpecial(a.diaryNumber) && !isSpecial(b.diaryNumber)) return 1;
+               if (!isSpecial(a.diaryNumber) && isSpecial(b.diaryNumber)) return -1;
+               if (isSpecial(a.diaryNumber) && isSpecial(b.diaryNumber)) return 0;
+               return a.diaryNumber - b.diaryNumber;
+          });
      }
+     xcombineData = temp
+     if (searchText.length > 0) {
+          temp = temp.filter((item) => {
+               return item.user.name.toLowerCase().includes(searchText.toLowerCase());
+          });
+     }
+     temp.forEach((item) => {
+          data.push(makeRow(item, loadConnection));
+     });
      useEffect(() => {
           if (customerData.data == null && !customerData.isLoading && !customerData.isError) {
                dispatch(fetchCustomerData());
@@ -143,7 +130,6 @@ const ViewCustomer = () => {
                if (
                     !customerData.isLoading
                ) {
-                    //console.log("fetchCustomerData...");
                     dispatch(fetchCustomerData());
 
                }
@@ -163,17 +149,12 @@ const ViewCustomer = () => {
                     alert("Gas already selected");
                     return;
                }
-               //gas not found
                if (gasList.find((item) => item.id === id) == null) {
                     alert("Select A Gas");
                     return;
                }
-
-               //console.log(id, qty);
                setGasIdList((prevList) => [...prevList, { id: id, qty: qty, price: price }]);
           };
-
-          //console.log(gasIdList)
           const removeGasItem = (index) => {
                setGasIdList((prevList) => {
                     let temp = [...prevList];
@@ -198,7 +179,6 @@ const ViewCustomer = () => {
                setAccessory("");
                setPrice("");
           };
-          //console.log(accessoryList)
           const removeAccessory = (index) => {
                setAccessoryList((prevList) => {
                     let temp = [...prevList];
@@ -206,53 +186,29 @@ const ViewCustomer = () => {
                     return temp;
                })
           };
-          ///
           return <Modal
                open={openNewConnection}
                onClose={() => setOpenNewConnection(false)}
                title="New Connection"
-               sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    gap: "10px",
-               }}
+               className="flex flex-col justify-center items-center gap-2.5"
           >
                <Container>
-                    <Sheet
-                         sx={{
-                              padding: "20px",
-                              borderRadius: "10px",
-                              backgroundColor: "#fff",
-                              boxShadow: "0px 0px 10px 0px #0000001a",
-                         }}
-                    >
+                    <Sheet className="p-5 rounded-xl bg-white shadow-lg">
                          <ModalClose variant="outlined" />
                          <Typography>New Connection</Typography>
-                         <Divider sx={{
-                              p: 1,
-                              opacity: 0,
-                         }} />
+                         <Divider className="opacity-0 p-2" />
                          <form
-                              //hande submit
                               onSubmit={
                                    (e) => {
                                         e.preventDefault();
-
                                         setLoadingSubmit(true);
-
-                                        //get the form data in json format
                                         const formData = new FormData(e.target);
                                         const t = {};
                                         formData.forEach((value, key) => {
                                              t[key] = value;
                                         })
-                                        //console.log(t)
-
                                         let diaryNo = t.diary_no;
                                         if (diaryNo.length > 0) {
-                                             //check if diary number is already taken
                                              let isTaken = false;
                                              CUSTOMERS.forEach((customer) => {
                                                   if (customer.diaryNumber == diaryNo) {
@@ -265,7 +221,6 @@ const ViewCustomer = () => {
                                                   return;
                                              }
                                         }
-
                                         let data = JSON.stringify({
                                              "name": t.name,
                                              "phone_no": t.phone,
@@ -275,8 +230,6 @@ const ViewCustomer = () => {
                                              "aadhar_card_no": t.aadhar_card_no,
                                              "accessories": noAccessory ? [] : accessoryList
                                         });
-                                        //console.log(data)
-
                                         const token = sessionStorage.getItem("authToken");
                                         let config = {
                                              method: 'post',
@@ -291,17 +244,14 @@ const ViewCustomer = () => {
 
                                         axios.request(config)
                                              .then((response) => {
-                                                  //console.log(JSON.stringify(response.data));
                                                   if (response.data.success == true) {
                                                        dispatch(fetchCustomerData());
                                                        setOpenNewConnection(false);
                                                        setLoadingSubmit(false);
                                                   } else {
                                                        alert("Error Adding Customer");
-                                                       //console.log(response.data);
                                                        setLoadingSubmit(false);
                                                   }
-
                                              })
                                              .catch((error) => {
                                                   alert("Error Adding Customer");
@@ -312,9 +262,7 @@ const ViewCustomer = () => {
                                    }
                               }
                          >
-                              <Stack spacing={2}
-                                   direction={"column"}
-                              >
+                              <Stack spacing={2} direction={"column"}>
                                    <FormControl>
                                         <FormLabel>Name</FormLabel>
                                         <Input placeholder="Name" name="name" required />
@@ -327,30 +275,23 @@ const ViewCustomer = () => {
                                              required
                                              type="tel"
                                              onChange={(e) => {
-
-                                                  //remove + from phone number if present
                                                   if (e.target.value.startsWith('+')) {
                                                        e.target.value = e.target.value.substring(1);
                                                   }
-
                                                   const value = e.target.value;
-                                                  // Allow only digits and + symbol
                                                   const sanitized = value.replace(/[^\d+]/g, '');
                                                   e.target.value = sanitized;
                                              }}
                                              onBlur={(e) => {
                                                   const value = e.target.value.trim();
                                                   const patterns = [
-                                                       /^\+91\d{10}$/, // +919876543210 (13 characters)
-                                                       /^91\d{10}$/,   // 919876543210 (12 characters)
-                                                       /^\d{10}$/      // 9876543210 (10 characters)
+                                                       /^\+91\d{10}$/,
+                                                       /^91\d{10}$/,
+                                                       /^\d{10}$/
                                                   ];
-
                                                   const isValid = patterns.some(pattern => pattern.test(value));
-
                                                   if (!isValid && value.length > 0) {
                                                        alert('Phone number must be in one of these formats:\n+919876543210 (13 digits)\n919876543210 (12 digits)\n9876543210 (10 digits)');
-                                                       // Remove the focus() call to prevent infinite loop
                                                   }
                                              }}
                                              pattern="^(\+91\d{10}|91\d{10}|\d{10})$"
@@ -369,38 +310,19 @@ const ViewCustomer = () => {
                                         <FormLabel>Diary No.</FormLabel>
                                         <Input placeholder="Diary No." type="number" name="diary_no" />
                                    </FormControl>
-                                   <FormLabel sx={{ opacity: noGas ? 0.5 : 1 }}>Gas List</FormLabel>
-                                   <List sx={{ display: noGas ? "none" : "block" }}>
+                                   <FormLabel className={noGas ? "opacity-50" : ""}>Gas List</FormLabel>
+                                   <List className={noGas ? "hidden" : "block"}>
                                         {gasIdList.map((item, index) => {
                                              const gas = gasList.find((gas) => gas.id === item.id);
                                              return <ListItem
                                                   key={"gas_sel_" + index}
-                                                  sx={{
-                                                       // border stroke
-                                                       borderWidth: 2,
-                                                       borderRadius: "lg",
-                                                       display: "flex",
-                                                       mt: 1
-                                                  }}
+                                                  className="border-2 rounded-lg flex mt-1"
                                              >
-                                                  <ListItemContent
-                                                       sx={{
-                                                            fontWeight: "bold",
-                                                            flexGrow: 1
-                                                       }}
-                                                  >{gas.company_name} : {gas.kg}KG : {item.qty} QTY : Price ₹{item.price} : TOTAL ₹{item.qty * item.price}</ListItemContent>
+                                                  <ListItemContent className="font-bold flex-grow">
+                                                       {gas.company_name} : {gas.kg}KG : {item.qty} QTY : Price ₹{item.price} : TOTAL ₹{item.qty * item.price}
+                                                  </ListItemContent>
                                                   <Box
-                                                       sx={{
-                                                            display: "flex",
-                                                            justifyContent: "end",
-                                                            padding: 1,
-                                                            borderRadius: "lg",
-                                                            //hover effect
-                                                            '&:hover': {
-                                                                 backgroundColor: "#CC2B52",
-                                                                 color: "#fff",
-                                                            }
-                                                       }}
+                                                       className="flex justify-end p-1 rounded-lg hover:bg-[#CC2B52] hover:text-white"
                                                        onClick={() => {
                                                             removeGasItem(index)
                                                        }}
@@ -409,12 +331,8 @@ const ViewCustomer = () => {
                                         })
                                         }
                                    </List>
-                                   <Stack
-                                        direction={"row"}
-                                        gap={1}
-                                        sx={{ display: noGas ? "none" : "flex" }}
-                                   >
-                                        <Select sx={{ flexGrow: 1 }}
+                                   <Stack direction={"row"} gap={1} className={noGas ? "hidden" : "flex"}>
+                                        <Select className="flex-grow"
                                              placeholder="Select Gas"
                                              onChange={(event, value) => {
                                                   tempSelectedId = value
@@ -448,39 +366,18 @@ const ViewCustomer = () => {
                                              }}
                                         >Add Gas</Button>
                                    </Stack>
-                                   <FormLabel sx={{ opacity: noAccessory ? 0.5 : 1 }}>Accessory List</FormLabel>
-                                   <List
-                                        sx={{ display: noAccessory ? "none" : "block" }}
-                                   >
+                                   <FormLabel className={noAccessory ? "opacity-50" : ""}>Accessory List</FormLabel>
+                                   <List className={noAccessory ? "hidden" : "block"}>
                                         {accessoryList.map((item, index) => {
                                              return <ListItem
                                                   key={"accessory_" + index}
-                                                  sx={{
-                                                       // border stroke
-                                                       borderWidth: 2,
-                                                       borderRadius: "lg",
-                                                       display: "flex",
-                                                       mt: 1
-                                                  }}
+                                                  className="border-2 rounded-lg flex mt-1"
                                              >
-                                                  <ListItemContent
-                                                       sx={{
-                                                            fontWeight: "bold",
-                                                            flexGrow: 1
-                                                       }}
-                                                  >{item.accessory} : ₹{item.price}</ListItemContent>
+                                                  <ListItemContent className="font-bold flex-grow">
+                                                       {item.accessory} : ₹{item.price}
+                                                  </ListItemContent>
                                                   <Box
-                                                       sx={{
-                                                            display: "flex",
-                                                            justifyContent: "end",
-                                                            padding: 1,
-                                                            borderRadius: "lg",
-                                                            //hover effect
-                                                            '&:hover': {
-                                                                 backgroundColor: "#CC2B52",
-                                                                 color: "#fff",
-                                                            }
-                                                       }}
+                                                       className="flex justify-end p-1 rounded-lg hover:bg-[#CC2B52] hover:text-white"
                                                        onClick={() => {
                                                             removeAccessory(index)
                                                        }}
@@ -489,13 +386,13 @@ const ViewCustomer = () => {
                                         })
                                         }
                                    </List>
-                                   <Stack direction={"row"} gap={1} sx={{ display: noAccessory ? "none" : "flex" }}>
-                                        <Input sx={{ flexGrow: 1 }} placeholder="Accessory" value={accessory}
+                                   <Stack direction={"row"} gap={1} className={noAccessory ? "hidden" : "flex"}>
+                                        <Input className="flex-grow" placeholder="Accessory" value={accessory}
                                              onChange={(e) => {
                                                   setAccessory(e.target.value)
                                              }}
                                         />
-                                        <Input sx={{ flexGrow: .1 }} placeholder="Price" type="number" value={price}
+                                        <Input className="flex-[0.1]" placeholder="Price" type="number" value={price}
                                              onChange={(e) => {
                                                   setPrice(e.target.value)
                                              }}
@@ -506,14 +403,11 @@ const ViewCustomer = () => {
                                              }}
                                         >Add Accessory</Button>
                                    </Stack>
-                                   <Divider sx={{ opacity: 0, m: 1 }} />
+                                   <Divider className="opacity-0 m-2" />
                                    <Stack direction={"row"} gap={1}>
                                         <Stack
                                              gap={1}
-                                             sx={{
-                                                  flexDirection: { xs: 'column', md: 'row' },
-                                                  alignItems: { xs: 'flex-start', md: 'center' }
-                                             }}
+                                             className="flex-col md:flex-row md:items-center"
                                         >
                                              <Checkbox
                                                   label=""
@@ -523,21 +417,12 @@ const ViewCustomer = () => {
                                                        setNoGas(e.target.checked);
                                                   }}
                                              />
-                                             <span style={{
-                                                  fontWeight: "bold",
-                                                  color: "black",
-                                                  minWidth: { xs: '100%', md: 'auto' },
-                                                  whiteSpace: 'nowrap'
-                                             }}>
+                                             <span className="font-bold text-black min-w-full md:min-w-auto whitespace-nowrap">
                                                   No Gas :
                                              </span>
-
                                              <Stack
                                                   gap={1}
-                                                  sx={{
-                                                       flexDirection: { xs: 'column', md: 'row' },
-                                                       alignItems: { xs: 'flex-start', md: 'center' }
-                                                  }}
+                                                  className="flex-col md:flex-row md:items-center"
                                              >
                                                   <Checkbox
                                                        label=""
@@ -547,18 +432,13 @@ const ViewCustomer = () => {
                                                             setNoAccessory(e.target.checked);
                                                        }}
                                                   />
-                                                  <span style={{
-                                                       fontWeight: "bold",
-                                                       color: "black",
-                                                       minWidth: { xs: '100%', md: 'auto' },
-                                                       whiteSpace: 'nowrap'
-                                                  }}>
+                                                  <span className="font-bold text-black min-w-full md:min-w-auto whitespace-nowrap">
                                                        No Accessory :
                                                   </span>
                                              </Stack>
                                         </Stack>
                                    </Stack>
-                                   <Divider sx={{ opacity: 0, m: 1 }} />
+                                   <Divider className="opacity-0 m-2" />
                                    {
                                         loadingSubmit ? <LinearProgress /> : <>
                                              <Button type="submit"
@@ -571,58 +451,37 @@ const ViewCustomer = () => {
                </Container>
           </Modal>
      }
-
-     if (customerData.data == null || gasList.length == 0) {
-          return <div style={{
-               width: "100%",
-               height: "100%",
-               overflow: "auto",
-               padding: "10px",
-               backgroundColor: "#f5f5f5",
-               borderRadius: "16px",
-          }}>
-               <LinearProgress></LinearProgress>
-          </div>
-     }
      let tempQty = 1
      let tempPrice = 0
-     let tempSelectedId = gasList[0].id
+     let tempSelectedId = 0
      let new_connection = null
      try {
-          //console.log(connection.data.new_connection)
+          tempSelectedId = gasList[0].id
           if (connection.data.new_connection) {
                new_connection = connection.data.new_connection
           }
      } catch (e) {
-          //console.log(e)
      }
      new_connection = new_connection ? new_connection : []
-     //console.log(new_connection)
      return (
-          <div style={{
-               width: "100%",
-               height: "100%",
-               overflow: "auto",
-               padding: "10px",
-               backgroundColor: "#f5f5f5",
-               borderRadius: "16px",
-          }}>
+          <div className="w-full h-full overflow-auto p-2.5 bg-[#f5f5f5] rounded-2xl">
                <NewConnectionForm />
-               <Stack direction="row" mb={1} spacing={1} justifyContent="flex-end">
-                    <Button onClick={
-                         () => {
-                              setOpenNewConnection(true);
-                         }
-                    } startDecorator={<TbHomePlus />}>New Connection</Button>
-                    <div style={{ flexGrow: 1 }} />
+               <Stack direction="row" mb={1} spacing={1} justifyContent="flex-end" className="flex flex-row mb-1 space-x-2 justify-end">
+                    <Button
+                         onClick={() => setOpenNewConnection(true)}
+                         startDecorator={<TbHomePlus />}
+                         className="flex items-center"
+                    >
+                         New Connection
+                    </Button>
+                    <div className="flex-grow" />
                     <Typography
                          variant="h4"
-                         style={{
-                              display: "flex",
-                              alignItems: "center",
-                         }}
-                    >Sort By</Typography>
-                    <Select defaultValue={BALANCE_SORT}>
+                         className="flex items-center"
+                    >
+                         Sort By
+                    </Typography>
+                    <Select defaultValue={BALANCE_SORT} className="min-w-[120px]">
                          <Option value={BALANCE_SORT} onClick={() => setSortBy(BALANCE_SORT)}>Balance</Option>
                          <Option value={CUSTOMER_NAME_SORT} onClick={() => setSortBy(CUSTOMER_NAME_SORT)}>Customer Name</Option>
                          <Option value={ADDRESS_SORT} onClick={() => setSortBy(ADDRESS_SORT)}>Address</Option>
@@ -630,50 +489,30 @@ const ViewCustomer = () => {
                     </Select>
                     <Typography
                          variant="h4"
-                         style={{
-                              display: "flex",
-                              alignItems: "center",
-                         }}
-                    >Search Customer</Typography>
+                         className="flex items-center"
+                    >
+                         Search Customer
+                    </Typography>
                     <Input
                          placeholder="Name"
                          value={searchText}
                          onChange={(e) => setSearchText(e.target.value)}
+                         className="min-w-[180px]"
                     />
-                    <Button startDecorator={<BsSearch />}>Search</Button>
-
+                    <Button startDecorator={<BsSearch />} className="flex items-center">Search</Button>
                </Stack>
                <>
                     <Modal
                          open={customerDetailsModel}
                          onClose={() => setCustomerDetailsModel(false)}
                          title="All Data"
-                         sx={{
-                              display: "flex",
-                              flexDirection: "column",
-                              justifyContent: "center",
-                              alignItems: "center",
-                              gap: "10px",
-                         }}
+                         className="flex flex-col justify-center items-center gap-2.5"
                     >
-                         <Container
-                         >
-                              <Sheet
-                                   sx={{
-                                        padding: "20px",
-                                        borderRadius: "10px",
-                                        backgroundColor: "#fff",
-                                        boxShadow: "0px 0px 10px 0px #0000001a",
-                                        overflow: "auto",
-                                        height: "80vh",
-                                   }}
-                              >
+                         <Container>
+                              <Sheet className="p-5 rounded-xl bg-white shadow-lg overflow-auto h-[80vh]">
                                    <ModalClose variant="outlined" />
                                    <Typography>All Data</Typography>
-                                   <Divider sx={{
-                                        p: 1,
-                                        opacity: 0,
-                                   }} />
+                                   <Divider className="opacity-0 p-2" />
                                    <List>
                                         {
                                              connection.isLoading ? <LinearProgress /> : <>
@@ -682,7 +521,7 @@ const ViewCustomer = () => {
                                                             <Stack direction={"row"} spacing={1} alignItems="center" justifyContent="flex-start">
                                                                  <pre>Name</pre>
                                                                  :
-                                                                 <pre>{selectedCustomer ? selectedCustomer.user.name : ''}</pre>
+                                                                 <pre>{selectedCustomer ? selectedCustomer.name : ''}</pre>
                                                             </Stack>
                                                        </ListItemContent>
                                                   </ListItem>
@@ -692,7 +531,7 @@ const ViewCustomer = () => {
                                                             <Stack direction={"row"} spacing={1} alignItems="center" justifyContent="flex-start">
                                                                  <pre>Address</pre>
                                                                  :
-                                                                 <pre>{selectedCustomer ? selectedCustomer.user.address : ""}</pre>
+                                                                 <pre>{selectedCustomer ? selectedCustomer.address : ""}</pre>
                                                             </Stack>
                                                        </ListItemContent>
                                                   </ListItem>
@@ -702,7 +541,7 @@ const ViewCustomer = () => {
                                                             <Stack direction={"row"} spacing={1} alignItems="center" justifyContent="flex-start">
                                                                  <pre>Phone Number</pre>
                                                                  :
-                                                                 <pre>{selectedCustomer ? selectedCustomer.user.phone_no : ""}</pre>
+                                                                 <pre>{selectedCustomer ? selectedCustomer.phone_no : ""}</pre>
                                                             </Stack>
                                                        </ListItemContent>
                                                   </ListItem>
@@ -765,18 +604,8 @@ const ViewCustomer = () => {
 
 export default ViewCustomer;
 
-function combineData(data, userdata) {
-     return data.map((item) => {
-          const user = userdata.find((user) => user.id === item.user_id);
-          return {
-               ...item,
-               user,
-          };
-     });
-}
-
 function makeRow(data, onAllDataClick) {
-     //console.log(data);
+     console.log("Making Row");
      return [
           <AllData
                key="all_data"
@@ -801,8 +630,8 @@ function makeRow(data, onAllDataClick) {
                key="name"
                name="name"
                type={TEXT}
-               text={data.user.name}
-               value={data.user.name}
+               text={data.name}
+               value={data.name}
                table={UPDATE_USER}
           />,
           <UpdateCustomerCell
@@ -812,8 +641,8 @@ function makeRow(data, onAllDataClick) {
                key="address"
                name="address"
                type={TEXT}
-               text={data.user.address}
-               value={data.user.address}
+               text={data.address}
+               value={data.address}
                table={UPDATE_USER}
           />,
           <UpdateCustomerCell
@@ -823,83 +652,39 @@ function makeRow(data, onAllDataClick) {
                key="phone_no"
                name="phone_no"
                type={NUMBER}
-               text={data.user.phone_no}
-               value={data.user.phone_no}
+               text={data.phone_no}
+               value={data.phone_no}
                table={UPDATE_USER}
           />,
           <Balance data={data} />,
           <Box
                key="chb"
-               sx={{
-                    padding: "0px",
-                    margin: "0px",
-                    backgroundColor: "transparent",
-                    mx: "2px",
-                    transition: "background-color 0.3s",
-                    "&:hover": {
-                         backgroundColor: "rgb(75 112 245 / 25%)",
-                    },
-                    pl: 1
-
-               }}>
-               <Button style={{
-                    flexGrow: 1,
-                    width: "100%",
-                    height: "100%",
-                    margin: "0px",
-                    padding: "0px",
-                    borderRadius: "0px",
-                    backgroundColor: "transparent",
-                    whiteSpace: "nowrap",
-                    textAlign: "center",
-                    disabled: true,
-                    justifyContent: "flex-start",
-                    color: "#185ea5",
-               }}
-
+               className="p-0 m-0 bg-transparent mx-0.5 transition-colors hover:bg-[rgba(75,112,245,0.25)] pl-1"
+          >
+               <Button
+                    className="flex-grow w-full h-full m-0 p-0 rounded-none bg-transparent whitespace-nowrap text-center text-[#185ea5] justify-start"
                     onClick={() => {
                          window.location.href = `/admin/#/admin/deliveryHistory/?customerId=${data.id}`;
                     }}
-
                >History</Button>
           </Box>
      ];
 }
-
 function AllData({ data, onClick }) {
      return <Box
           key="chb"
-          sx={{
-               padding: "0px",
-               margin: "0px",
-               backgroundColor: "transparent",
-               mx: "2px",
-               transition: "background-color 0.3s",
-               "&:hover": {
-                    backgroundColor: "rgb(75 112 245 / 25%)",
-               },
-
-          }}>
-          <Button style={{
-               flexGrow: 1,
-               width: "100%",
-               height: "100%",
-               margin: "0px",
-               padding: "0px",
-               borderRadius: "0px",
-               backgroundColor: "transparent",
-               whiteSpace: "nowrap",
-               textAlign: "center",
-               disabled: true,
-               //justifyContent: "flex-start",
-               color: "#377e3a",
-               display: "flex",
-               alignItems: "center",
-               justifyContent: "center",
-          }}
+          className="p-0 m-0 bg-transparent mx-0.5 transition-colors hover:bg-[rgba(75,112,245,0.25)]"
+     >
+          <Button
+               sx={{
+                    backgroundColor: "transparent",
+                    border: "none",
+                    color: "black",
+                    '&:hover': {
+                         color: "white"
+                    },
+               }}
                onClick={() => {
-                    //window.location.href = `/admin/#/admin/deliveryHistory/?customer_id=${data.id}`;
-                    //console.log(data)
                     onClick(data.id);
                }}
           >
@@ -907,7 +692,6 @@ function AllData({ data, onClick }) {
           </Button>
      </Box>
 }
-
 function Balance({ data }) {
      const dispatch = useDispatch();
      const [showModal, setShowModal] = useState(false);
@@ -918,23 +702,9 @@ function Balance({ data }) {
                     open={showModal}
                     onClose={() => setShowModal(false)}
                     title="Balance"
-                    sx={{
-                         display: "flex",
-                         flexDirection: "column",
-                         justifyContent: "center",
-                         alignItems: "center",
-                         gap: "10px",
-                    }}
+                    className="flex flex-col justify-center items-center gap-2.5"
                >
-                    <Sheet
-                         sx={{
-                              padding: "20px",
-                              borderRadius: "10px",
-                              backgroundColor: "#fff",
-                              boxShadow: "0px 0px 10px 0px #0000001a",
-                              overflow: "auto",
-                         }}
-                    >
+                    <Sheet className="p-5 rounded-xl bg-white shadow-lg overflow-auto">
                          <Stack
                               direction={"column"}
                               spacing={1}
@@ -942,7 +712,7 @@ function Balance({ data }) {
                               justifyContent="flex-start">
                               <ModalClose variant="outlined" />
                               <Typography>Adjust Balance</Typography>
-                              <Divider sx={{ mb: 10 }} />
+                              <Divider className="mb-10" />
                               <span>Balance</span>
                               <pre>{decimalFix(data.totalBalance, true)}</pre>
                               <span>Outstanding Balance</span>
@@ -954,13 +724,12 @@ function Balance({ data }) {
                                    placeholder="Enter Amount"
                                    value={amount}
                                    onChange={(e) => {
-                                        // Only allow digits and empty string except - and .
                                         const num = e.target.value.replace(/[^\d\-\.]/g, "");
                                         setAmount(num);
                                    }}
                               />
-                              <Divider sx={{ mb: 10 }} />
-                              <Stack direction={"row"} gap={1} sx={{ display: "flex", width: "100%", justifyContent: "flex-end" }}>
+                              <Divider className="mb-10" />
+                              <Stack direction={"row"} gap={1} className="flex w-full justify-end">
                                    <Button
                                         onClick={() => {
                                              setShowModal(false);
@@ -973,7 +742,6 @@ function Balance({ data }) {
                                         onClick={() => {
                                              let amt = Number(amount);
                                              amt = amt * -1;
-                                             //console.log(amt)
                                              dispatch(
                                                   adjustBalance({
                                                        customerId: data.id,
@@ -995,9 +763,7 @@ function Balance({ data }) {
           <Button
                variant="plain"
                color="success"
-               sx={{
-                    color: "black",
-               }}
+               className="text-black"
                onClick={() => {
                     setShowModal(true);
                }}

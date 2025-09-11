@@ -83,7 +83,11 @@ function setGasDeliveryList(parentKey, childKey, value) {
 export default function deliveryHistory() {
 
      const dispatch = useDispatch();
-     const { deliveries, loading, updateSuccess, error } = useSelector((state) => state.deliverys);
+     const deliveriesData = useSelector((state) => state.deliverys);
+     let deliveries = deliveriesData.deliveries;
+     const loading = deliveriesData.loading;
+     const updateSuccess = deliveriesData.updateSuccess;
+     const error = deliveriesData.error;
      //console.log(deliveries);
      const { userDataLoading, users, userDataError } = useSelector((state) => state.user);
      const allGasData = useSelector((state) => state.gas);
@@ -118,16 +122,13 @@ export default function deliveryHistory() {
                const customerId = user.customers[0]?.id;
                const customerName = titleCase(user.name);
                const address = titleCase(user.address);
-
                return {
                     id: customerId,
                     label: `${customerName} (${address})`,
-                    // Or alternatively, just use the name but ensure React keys are unique
-                    // label: customerName
                }
-          }).filter(Boolean); // Remove null entries
+          }).filter(Boolean);
 
-          CUSTOMER_LIST.push(...customerOptions); // Spread the array instead of nesting
+          CUSTOMER_LIST.push(...customerOptions);
      }
      //console.log(CUSTOMER_LIST)
 
@@ -186,8 +187,13 @@ export default function deliveryHistory() {
           loadData(true);
      }
 
-     const loadData = (force = false) => {
-          const fetchDeliveriesParams = { dateStart: dateStart, dateEnd: dateEnd, customer_id: customerId, courier_boy_id: deliverBoyId, page }
+     const loadData = (force = false, resetPage = false) => {
+          let tempPage = page
+          if (resetPage) {
+               setPage(1);
+               tempPage = 1
+          }
+          const fetchDeliveriesParams = { dateStart: dateStart, dateEnd: dateEnd, customer_id: customerId, courier_boy_id: deliverBoyId, page: tempPage }
           if (force) {
                dispatch(fetchDeliveries(fetchDeliveriesParams));
           } else if (
@@ -261,7 +267,7 @@ export default function deliveryHistory() {
                     loading === false
                ) {
                     console.log("fetchDeliveries...Fire");
-                    loadData(true);
+                    loadData(true, true);
                }
           });
      }, []);
@@ -315,11 +321,11 @@ export default function deliveryHistory() {
      if (deliveries != null || deliveries != undefined) {
           if (!deliveries.noData) {
 
-               // if (deliverBoyId != null || deliverBoyId != undefined) {
-               //      filterDeliveries = deliveries.filter((delivery) => {
-               //           return delivery.courier_boy.id == deliverBoyId
-               //      })
-               // }
+               deliveries.sort((a, b) => {
+                    const dateA = new Date(a.created_at);
+                    const dateB = new Date(b.created_at);
+                    return dateB - dateA;
+               });
 
                ncGasDeliveryList = {}
                rows = deliveries.map((delivery) => {

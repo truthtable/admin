@@ -40,7 +40,6 @@ export const getUserDataFromCookie = () => {
                const value = temp[1];
                data = { ...data, [key]: value };
           });
-          //console.log(data);
           if (data.token === undefined || data.token === "") {
                data = null;
           }
@@ -71,7 +70,6 @@ const axiosInstance_ = axios.create({
 });
 
 export const axiosInstance = () => {
-
      // Add a request interceptor to attach the token
      axiosInstance_.interceptors.request.use(
           (config) => {
