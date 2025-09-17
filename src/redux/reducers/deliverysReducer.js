@@ -35,15 +35,19 @@ const deliverysReducer = (state = initialState, action) => {
                     error: false,
                };
           case FETCH_DELIVERIES_SUCCESS: {
-               // Merge and remove duplicates by 'id'
+               // Merge old + new
                const merged = [
                     ...(state.deliveries ? state.deliveries : []),
                     ...action.payload,
                ];
+
+               // Keep the last occurrence of each id (new data replaces old)
                const uniqueDeliveries = merged.filter(
                     (delivery, index, self) =>
-                         index === self.findIndex((d) => d.id === delivery.id),
+                         index ===
+                         self.findLastIndex((d) => d.id === delivery.id),
                );
+
                return {
                     loading: false,
                     deliveries: uniqueDeliveries,

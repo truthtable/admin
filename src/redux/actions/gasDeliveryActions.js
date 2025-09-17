@@ -73,6 +73,7 @@ export const updateGasDelivery = (deliveries) => async (dispatch) => {
           console.log(res);
           dispatch({
                type: UPDATE_GAS_DELIVERY,
+               payload: deliveries,
           });
      } catch (error) {
           dispatch({

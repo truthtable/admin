@@ -67,12 +67,13 @@ const gasDeliveryReducer = (state = initialState, action) => {
                     gasDeliverysSucsess: true,
                     loading: false,
                };
-          case UPDATE_GAS_DELIVERY_SUCCESS_RESET:
+          case UPDATE_GAS_DELIVERY_SUCCESS_RESET: {
                return {
                     ...state,
                     gasDeliverysSucsess: false,
                     loading: false,
                };
+          }
           default:
                return state;
      }

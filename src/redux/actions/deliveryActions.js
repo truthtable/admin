@@ -62,25 +62,14 @@ export const deliveriesIniState = () => {
 export const fetchDeliveries = (params) => {
      return async (dispatch) => {
           dispatch(fetchDeliveriesRequest());
-          console.log(params);
           try {
                const response = await axios().get(API, {
                     params: params,
                });
-               // try {
-               //      // let logs = response.headers["x-log-data"];
-               //      //  logs = decodeURIComponent(logs);
-               //      //  logs = JSON.parse(logs);
-               //      // console.log(logs);
-               // } catch (e) {
-               //      console.log(e);
-               // }
-               let deliveries = response.data;
-               //check if data has noData field
-               if (deliveries.noData) {
-                    deliveries = [];
-               }
-               console.log("deliveries", deliveries);
+               //let deliveries = response.data.noData ? [] : [...response.data];
+               const deliveries = response.data.noData
+                    ? []
+                    : JSON.parse(JSON.stringify(response.data));
                dispatch(fetchDeliveriesSuccess(deliveries));
           } catch (error) {
                console.log("error", error);
