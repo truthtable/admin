@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { CUSTOMER_DATA, getLoginData } from "../services/Api";
 import { localDB, storeCustomer } from "../db/db";
 import { useDispatch } from "react-redux";
+import { storeCustomerSuccess } from "../redux/localData/localCustomers";
 export const fetchCustomerData = createAsyncThunk(
      "customer/fetchCustomerData",
      async (_, { dispatch }) => {
@@ -33,6 +34,7 @@ export const fetchCustomerData = createAsyncThunk(
                          //customer-user_id = user-id
                          customers.forEach((customer) => {
                               const user = users.find((user) => user.id == customer.user_id);
+                              //console.log("store customer");
                               storeCustomer(
                                    customer.id,
                                    customer.user_id,
@@ -44,6 +46,7 @@ export const fetchCustomerData = createAsyncThunk(
                                    customer.totalBalance
                               )
                          });
+                         dispatch(storeCustomerSuccess());
                     } catch (e) {
                          console.log(e)
                     }

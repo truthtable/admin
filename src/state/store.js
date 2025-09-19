@@ -1,4 +1,4 @@
-import { configureStore } from "@reduxjs/toolkit";
+import {configureStore} from "@reduxjs/toolkit";
 import deliveryReducer from "./DeliveryAPI";
 import loginReducer from "./LoginAPI";
 import countReducer from "./Count";
@@ -15,11 +15,9 @@ import purchaseOrderReducer from "../redux/reducers/purchaseOrderReducer.js";
 import purchaseOrderItemReducer from "../redux/reducers/purchaseOrderItemReducer.js";
 import warehouseReducer from "../redux/reducers/warehouseReducer.js";
 import plantsReducer from "../redux/reducers/plantsReducer.js";
-import { deliveryHistory } from "../crud/index.js";
 import deliverysReducer from "../redux/reducers/deliverysReducer.js";
 import userReducer from "../redux/reducers/userReducer.js";
 import gasDeliveryReducer from "../redux/reducers/gasDeliveryReducer.js";
-import { expencesIniState } from "../redux/actions/expencesActions.js";
 import expencesReducer from "../redux/reducers/expencesReducer.js";
 import newGasReducer from "../redux/reducers/gasReducer.js";
 import customersReducer from "../redux/reducers/customerReducers.js";
@@ -27,63 +25,67 @@ import reportReducer from "../redux/reducers/reportReducers.js";
 import authReducer from "../redux/authSlice.js";
 import connectionReducer from "../redux/connectionSlice.js";
 import billReducer from "../redux/billSlice.js";
+import localCustomersReducer from "../redux/localData/localCustomers.js";
 import customerPaymentsUpdateOrCreateSliceReducer from "../redux/customerPaymentsUpdateOrCreate.js";
+
 export const store = configureStore({
-     reducer: {
-          login: loginReducer,
-          loginV2: authReducer,
+    reducer: {
+        login: loginReducer,
+        loginV2: authReducer,
 
-          checkLogin: checkLoginReducer,
+        checkLogin: checkLoginReducer,
 
-          delivery: deliveryReducer,
-          deliverys: deliverysReducer,
+        delivery: deliveryReducer,
+        deliverys: deliverysReducer,
 
-          count: countReducer,
+        count: countReducer,
 
-          gas: gasReducer,
+        gas: gasReducer,
 
-          gasList: newGasReducer,
+        gasList: newGasReducer,
 
-          search_customer: customerSearhReducer,
+        search_customer: customerSearhReducer,
 
-          customers: customerReducer,
-          //new
-          customer: customersReducer,
+        customers: customerReducer,
+        //new
+        customer: customersReducer,
 
-          updateDeliveryData: UpdateDeliveryReducer,
+        updateDeliveryData: UpdateDeliveryReducer,
 
-          updateGas: UpdateGasReducer,
+        updateGas: UpdateGasReducer,
 
-          updateCustomer: updateCustomerReducer,
+        updateCustomer: updateCustomerReducer,
 
-          getData: getDataReducer,
+        getData: getDataReducer,
 
-          //old
-          gasDeliverys: gasDeliverysReducer,
+        //old
+        gasDeliverys: gasDeliverysReducer,
 
-          //new
-          gasDelivery: gasDeliveryReducer,
+        //new
+        gasDelivery: gasDeliveryReducer,
 
-          purchaseOrders: purchaseOrderReducer,
+        purchaseOrders: purchaseOrderReducer,
 
-          purchaseOrderItems: purchaseOrderItemReducer,
+        purchaseOrderItems: purchaseOrderItemReducer,
 
-          reports: reportReducer,
+        reports: reportReducer,
 
-          plants: plantsReducer,
+        plants: plantsReducer,
 
-          warehouses: warehouseReducer,
+        warehouses: warehouseReducer,
 
-          user: userReducer,
+        user: userReducer,
 
-          expence: expencesReducer,
+        expence: expencesReducer,
 
-          connections: connectionReducer,
+        connections: connectionReducer,
 
-          bill: billReducer,
+        bill: billReducer,
 
-          customerPaymentsUpdateOrCreate:
-               customerPaymentsUpdateOrCreateSliceReducer,
-     },
-     devTools: process.env.NODE_ENV !== "production",
+        customerPaymentsUpdateOrCreate:
+        customerPaymentsUpdateOrCreateSliceReducer,
+
+        localCustomers: localCustomersReducer
+    },
+    devTools: process.env.NODE_ENV !== "production",
 });

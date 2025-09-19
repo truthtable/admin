@@ -1,64 +1,56 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import "../../crud/crud-css/read.css";
 import { BsSearch } from "react-icons/bs";
-import gasDataService from "../../services/gas-services.jsx";
+import gasServices from "../../services/gas-services.jsx";
 import DataTable from "../table/DataTable.jsx";
 import {
      Box,
      Button,
-     Input,
-     Stack,
-     Typography,
-     Modal,
-     ModalClose,
-     Sheet,
+     Checkbox,
      Container,
      Divider,
-     Select,
-     Option,
+     FormControl,
+     FormLabel,
+     Input,
      LinearProgress,
      List,
      ListItem,
-     ListItemButton,
      ListItemContent,
-     Table,
-     FormControl,
-     FormLabel,
-     Checkbox,
-     Radio,
-     RadioGroup
+     Modal,
+     ModalClose,
+     Option,
+     Select,
+     Sheet,
+     Stack,
+     Typography
 } from "@mui/joy";
 import TableHead from "../table/TableHead.jsx";
 import axios from "axios";
-
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCustomerData } from "../../state/Customers.jsx";
 import UpdateCustomerCell, { NUMBER, TEXT } from "../edit/UpdateCustomerCell.jsx";
-import { notNull } from "../../helpers.jsx/Validation.jsx";
-import { getLoginData, UPDATE_CUSTOMER, UPDATE_USER, URL } from "../../services/Api.jsx";
-
+import { UPDATE_CUSTOMER, UPDATE_USER, URL } from "../../services/Api.jsx";
 import { TbHomePlus } from "react-icons/tb";
 import { fetchGas } from "../../redux/actions/gasAction.js";
 import { CgClose } from "react-icons/cg";
-import { IoMdClose } from "react-icons/io";
-import gasServices from "../../services/gas-services.jsx";
-import { decimalFix, formatDateTDDMMYY, urlDecodeAndParseJson } from "../../Tools.jsx";
+import { decimalFix } from "../../Tools.jsx";
 import { FaInfoCircle } from "react-icons/fa";
-import { use } from "react";
-import {
-     fetchConnectionByCustomerId,
-     resetConnection
-} from '../../redux/connectionSlice.js'
-import { get, set } from "firebase/database";
 import { adjustBalance, customerPaymentsUpdateOrCreateReset } from "../../redux/customerPaymentsUpdateOrCreate.js";
-import { getLocalCustomers } from "../../db/db.js";
+import { fetchLocalCustomers } from "../../redux/localData/localCustomers.js";
+
 let CUSTOMERS = [];
 const ViewCustomer = () => {
      const dispatch = useDispatch();
      const customerData = useSelector((state) => state.customers);
      const updateCustomer = useSelector((state) => state.updateCustomer);
      const { gasLoading, gasList, gasError } = useSelector((state) => state.gasList);
-     const { isCustomerPaymentsUpdateOrCreateLoading, isCustomerPaymentsUpdateOrCreateError, customerPaymentsUpdateOrCreateErrorMessage, isCustomerPaymentsUpdateOrCreateSuccess } = useSelector((state) => state.customerPaymentsUpdateOrCreate);
+     const {
+          isCustomerPaymentsUpdateOrCreateLoading,
+          isCustomerPaymentsUpdateOrCreateError,
+          customerPaymentsUpdateOrCreateErrorMessage,
+          isCustomerPaymentsUpdateOrCreateSuccess
+     } = useSelector((state) => state.customerPaymentsUpdateOrCreate);
+     const c = useSelector((state) => state.localCustomers);
      const [searchText, setSearchText] = useState("");
      const [customerDetailsModel, setCustomerDetailsModel] = useState(false);
      const BALANCE_SORT = "balance";
@@ -74,64 +66,58 @@ const ViewCustomer = () => {
           setSelectedCustomer(customer)
           setCustomerDetailsModel(true);
      };
-     const [localCustomers, setLocalCustomers] = useState([]);
-     useEffect(() => {
-          async function fetchLocal() {
-               const customers = await getLocalCustomers();
-               setLocalCustomers(customers);
+     const data = useMemo(() => {
+          let filtered = [...c.customers];
+          if (sortBy == CUSTOMER_NAME_SORT) {
+               filtered.sort((a, b) => a.name.localeCompare(b.name));
+          } else if (sortBy == BALANCE_SORT) {
+               filtered.sort((a, b) => b.totalBalance - a.totalBalance);
+          } else if (sortBy == ADDRESS_SORT) {
+               filtered.sort((a, b) => a.address.localeCompare(b.address));
+          } else if (sortBy == DIARY_SORT) {
+               filtered.sort((a, b) => {
+                    const isSpecial = v => v === 0 || v === null || v === "";
+                    if (isSpecial(a.diaryNumber) && !isSpecial(b.diaryNumber)) return 1;
+                    if (!isSpecial(a.diaryNumber) && isSpecial(b.diaryNumber)) return -1;
+                    if (isSpecial(a.diaryNumber) && isSpecial(b.diaryNumber)) return 0;
+                    return a.diaryNumber - b.diaryNumber;
+               });
           }
-          fetchLocal();
-     }, []);
-     const data = [];
-     let temp = localCustomers;
-     if (sortBy == CUSTOMER_NAME_SORT) {
-          temp.sort((a, b) => a.name.localeCompare(b.name));
-     } else if (sortBy == BALANCE_SORT) {
-          temp.sort((a, b) => b.totalBalance - a.totalBalance);
-     } else if (sortBy == ADDRESS_SORT) {
-          temp.sort((a, b) => a.address.localeCompare(b.address));
-     } else if (sortBy == DIARY_SORT) {
-          temp.sort((a, b) => {
-               const isSpecial = v => v === 0 || v === null || v === "";
-               if (isSpecial(a.diaryNumber) && !isSpecial(b.diaryNumber)) return 1;
-               if (!isSpecial(a.diaryNumber) && isSpecial(b.diaryNumber)) return -1;
-               if (isSpecial(a.diaryNumber) && isSpecial(b.diaryNumber)) return 0;
-               return a.diaryNumber - b.diaryNumber;
-          });
-     }
-     xcombineData = temp
-     if (searchText.length > 0) {
-          temp = temp.filter((item) => {
-               return item.user.name.toLowerCase().includes(searchText.toLowerCase());
-          });
-     }
-     temp.forEach((item) => {
-          data.push(makeRow(item, loadConnection));
-     });
+          if (searchText.length > 0) {
+               filtered = filtered.filter((item) => {
+                    return item.name.toLowerCase().includes(searchText.toLowerCase());
+               });
+          }
+          xcombineData = filtered;
+          return filtered.map((item) => makeRow(item, loadConnection));
+     }, [c.customers, sortBy, searchText]);
      useEffect(() => {
           if (customerData.data == null && !customerData.isLoading && !customerData.isError) {
                dispatch(fetchCustomerData());
+               dispatch(fetchLocalCustomers())
           }
           if (gasList.length == 0 && !gasLoading) {
                dispatch(fetchGas())
           }
-     });
+     }, [customerData.data, customerData.isLoading, customerData.isError, gasList.length, gasLoading, dispatch]);
      useEffect(() => {
           if (updateCustomer.isSuccessful) {
                dispatch(fetchCustomerData());
+               dispatch(fetchLocalCustomers())
           }
           if (isCustomerPaymentsUpdateOrCreateSuccess) {
                dispatch(customerPaymentsUpdateOrCreateReset())
                dispatch(fetchCustomerData());
+               dispatch(fetchLocalCustomers())
           }
-     });
+     }, [updateCustomer.isSuccessful, isCustomerPaymentsUpdateOrCreateSuccess, dispatch]);
      useEffect(() => {
           gasServices.listenDataChange(() => {
                if (
                     !customerData.isLoading
                ) {
                     dispatch(fetchCustomerData());
-
+                    dispatch(fetchLocalCustomers())
                }
           });
      }, []);
@@ -319,7 +305,8 @@ const ViewCustomer = () => {
                                                   className="border-2 rounded-lg flex mt-1"
                                              >
                                                   <ListItemContent className="font-bold flex-grow">
-                                                       {gas.company_name} : {gas.kg}KG : {item.qty} QTY : Price ₹{item.price} : TOTAL ₹{item.qty * item.price}
+                                                       {gas.company_name} : {gas.kg}KG : {item.qty} QTY : Price ₹{item.price} :
+                                                       TOTAL ₹{item.qty * item.price}
                                                   </ListItemContent>
                                                   <Box
                                                        className="flex justify-end p-1 rounded-lg hover:bg-[#CC2B52] hover:text-white"
@@ -432,7 +419,8 @@ const ViewCustomer = () => {
                                                             setNoAccessory(e.target.checked);
                                                        }}
                                                   />
-                                                  <span className="font-bold text-black min-w-full md:min-w-auto whitespace-nowrap">
+                                                  <span
+                                                       className="font-bold text-black min-w-full md:min-w-auto whitespace-nowrap">
                                                        No Accessory :
                                                   </span>
                                              </Stack>
@@ -462,11 +450,11 @@ const ViewCustomer = () => {
           }
      } catch (e) {
      }
-     new_connection = new_connection ? new_connection : []
      return (
           <div className="w-full h-full overflow-auto p-2.5 bg-[#f5f5f5] rounded-2xl">
                <NewConnectionForm />
-               <Stack direction="row" mb={1} spacing={1} justifyContent="flex-end" className="flex flex-row mb-1 space-x-2 justify-end">
+               <Stack direction="row" mb={1} spacing={1} justifyContent="flex-end"
+                    className="flex flex-row mb-1 space-x-2 justify-end">
                     <Button
                          onClick={() => setOpenNewConnection(true)}
                          startDecorator={<TbHomePlus />}
@@ -483,7 +471,8 @@ const ViewCustomer = () => {
                     </Typography>
                     <Select defaultValue={BALANCE_SORT} className="min-w-[120px]">
                          <Option value={BALANCE_SORT} onClick={() => setSortBy(BALANCE_SORT)}>Balance</Option>
-                         <Option value={CUSTOMER_NAME_SORT} onClick={() => setSortBy(CUSTOMER_NAME_SORT)}>Customer Name</Option>
+                         <Option value={CUSTOMER_NAME_SORT} onClick={() => setSortBy(CUSTOMER_NAME_SORT)}>Customer
+                              Name</Option>
                          <Option value={ADDRESS_SORT} onClick={() => setSortBy(ADDRESS_SORT)}>Address</Option>
                          <Option value={DIARY_SORT} onClick={() => setSortBy(DIARY_SORT)}>Diary No.</Option>
                     </Select>
@@ -518,7 +507,8 @@ const ViewCustomer = () => {
                                              connection.isLoading ? <LinearProgress /> : <>
                                                   <ListItem>
                                                        <ListItemContent>
-                                                            <Stack direction={"row"} spacing={1} alignItems="center" justifyContent="flex-start">
+                                                            <Stack direction={"row"} spacing={1} alignItems="center"
+                                                                 justifyContent="flex-start">
                                                                  <pre>Name</pre>
                                                                  :
                                                                  <pre>{selectedCustomer ? selectedCustomer.name : ''}</pre>
@@ -528,7 +518,8 @@ const ViewCustomer = () => {
                                                   <Divider />
                                                   <ListItem>
                                                        <ListItemContent>
-                                                            <Stack direction={"row"} spacing={1} alignItems="center" justifyContent="flex-start">
+                                                            <Stack direction={"row"} spacing={1} alignItems="center"
+                                                                 justifyContent="flex-start">
                                                                  <pre>Address</pre>
                                                                  :
                                                                  <pre>{selectedCustomer ? selectedCustomer.address : ""}</pre>
@@ -538,7 +529,8 @@ const ViewCustomer = () => {
                                                   <Divider />
                                                   <ListItem>
                                                        <ListItemContent>
-                                                            <Stack direction={"row"} spacing={1} alignItems="center" justifyContent="flex-start">
+                                                            <Stack direction={"row"} spacing={1} alignItems="center"
+                                                                 justifyContent="flex-start">
                                                                  <pre>Phone Number</pre>
                                                                  :
                                                                  <pre>{selectedCustomer ? selectedCustomer.phone_no : ""}</pre>
@@ -548,7 +540,8 @@ const ViewCustomer = () => {
                                                   <Divider />
                                                   <ListItem>
                                                        <ListItemContent>
-                                                            <Stack direction={"row"} spacing={1} alignItems="center" justifyContent="flex-start">
+                                                            <Stack direction={"row"} spacing={1} alignItems="center"
+                                                                 justifyContent="flex-start">
                                                                  <pre>Aadhar Card Number</pre>
                                                                  <UpdateCustomerCell
                                                                       userId={(selectedCustomer != null) ? selectedCustomer.user_id : null}
@@ -567,7 +560,8 @@ const ViewCustomer = () => {
                                                   <Divider />
                                                   <ListItem>
                                                        <ListItemContent>
-                                                            <Stack direction={"row"} spacing={1} alignItems="center" justifyContent="flex-start">
+                                                            <Stack direction={"row"} spacing={1} alignItems="center"
+                                                                 justifyContent="flex-start">
                                                                  <pre>Diary Number</pre>
                                                                  :
                                                                  <pre>{selectedCustomer ? selectedCustomer.diaryNumber : ""}</pre>
@@ -670,6 +664,7 @@ function makeRow(data, onAllDataClick) {
           </Box>
      ];
 }
+
 function AllData({ data, onClick }) {
      return <Box
           key="chb"
@@ -692,6 +687,7 @@ function AllData({ data, onClick }) {
           </Button>
      </Box>
 }
+
 function Balance({ data }) {
      const dispatch = useDispatch();
      const [showModal, setShowModal] = useState(false);
@@ -770,5 +766,5 @@ function Balance({ data }) {
           >
                {decimalFix(data.totalBalance, true)}
           </Button>
-     </div >
+     </div>
 }

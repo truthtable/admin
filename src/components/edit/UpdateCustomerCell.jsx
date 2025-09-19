@@ -60,13 +60,9 @@ export default function UpdateCustomerCell({ userId, custId, text, type, name, v
                     }
                }
                if (valid && (notNull(table))) {
-
                     const id = (updateUser) ? uid : cid;
-
                     let url = `${table}${id}`
-
                     //console.log(url)
-
                     dispatch(
                          updateCustomer({
                               url: url,
