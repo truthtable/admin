@@ -106,3 +106,23 @@ export const chunkArray = (array, chunkSize) => {
     }
     return results;
 }
+
+export const storeInLocalStorage = (key, value) => {
+    try {
+        const serializedValue = JSON.stringify(value);
+        localStorage.setItem(key, serializedValue);
+    } catch (e) {
+        console.warn('Error storing in localStorage:', e);
+    }
+}
+
+export const getFromLocalStorage = (key) => {
+    try {
+        const serializedValue = localStorage.getItem(key);
+        if (serializedValue === null) return null;
+        return JSON.parse(serializedValue);
+    } catch (e) {
+        console.warn('Error getting from localStorage:', e);
+        return null;
+    }
+}
