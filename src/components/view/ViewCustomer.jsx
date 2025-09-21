@@ -194,10 +194,12 @@ const ViewCustomer = () => {
             title="New Connection"
             className="flex flex-col justify-center items-center gap-2.5"
         >
-            <Container>
+            <Container sx={{
+                overflow: 'auto',
+            }}>
                 <Sheet className="p-5 rounded-xl bg-white shadow-lg">
                     <ModalClose variant="outlined"/>
-                    <Typography>New Connection</Typography>
+                    <Typography>New Customer</Typography>
                     <Divider className="opacity-0 p-2"/>
                     <form
                         onSubmit={
@@ -312,105 +314,114 @@ const ViewCustomer = () => {
                                 <FormLabel>Diary No.</FormLabel>
                                 <Input placeholder="Diary No." type="number" name="diary_no"/>
                             </FormControl>
-                            <FormLabel className={noGas ? "opacity-50" : ""}>Gas List</FormLabel>
-                            <List className={noGas ? "hidden" : "block"}>
-                                {gasIdList.map((item, index) => {
-                                    const gas = gasList.find((gas) => gas.id === item.id);
-                                    return <ListItem
-                                        key={"gas_sel_" + index}
-                                        className="border-2 rounded-lg flex mt-1"
-                                    >
-                                        <ListItemContent className="font-bold flex-grow">
-                                            {gas.company_name} : {gas.kg}KG : {item.qty} QTY : Price ₹{item.price} :
-                                            TOTAL ₹{item.qty * item.price}
-                                        </ListItemContent>
-                                        <Box
-                                            className="flex justify-end p-1 rounded-lg hover:bg-[#CC2B52] hover:text-white"
-                                            onClick={() => {
-                                                removeGasItem(index)
-                                            }}
-                                        ><CgClose/></Box>
-                                    </ListItem>
-                                })
-                                }
-                            </List>
-                            <Stack direction={"row"} gap={1} className={noGas ? "hidden" : "flex"}>
-                                <Select className="flex-grow"
-                                        placeholder="Select Gas"
-                                        onChange={(event, value) => {
-                                            tempSelectedId = value
-                                        }}
-                                >
-                                    {
-                                        gasList.map((item) => {
-                                            if (gasIdList.find((gas) => gas.id === item.id)) {
-                                                return null;
-                                            }
-                                            return <Option key={item.id}
-                                                           value={item.id}>{item.company_name} : {item.kg}KG</Option>
+                            {
+                                !noGas ? (<>
+                                    <FormLabel className={noGas ? "opacity-50" : ""}>Gas List</FormLabel>
+                                    <List className={noGas ? "hidden" : "block"}>
+                                        {gasIdList.map((item, index) => {
+                                            const gas = gasList.find((gas) => gas.id === item.id);
+                                            return <ListItem
+                                                key={"gas_sel_" + index}
+                                                className="border-2 rounded-lg flex mt-1"
+                                            >
+                                                <ListItemContent className="font-bold flex-grow">
+                                                    {gas.company_name} : {gas.kg}KG : {item.qty} QTY : Price
+                                                    ₹{item.price} :
+                                                    TOTAL ₹{item.qty * item.price}
+                                                </ListItemContent>
+                                                <Box
+                                                    className="flex justify-end p-1 rounded-lg hover:bg-[#CC2B52] hover:text-white"
+                                                    onClick={() => {
+                                                        removeGasItem(index)
+                                                    }}
+                                                ><CgClose/></Box>
+                                            </ListItem>
                                         })
-                                    }
-                                </Select>
-                                <Input type="number" placeholder="Quantity" name="qty" defaultValue={tempQty}
-                                       onChange={(e) => {
-                                           tempQty = Number(e.target.value)
-                                       }}
-                                       startDecorator={<Typography>Quantity : </Typography>}
-                                />
-                                <Input type="number" placeholder="Price" name="price" defaultValue={tempPrice}
-                                       onChange={(e) => {
-                                           tempPrice = Number(e.target.value)
-                                       }}
-                                       startDecorator={<Typography>Price : </Typography>}
-                                />
-                                <Button
-                                    onClick={() => {
-                                        addGasIdList(tempSelectedId, tempQty, tempPrice)
-                                    }}
-                                >Add Gas</Button>
-                            </Stack>
-                            <FormLabel className={noAccessory ? "opacity-50" : ""}>Accessory List</FormLabel>
-                            <List className={noAccessory ? "hidden" : "block"}>
-                                {accessoryList.map((item, index) => {
-                                    return <ListItem
-                                        key={"accessory_" + index}
-                                        className="border-2 rounded-lg flex mt-1"
-                                    >
-                                        <ListItemContent className="font-bold flex-grow">
-                                            {item.accessory} : ₹{item.price}
-                                        </ListItemContent>
-                                        <Box
-                                            className="flex justify-end p-1 rounded-lg hover:bg-[#CC2B52] hover:text-white"
+                                        }
+                                    </List>
+                                    <Stack direction={"row"} gap={1} className={noGas ? "hidden" : "flex"}>
+                                        <Select className="flex-grow"
+                                                placeholder="Select Gas"
+                                                onChange={(event, value) => {
+                                                    tempSelectedId = value
+                                                }}
+                                        >
+                                            {
+                                                gasList.map((item) => {
+                                                    if (gasIdList.find((gas) => gas.id === item.id)) {
+                                                        return null;
+                                                    }
+                                                    return <Option key={item.id}
+                                                                   value={item.id}>{item.company_name} : {item.kg}KG</Option>
+                                                })
+                                            }
+                                        </Select>
+                                        <Input type="number" placeholder="Quantity" name="qty" defaultValue={tempQty}
+                                               onChange={(e) => {
+                                                   tempQty = Number(e.target.value)
+                                               }}
+                                               startDecorator={<Typography>Quantity : </Typography>}
+                                        />
+                                        <Input type="number" placeholder="Price" name="price" defaultValue={tempPrice}
+                                               onChange={(e) => {
+                                                   tempPrice = Number(e.target.value)
+                                               }}
+                                               startDecorator={<Typography>Price : </Typography>}
+                                        />
+                                        <Button
                                             onClick={() => {
-                                                removeAccessory(index)
+                                                addGasIdList(tempSelectedId, tempQty, tempPrice)
                                             }}
-                                        ><CgClose/></Box>
-                                    </ListItem>
-                                })
-                                }
-                            </List>
-                            <Stack direction={"row"} gap={1} className={noAccessory ? "hidden" : "flex"}>
-                                <Input className="flex-grow" placeholder="Accessory" value={accessory}
-                                       onChange={(e) => {
-                                           setAccessory(e.target.value)
-                                       }}
-                                />
-                                <Input className="flex-[0.1]" placeholder="Price" type="number" value={price}
-                                       onChange={(e) => {
-                                           setPrice(e.target.value)
-                                       }}
-                                />
-                                <Button
-                                    onClick={() => {
-                                        addAccessory(accessory, price)
-                                    }}
-                                >Add Accessory</Button>
-                            </Stack>
+                                        >Add Gas</Button>
+                                    </Stack>
+                                </>) : null
+                            }
+                            {
+                                !noAccessory ? (<>
+                                    <FormLabel className={noAccessory ? "opacity-50" : ""}>Accessory List</FormLabel>
+                                    <List className={noAccessory ? "hidden" : "block"}>
+                                        {accessoryList.map((item, index) => {
+                                            return <ListItem
+                                                key={"accessory_" + index}
+                                                className="border-2 rounded-lg flex mt-1"
+                                            >
+                                                <ListItemContent className="font-bold flex-grow">
+                                                    {item.accessory} : ₹{item.price}
+                                                </ListItemContent>
+                                                <Box
+                                                    className="flex justify-end p-1 rounded-lg hover:bg-[#CC2B52] hover:text-white"
+                                                    onClick={() => {
+                                                        removeAccessory(index)
+                                                    }}
+                                                ><CgClose/></Box>
+                                            </ListItem>
+                                        })
+                                        }
+                                    </List>
+                                    <Stack direction={"row"} gap={1} className={noAccessory ? "hidden" : "flex"}>
+                                        <Input className="flex-grow" placeholder="Accessory" value={accessory}
+                                               onChange={(e) => {
+                                                   setAccessory(e.target.value)
+                                               }}
+                                        />
+                                        <Input className="flex-[0.1]" placeholder="Price" type="number" value={price}
+                                               onChange={(e) => {
+                                                   setPrice(e.target.value)
+                                               }}
+                                        />
+                                        <Button
+                                            onClick={() => {
+                                                addAccessory(accessory, price)
+                                            }}
+                                        >Add Accessory</Button>
+                                    </Stack>
+                                </>) : null
+                            }
                             <Divider className="opacity-0 m-2"/>
                             <Stack direction={"row"} gap={1}>
                                 <Stack
                                     gap={1}
-                                    className="flex-col md:flex-row md:items-center"
+                                    direction={"row"}
                                 >
                                     <Checkbox
                                         label=""
@@ -423,23 +434,24 @@ const ViewCustomer = () => {
                                     <span className="font-bold text-black min-w-full md:min-w-auto whitespace-nowrap">
                                                   No Gas :
                                              </span>
-                                    <Stack
-                                        gap={1}
-                                        className="flex-col md:flex-row md:items-center"
-                                    >
-                                        <Checkbox
-                                            label=""
-                                            size="lg"
-                                            checked={noAccessory}
-                                            onChange={(e) => {
-                                                setNoAccessory(e.target.checked);
-                                            }}
-                                        />
-                                        <span
-                                            className="font-bold text-black min-w-full md:min-w-auto whitespace-nowrap">
+
+                                </Stack>
+                                <Stack
+                                    gap={1}
+                                    direction={"row"}
+                                >
+                                    <Checkbox
+                                        label=""
+                                        size="lg"
+                                        checked={noAccessory}
+                                        onChange={(e) => {
+                                            setNoAccessory(e.target.checked);
+                                        }}
+                                    />
+                                    <span
+                                        className="font-bold text-black min-w-full md:min-w-auto whitespace-nowrap">
                                                        No Accessory :
                                                   </span>
-                                    </Stack>
                                 </Stack>
                             </Stack>
                             <Divider className="opacity-0 m-2"/>
@@ -476,7 +488,7 @@ const ViewCustomer = () => {
                     startDecorator={<TbHomePlus/>}
                     className="flex items-center"
                 >
-                    New Connection
+                    New Customer
                 </Button>
                 <div className="flex-grow"/>
                 <Typography
