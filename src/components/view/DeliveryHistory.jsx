@@ -125,10 +125,10 @@ export default function deliveryHistory() {
     tempUrlCustomerId = getSessionVal("customerId")
     //}
 
-    console.log({url, searchParams});
+    //console.log({url, searchParams});
 
     const [customerId, setTheCustomerId] = useState(getSessionVal("customerId"));
-    const [deliverBoyId, setDeliverTheBoyId] = useState(tempUrlCourierBoyId);
+    const [deliverBoyId, setDeliverTheBoyId] = useState(getSessionVal("deliveryBoyId"));
     const [dateStart, setDateStartState] = useState(
         () => {
             if (date_start) {
@@ -228,6 +228,7 @@ export default function deliveryHistory() {
 
     const setDeliverBoyId = useCallback((id) => {
         setDeliverTheBoyId(id);
+        setSessionVal("deliveryBoyId", id);
         loadData(true);
     }, [loadData]);
 
@@ -791,6 +792,7 @@ export default function deliveryHistory() {
                     color: "black",
                 }}
             >Customer :</span>
+            {/*
             <Select
                 defaultValue={customerId ? customerId : null}
                 placeholder="Select Customer"
@@ -811,6 +813,19 @@ export default function deliveryHistory() {
                     ))
                 }
             </Select>
+            */}
+            <Autocomplete
+                placeholder="Select Customer"
+                options={[{id: null, label: "Show All"}, ...CUSTOMER_LIST]}
+                getOptionLabel={(option) => option.label}
+                isOptionEqualToValue={(option, value) => option?.id === value?.id}
+                onChange={(_, value) => {
+                    setCustomerId(value?.id ?? null);
+                }}
+                sx={{
+                    fontWeight: 'bold',
+                }}
+            />
             <span
                 style={{
                     fontWeight: "bold",

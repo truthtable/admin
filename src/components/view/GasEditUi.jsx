@@ -493,17 +493,6 @@ export const GasEditUi = ({
 
                 {isAddNewDeliveryModal ? <Sheet className="mb-3">
                     <FormLabel>Delivery Boy</FormLabel>
-                    {/*<Select*/}
-                    {/*    placeholder="Select Delivery Boy"*/}
-                    {/*    required*/}
-                    {/*    onChange={(event, value) => handleDeliveryBoyChange(value)}*/}
-                    {/*>*/}
-                    {/*    {[...DELIVERY_BOY_LIST.entries()].map(([courierId, user]) => (*/}
-                    {/*        <Option key={courierId} value={courierId}>*/}
-                    {/*            {titleCase(user.name)}*/}
-                    {/*        </Option>*/}
-                    {/*    ))}*/}
-                    {/*</Select>*/}
                     <Autocomplete
                         placeholder="Select Delivery Boy"
                         options={[...DELIVERY_BOY_LIST.entries()].map(([courierId, user]) => ({

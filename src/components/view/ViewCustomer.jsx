@@ -56,7 +56,7 @@ const ViewCustomer = () => {
     } = useSelector((state) => state.customerPaymentsUpdateOrCreate);
     const c = useSelector((state) => state.localCustomers);
     const localCustomers = c.customers || [];
-    console.log({c, localCustomers})
+    //console.log({c, localCustomers})
     const [searchText, setSearchCustomerText] = useState(getFromLocalStorage(CUSTOMER_SEARCH_TEXT) || "");
     const setSearchText = (text) => {
         storeInLocalStorage(CUSTOMER_SEARCH_TEXT, text);
@@ -112,15 +112,6 @@ const ViewCustomer = () => {
             dispatch(fetchCustomerData());
         }
     }, [customerData, gasList, gasLoading, dispatch, updateCustomer]);
-    // useEffect(() => {
-    //     gasServices.listenDataChange(() => {
-    //         if (
-    //             !customerData.isLoading
-    //         ) {
-    //             //dispatch(fetchCustomerData());
-    //         }
-    //     });
-    // }, []);
     useEffect(() => {
         // firebase update
         const unsubscribe = gasServices.listenDataChange(() => {
@@ -132,7 +123,7 @@ const ViewCustomer = () => {
     }, []);
     useEffect(() => {
         if (shouldReload) {
-            console.log("reload");
+            //console.log("reload");
             dispatch(fetchCustomerData());
             setShouldReload(false);
         }
@@ -627,7 +618,7 @@ const ViewCustomer = () => {
 export default ViewCustomer;
 
 function makeRow(data, onAllDataClick) {
-    console.log("Making Row");
+    //console.log("Making Row");
     return [
         <AllData
             key="all_data"
@@ -687,7 +678,8 @@ function makeRow(data, onAllDataClick) {
                 className="flex-grow w-full h-full m-0 p-0 rounded-none bg-transparent whitespace-nowrap text-center text-[#185ea5] justify-start"
                 onClick={() => {
                     setSessionVal("customerId", data.id);
-                    window.location.href = `/admin/#/admin/deliveryHistory/?customerId=${data.id}`;
+                    setSessionVal("deliveryBoyId", null);
+                    window.location.href = `/admin/#/admin/deliveryHistory/?customerId=0`;
                 }}
             >History</Button>
         </Box>
