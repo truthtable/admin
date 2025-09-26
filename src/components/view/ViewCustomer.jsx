@@ -32,7 +32,7 @@ import {UPDATE_CUSTOMER, UPDATE_USER, URL} from "../../services/Api.jsx";
 import {TbHomePlus} from "react-icons/tb";
 import {fetchGas} from "../../redux/actions/gasAction.js";
 import {CgClose} from "react-icons/cg";
-import {decimalFix, getFromLocalStorage, storeInLocalStorage} from "../../Tools.jsx";
+import {decimalFix, getFromLocalStorage, setSessionVal, storeInLocalStorage} from "../../Tools.jsx";
 import {FaInfoCircle} from "react-icons/fa";
 import {adjustBalance, customerPaymentsUpdateOrCreateReset} from "../../redux/customerPaymentsUpdateOrCreate.js";
 import gasServices from "../../services/gas-services.jsx";
@@ -686,6 +686,7 @@ function makeRow(data, onAllDataClick) {
             <Button
                 className="flex-grow w-full h-full m-0 p-0 rounded-none bg-transparent whitespace-nowrap text-center text-[#185ea5] justify-start"
                 onClick={() => {
+                    setSessionVal("customerId", data.id);
                     window.location.href = `/admin/#/admin/deliveryHistory/?customerId=${data.id}`;
                 }}
             >History</Button>

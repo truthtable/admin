@@ -28,7 +28,7 @@ import {fetchUser} from "../../redux/actions/userActions.js";
 import {MdKeyboardArrowDown, MdKeyboardArrowUp} from "react-icons/md";
 import {UPDATE_GAS_DELIVERY_SUCCESS_RESET, updateCreateDelete} from "../../redux/actions/gasDeliveryActions.js";
 import gasServices from "../../services/gas-services.jsx";
-import {decimalFix, titleCase} from "../../Tools.jsx";
+import {decimalFix, getSessionVal, setSessionVal, titleCase} from "../../Tools.jsx";
 import ExportCSV from "../ExportCSV.jsx";
 import {FaArrowDown, FaCalendarAlt} from "react-icons/fa";
 import {GasEditUi} from "./GasEditUi.jsx";
@@ -107,44 +107,6 @@ export default function deliveryHistory() {
     const [shouldReload, setShouldReload] = useState(false);
     //console.log(isAddNewDeliveryModal);
 
-    deleveryGasEditUiGasList.length = 0;
-    gasList.clear();
-
-    if (allGasData.data != null) {
-        allGasData.data.data.forEach((value) => {
-            gasList.set(value.id, value)
-            deleveryGasEditUiGasList.push(<Option key={value.id}
-                                                  value={value.id}>{value.company_name} - {value.kg}KG</Option>)
-        })
-    }
-    //console.log(users);
-
-    //clear customer list
-    CUSTOMER_LIST.length = 0
-    if (users != null && users != undefined) {
-        const customerOptions = users.map((user) => {
-            if (user.courier_boys.length != 0) {
-                if (user.courier_boys[0]?.login?.role == 2) {
-                    DELIVERY_BOY_LIST.set(user.courier_boys[0].id, user)
-                } else {
-                    ADMIN_LIST.set(user.courier_boys[0].id, user)
-                }
-            }
-            if (user.customers.length == 0) {
-                return null;
-            }
-            const customerId = user.customers[0]?.id;
-            const customerName = titleCase(user.name);
-            const address = titleCase(user.address);
-            return {
-                id: customerId,
-                label: `${customerName} (${address})`,
-            }
-        }).filter(Boolean);
-
-        CUSTOMER_LIST.push(...customerOptions);
-    }
-    //console.log(CUSTOMER_LIST)
 
     const currentUrl = window.location.href;
     const hashIndex = currentUrl.indexOf('#');
@@ -156,14 +118,16 @@ export default function deliveryHistory() {
     const date_start = searchParams.get('dateStart');
     const date_end = searchParams.get('dateEnd');
 
-    //console.log(deliveries);
-
     let tempUrlCustomerId = urlCustomerId ? Number(urlCustomerId) : null;
     let tempUrlCourierBoyId = urlCourierBoyId ? Number(urlCourierBoyId) : null;
 
-    //console.log([{ urlCustomerId, tempUrlCustomerId }, { urlCourierBoyId, tempUrlCourierBoyId }]);
+    //if (tempUrlCustomerId === null) {
+    tempUrlCustomerId = getSessionVal("customerId")
+    //}
 
-    const [customerId, setTheCustomerId] = useState(tempUrlCustomerId);
+    console.log({url, searchParams});
+
+    const [customerId, setTheCustomerId] = useState(getSessionVal("customerId"));
     const [deliverBoyId, setDeliverTheBoyId] = useState(tempUrlCourierBoyId);
     const [dateStart, setDateStartState] = useState(
         () => {
@@ -189,6 +153,39 @@ export default function deliveryHistory() {
         }
     );
 
+    deleveryGasEditUiGasList.length = 0;
+    gasList.clear();
+    if (allGasData.data != null) {
+        allGasData.data.data.forEach((value) => {
+            gasList.set(value.id, value)
+            deleveryGasEditUiGasList.push(<Option key={value.id}
+                                                  value={value.id}>{value.company_name} - {value.kg}KG</Option>)
+        })
+    }
+    CUSTOMER_LIST.length = 0
+    if (users != null && users != undefined) {
+        const customerOptions = users.map((user) => {
+            if (user.courier_boys.length != 0) {
+                if (user.courier_boys[0]?.login?.role == 2) {
+                    DELIVERY_BOY_LIST.set(user.courier_boys[0].id, user)
+                } else {
+                    ADMIN_LIST.set(user.courier_boys[0].id, user)
+                }
+            }
+            if (user.customers.length == 0) {
+                return null;
+            }
+            const cId = user.customers[0]?.id;
+            const customerName = titleCase(user.name);
+            const address = titleCase(user.address);
+            return {
+                id: cId,
+                label: `${customerName} (${address})`,
+            }
+        }).filter(Boolean);
+
+        CUSTOMER_LIST.push(...customerOptions);
+    }
 
     const loadData = useCallback((force = false, resetPage = false) => {
 
@@ -224,6 +221,7 @@ export default function deliveryHistory() {
     }, [dateStart, dateEnd, customerId, deliverBoyId, page, loading, deliveries, dispatch]);
 
     const setCustomerId = useCallback((id) => {
+        setSessionVal("customerId", id);
         setTheCustomerId(id);
         loadData(true);
     }, [loadData]);
@@ -246,8 +244,7 @@ export default function deliveryHistory() {
         setPage(page + 1);
         loadData(true);
     }
-
-    const updateUrlParams = (dateStart, dateEnd, customerId, deliverBoyId) => {
+    const updateUrlParams = (dateStart, dateEnd) => {
         // Grab everything after the #
         const fullHash = window.location.hash.substring(1);            // e.g. "/admin/deliveryHistory?foo=bar"
         const [path, rawQuery = ''] = fullHash.split('?');             // separate path and query
@@ -291,9 +288,7 @@ export default function deliveryHistory() {
     useEffect(() => {
         updateUrlParams(
             dateStart,
-            dateEnd,
-            customerId,
-            deliverBoyId
+            dateEnd
         );
     }, [dateStart, dateEnd, customerId, deliverBoyId]);
 

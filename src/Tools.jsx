@@ -126,3 +126,22 @@ export const getFromLocalStorage = (key) => {
         return null;
     }
 }
+export const setSessionVal = (key, value) => {
+    try {
+        const serializedValue = JSON.stringify(value);
+        sessionStorage.setItem(key, serializedValue);
+    } catch (e) {
+        console.warn('Error storing in sessionStorage:', e);
+    }
+}
+
+export const getSessionVal = (key) => {
+    try {
+        const serializedValue = sessionStorage.getItem(key);
+        if (serializedValue === null) return null;
+        return JSON.parse(serializedValue);
+    } catch (e) {
+        console.warn('Error getting from sessionStorage:', e);
+        return null;
+    }
+}
