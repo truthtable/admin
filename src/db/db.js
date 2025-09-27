@@ -17,7 +17,8 @@ class LocalDB extends Dexie {
 
     constructor() {
         super(DB_NAME);
-        this.version(1).stores({
+        //NOTE : Delete When removing from remote
+        this.version(2).stores({
             customer: [
                 CUSTOMER_FIELDS.ID,
                 CUSTOMER_FIELDS.USER_ID,
@@ -47,7 +48,6 @@ localDB.version(1).stores({
         CUSTOMER_FIELDS.TOTAL_BALANCE,
     ].join(","),
 });
-
 export const storeCustomer = async (
     id,
     user_id,
@@ -73,3 +73,6 @@ export const getLocalCustomers = async () => {
     const customers = await localDB.customer.toArray();
     return customers || null;
 };
+export const removeAllLocalCustomers = async () => {
+    await localDB.customer.clear();
+}

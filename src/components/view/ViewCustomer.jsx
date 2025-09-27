@@ -36,6 +36,8 @@ import {decimalFix, getFromLocalStorage, setSessionVal, storeInLocalStorage} fro
 import {FaInfoCircle} from "react-icons/fa";
 import {adjustBalance, customerPaymentsUpdateOrCreateReset} from "../../redux/customerPaymentsUpdateOrCreate.js";
 import gasServices from "../../services/gas-services.jsx";
+import {RiDeleteBin2Fill} from "react-icons/ri";
+import {deleteCustomer} from "../../state/CustomerUpdate.jsx";
 
 let CUSTOMERS = [];
 const CUSTOMER_SEARCH_TEXT = "customerSearchText";
@@ -96,7 +98,13 @@ const ViewCustomer = () => {
             });
         }
         xcombineData = filtered;
-        return filtered.map((item) => makeRow(item, loadConnection));
+        return filtered.map((item) => makeRow(
+            item,
+            loadConnection,
+            (userId) => {
+                dispatch(deleteCustomer(userId))
+            }
+        ));
     }, [localCustomers, sortBy, searchText]);
     useEffect(() => {
         if (c.customers === null && !customerData.isLoading) {
@@ -607,9 +615,10 @@ const ViewCustomer = () => {
                     <TableHead key={"phone_no"}>Phone No.</TableHead>,
                     <TableHead key={"balance"}>Balance</TableHead>,
                     <TableHead key={"history"}>History</TableHead>,
+                    <TableHead key={"delete"}>Delete</TableHead>
                 ]}
                 tbody={data}
-                loading={customerData.isLoading}
+                loading={customerData.isLoading || updateCustomer.isSuccessful}
             />
         </div>
     );
@@ -617,7 +626,7 @@ const ViewCustomer = () => {
 
 export default ViewCustomer;
 
-function makeRow(data, onAllDataClick) {
+function makeRow(data, onAllDataClick, onDelete) {
     //console.log("Making Row");
     return [
         <AllData
@@ -682,6 +691,25 @@ function makeRow(data, onAllDataClick) {
                     window.location.href = `/admin/#/admin/deliveryHistory/?customerId=0`;
                 }}
             >History</Button>
+        </Box>,
+        <Box
+            key="deleb"
+            className="p-0 m-0 bg-transparent mx-0.5 transition-colors hover:bg-[rgba(75,112,245,0.25)] pl-1"
+        >
+            <Button
+                variant={"outlined"}
+                color="danger"
+                className="flex-grow w-full h-full m-0 p-0 rounded-none bg-transparent whitespace-nowrap text-center justify-start"
+                onClick={() => {
+                    const remove = prompt("Delete Customer?, Type 'yes' to delete")
+                    const yes = remove === "yes"
+                    if (yes) {
+                        onDelete(data.user_id)
+                    }
+                }}
+            >
+                <RiDeleteBin2Fill/>
+            </Button>
         </Box>
     ];
 }

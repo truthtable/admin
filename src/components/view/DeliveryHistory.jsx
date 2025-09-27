@@ -13,6 +13,7 @@ import {
     Select,
     Sheet,
     Stack,
+    Switch,
     Table,
     Typography
 } from "@mui/joy";
@@ -28,7 +29,14 @@ import {fetchUser} from "../../redux/actions/userActions.js";
 import {MdKeyboardArrowDown, MdKeyboardArrowUp} from "react-icons/md";
 import {UPDATE_GAS_DELIVERY_SUCCESS_RESET, updateCreateDelete} from "../../redux/actions/gasDeliveryActions.js";
 import gasServices from "../../services/gas-services.jsx";
-import {decimalFix, getSessionVal, setSessionVal, titleCase} from "../../Tools.jsx";
+import {
+    decimalFix,
+    getFromLocalStorage,
+    getSessionVal,
+    setSessionVal,
+    storeInLocalStorage,
+    titleCase
+} from "../../Tools.jsx";
 import ExportCSV from "../ExportCSV.jsx";
 import {FaArrowDown, FaCalendarAlt} from "react-icons/fa";
 import {GasEditUi} from "./GasEditUi.jsx";
@@ -113,20 +121,18 @@ export default function deliveryHistory() {
     const hashPart = currentUrl.substring(hashIndex + 1);
     const url = new URL(hashPart, window.location.origin);
     const searchParams = new URLSearchParams(url.search);
-    const urlCustomerId = searchParams.get('customerId');
-    const urlCourierBoyId = searchParams.get('deliverBoyId');
     const date_start = searchParams.get('dateStart');
     const date_end = searchParams.get('dateEnd');
 
-    let tempUrlCustomerId = urlCustomerId ? Number(urlCustomerId) : null;
-    let tempUrlCourierBoyId = urlCourierBoyId ? Number(urlCourierBoyId) : null;
 
-    //if (tempUrlCustomerId === null) {
-    tempUrlCustomerId = getSessionVal("customerId")
-    //}
-
-    //console.log({url, searchParams});
-
+    let deliveryHistoryOrder = getFromLocalStorage("deliveryHistoryOrder");
+    if (deliveryHistoryOrder === null || deliveryHistoryOrder === undefined) {
+        deliveryHistoryOrder = true;
+    }
+    console.log({deliveryHistoryOrder})
+    const [descending, setTheDescending] = useState(
+        deliveryHistoryOrder
+    );
     const [customerId, setTheCustomerId] = useState(getSessionVal("customerId"));
     const [deliverBoyId, setDeliverTheBoyId] = useState(getSessionVal("deliveryBoyId"));
     const [dateStart, setDateStartState] = useState(
@@ -183,28 +189,24 @@ export default function deliveryHistory() {
                 label: `${customerName} (${address})`,
             }
         }).filter(Boolean);
-
         CUSTOMER_LIST.push(...customerOptions);
     }
 
     const loadData = useCallback((force = false, resetPage = false) => {
-
         //console.log("loadData", force, resetPage);
-
         let tempPage = page;
         if (resetPage) {
             setPage(1);
             tempPage = 1;
         }
-
         const fetchDeliveriesParams = {
             dateStart: dateStart,
             dateEnd: dateEnd,
             customer_id: customerId,
             courier_boy_id: deliverBoyId,
-            page: tempPage
+            page: tempPage,
+            order: descending ? 'desc' : 'asc',
         };
-
         if (force) {
             console.log("force");
             dispatch(fetchDeliveries(fetchDeliveriesParams));
@@ -217,8 +219,13 @@ export default function deliveryHistory() {
         if (!(allGasData.isError) && !allGasData.isLoading && !loading && !userDataLoading && (allGasData.data == null || allGasData.data.data.length === 0)) {
             dispatch(fetchGasData());
         }
-
     }, [dateStart, dateEnd, customerId, deliverBoyId, page, loading, deliveries, dispatch]);
+
+    const setDescending = useCallback((val) => {
+        storeInLocalStorage("deliveryHistoryOrder", val);
+        setTheDescending(val);
+        loadData(true, true);
+    }, [loadData]);
 
     const setCustomerId = useCallback((id) => {
         setSessionVal("customerId", id);
@@ -359,7 +366,11 @@ export default function deliveryHistory() {
             let sortedDeliveries = [...deliveries].sort((a, b) => {
                 const dateA = new Date(a.created_at);
                 const dateB = new Date(b.created_at);
-                return dateB - dateA;
+                if (descending) {
+                    return dateB - dateA; // For descending order
+                } else {
+                    return dateA - dateB; // For ascending order
+                }
             });
 
             ncGasDeliveryList = {}
@@ -763,6 +774,7 @@ export default function deliveryHistory() {
                     "deliveries_" + formatDateToDDMMYY(dateStart) + "_TO_" + formatDateToDDMMYY(dateEnd) + ".csv"
                 }
             >Download File</ExportCSV>
+            <Divider sx={{backgroundColor: "grey"}} orientation="vertical"/>
             <GasEditUi
                 selectedGasList={[]}
                 customer={0}
@@ -786,6 +798,19 @@ export default function deliveryHistory() {
                     opacity: 0,
                 }}
             />
+            <span
+                style={{
+                    fontWeight: "bold",
+                    color: "black",
+                }}
+            >Reverse Order</span>
+            <Switch
+                checked={descending}
+                onChange={(event) => {
+                    setDescending(event.target.checked);
+                }}
+            />
+            <Divider sx={{backgroundColor: "grey"}} orientation="vertical"/>
             <span
                 style={{
                     fontWeight: "bold",
@@ -817,6 +842,10 @@ export default function deliveryHistory() {
             <Autocomplete
                 placeholder="Select Customer"
                 options={[{id: null, label: "Show All"}, ...CUSTOMER_LIST]}
+                value={[{
+                    id: null,
+                    label: "Show All"
+                }, ...CUSTOMER_LIST].find(option => option.id === customerId) || null}
                 getOptionLabel={(option) => option.label}
                 isOptionEqualToValue={(option, value) => option?.id === value?.id}
                 onChange={(_, value) => {
@@ -826,6 +855,7 @@ export default function deliveryHistory() {
                     fontWeight: 'bold',
                 }}
             />
+            <Divider sx={{backgroundColor: "grey"}} orientation="vertical"/>
             <span
                 style={{
                     fontWeight: "bold",
@@ -850,6 +880,7 @@ export default function deliveryHistory() {
                     </Option>
                 ))}
             </Select>
+            <Divider sx={{backgroundColor: "grey"}} orientation="vertical"/>
             <span
                 style={{
                     fontWeight: "bold",

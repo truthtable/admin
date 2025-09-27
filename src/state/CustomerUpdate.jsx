@@ -1,5 +1,7 @@
 import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
 import {json_to_x_www_form_urlencoded} from "./UpdateGas";
+import {axiosInstance as axios, URL} from "../services/Api.jsx";
+import {removeAllLocalCustomers} from "../db/db.js";
 
 
 export const updateCustomer = createAsyncThunk(
@@ -16,12 +18,6 @@ export const updateCustomer = createAsyncThunk(
             //console.log("reset");
             return {isSuccessful, error, errorMessage};
         }
-
-        // let url = UPDATE_CUSTOMER;
-
-        // if (data.updateUser) {
-        //      url = UPDATE_USER;
-        // }
 
         try {
             //console.log(data.url);
@@ -46,6 +42,43 @@ export const updateCustomer = createAsyncThunk(
         return {isSuccessful, error, errorMessage};
     },
 );
+export const deleteCustomer = createAsyncThunk(
+    "customer/deleteCustomer",
+    async (userId) => {
+        let isSuccessful = false;
+        let error = true;
+        let errorMessage = "";
+        let deleted = null;
+        try {
+            const response = await axios().post(
+                `${URL}api/deleteCustomer`,
+                {userId: userId}
+            );
+            const result = await response.data;
+            if (result.success) {
+                isSuccessful = true;
+                error = false;
+                deleted = true;
+                await removeAllLocalCustomers()
+                //refresh page
+                alert(result.message)
+                window.location.reload();
+            } else {
+                errorMessage = result.message;
+                deleted = false;
+                error = true;
+                isSuccessful = false;
+                alert("Error: " + result);
+            }
+        } catch (e) {
+            alert(e.response.data);
+            console.warn(e);
+            error = true;
+            errorMessage = e.message;
+        }
+        return {isSuccessful, error, errorMessage, deleted};
+    },
+);
 const updateCustomerSlice = createSlice({
     name: "updateCustomer",
     initialState: {
@@ -53,6 +86,7 @@ const updateCustomerSlice = createSlice({
         isLoading: false,
         isError: false,
         errorMessage: "",
+        deleted: null
     },
     extraReducers: (builder) => {
         builder.addCase(updateCustomer.pending, (state, action) => {
