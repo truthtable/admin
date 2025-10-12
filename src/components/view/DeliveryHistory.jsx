@@ -115,7 +115,6 @@ export default function deliveryHistory() {
     const [shouldReload, setShouldReload] = useState(false);
     //console.log(isAddNewDeliveryModal);
 
-
     const currentUrl = window.location.href;
     const hashIndex = currentUrl.indexOf('#');
     const hashPart = currentUrl.substring(hashIndex + 1);
@@ -124,12 +123,11 @@ export default function deliveryHistory() {
     const date_start = searchParams.get('dateStart');
     const date_end = searchParams.get('dateEnd');
 
-
     let deliveryHistoryOrder = getFromLocalStorage("deliveryHistoryOrder");
     if (deliveryHistoryOrder === null || deliveryHistoryOrder === undefined) {
         deliveryHistoryOrder = true;
     }
-    console.log({deliveryHistoryOrder})
+    //console.log({deliveryHistoryOrder})
     const [descending, setTheDescending] = useState(
         deliveryHistoryOrder
     );
@@ -817,28 +815,6 @@ export default function deliveryHistory() {
                     color: "black",
                 }}
             >Customer :</span>
-            {/*
-            <Select
-                defaultValue={customerId ? customerId : null}
-                placeholder="Select Customer"
-                onChange={(event, value) => {
-                    if (value === "") {
-                        setCustomerId(null);
-                        return;
-                    }
-                    setCustomerId(value);
-                }}
-            >
-                <Option value="">Show All</Option>
-                {
-                    CUSTOMER_LIST.map((user) => (
-                        <Option key={user.id} value={user.id}>
-                            {titleCase(user.label)}
-                        </Option>
-                    ))
-                }
-            </Select>
-            */}
             <Autocomplete
                 placeholder="Select Customer"
                 options={[{id: null, label: "Show All"}, ...CUSTOMER_LIST]}
@@ -1565,25 +1541,4 @@ function calculateGasGroup(cylinders, mt, rate) {
         rate,
         total: Number(cylinders) * Number(rate)
     };
-}
-
-const Cell = ({onClick, children}) => {
-    return <Box
-        onClick={() => {
-            onClick()
-        }}
-        sx={{
-            backgroundColor: "transparent",
-            border: "none",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "black",
-            fontWeight: "bold",
-        }}
-    >
-          <span>{
-              children
-          }</span>
-    </Box>
 }
