@@ -106,7 +106,6 @@ export default function deliveryHistory() {
     const loading = deliveriesData.loading;
     const updateSuccess = deliveriesData.updateSuccess;
     const error = deliveriesData.error;
-    //console.log(deliveries);
     const {userDataLoading, users, userDataError} = useSelector((state) => state.user);
     const allGasData = useSelector((state) => state.gas);
     const {gasDeliverysSucsess} = useSelector((state) => state.gasDelivery);
@@ -815,6 +814,28 @@ export default function deliveryHistory() {
                     color: "black",
                 }}
             >Customer :</span>
+            {/*
+            <Select
+                defaultValue={customerId ? customerId : null}
+                placeholder="Select Customer"
+                onChange={(event, value) => {
+                    if (value === "") {
+                        setCustomerId(null);
+                        return;
+                    }
+                    setCustomerId(value);
+                }}
+            >
+                <Option value="">Show All</Option>
+                {
+                    CUSTOMER_LIST.map((user) => (
+                        <Option key={user.id} value={user.id}>
+                            {titleCase(user.label)}
+                        </Option>
+                    ))
+                }
+            </Select>
+            */}
             <Autocomplete
                 placeholder="Select Customer"
                 options={[{id: null, label: "Show All"}, ...CUSTOMER_LIST]}
@@ -1541,4 +1562,25 @@ function calculateGasGroup(cylinders, mt, rate) {
         rate,
         total: Number(cylinders) * Number(rate)
     };
+}
+
+const Cell = ({onClick, children}) => {
+    return <Box
+        onClick={() => {
+            onClick()
+        }}
+        sx={{
+            backgroundColor: "transparent",
+            border: "none",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "black",
+            fontWeight: "bold",
+        }}
+    >
+          <span>{
+              children
+          }</span>
+    </Box>
 }
