@@ -43,7 +43,7 @@ import {GasEditUi} from "./GasEditUi.jsx";
 
 const COLORS = {
     WHITE: "#ffffff",
-    KG_4: "#fde3e3",
+    KG_5: "#fde3e3",
     KG_12: "#e3f2fd",
     KG_15: "#e8f5e9",
     KG_17: "#fff3e0",
@@ -56,7 +56,7 @@ const columns = [
     {column: "customer", color: COLORS.WHITE},
 
     //4KG Group
-    {column: "4kg cyl", color: COLORS.KG_4},
+    {column: "5kg cyl", color: COLORS.KG_4},
     {column: "mt", color: COLORS.KG_4},
     {column: "rate", color: COLORS.KG_4},
     {column: "total", color: COLORS.KG_4},
@@ -329,21 +329,21 @@ export default function deliveryHistory() {
     // First, let's add a helper function to calculate gas group totals
 
     // Update the createData function to be more organized
-    function createData(date, info, gasInfo, kg4Data, kg12Data, kg15Data, kg21Data, received, ncToatl, isOutstanding) {
+    function createData(date, info, gasInfo, kg5Data, kg12Data, kg15Data, kg21Data, received, ncToatl, isOutstanding) {
 
-        const kg4 = calculateGasGroup(kg4Data.cylinders, kg4Data.mt, kg4Data.rate);
+        const kg5 = calculateGasGroup(kg5Data.cylinders, kg5Data.mt, kg5Data.rate);
         const kg12 = calculateGasGroup(kg12Data.cylinders, kg12Data.mt, kg12Data.rate);
         const kg15 = calculateGasGroup(kg15Data.cylinders, kg15Data.mt, kg15Data.rate);
         const kg21 = calculateGasGroup(kg21Data.cylinders, kg21Data.mt, kg21Data.rate);
 
-        const subTotal = kg4.total + kg12.total + kg15.total + kg21.total + ncToatl;
+        const subTotal = kg5.total + kg12.total + kg15.total + kg21.total + ncToatl;
 
         return {
             date,
             customer: info.customer,
             info: info,
             gasInfo: gasInfo,
-            kg4,
+            kg5,
             kg12,
             kg15,
             kg21,
@@ -456,11 +456,11 @@ export default function deliveryHistory() {
                 let totalCash = 0
                 let totalOnline = 0
 
-                let cyl4KgQty = 0
-                let cyl4KgNcQty = 0
-                let cyl4KgMt = 0
-                let cyl4KgRate = 0
-                let cyl4KgNcRate = 0
+                let cyl5KgQty = 0
+                let cyl5KgNcQty = 0
+                let cyl5KgMt = 0
+                let cyl5KgRate = 0
+                let cyl5KgNcRate = 0
 
                 let cyl12KgQty = 0
                 let cyl12KgNcQty = 0
@@ -493,9 +493,9 @@ export default function deliveryHistory() {
                     if (gas.nc) {
                         //console.log(gas);
                         setGasDeliveryList("d_" + delivery.id, "kg_" + gas.kg, gas)
-                        if (gas.kg == 4) {
-                            cyl12KgNcQty = Number(gas.quantity)
-                            cyl12KgNcRate = Number(gas.gas_price)
+                        if (gas.kg == 5) {
+                            cyl5KgNcQty = Number(gas.quantity)
+                            cyl5KgNcRate = Number(gas.gas_price)
                         } else if (gas.kg == 12) {
                             cyl12KgNcQty = Number(gas.quantity)
                             cyl12KgNcRate = Number(gas.gas_price)
@@ -509,12 +509,12 @@ export default function deliveryHistory() {
                         //dont add in nc gas return
                         return
                     }
-                    if (gas.kg == 4) {
+                    if (gas.kg == 5) {
                         if (!gas.is_empty) {
-                            cyl4KgQty = Number(gas.quantity)
-                            cyl4KgRate = Number(gas.gas_price)
+                            cyl5KgQty = Number(gas.quantity)
+                            cyl5KgRate = Number(gas.gas_price)
                         } else {
-                            cyl4KgMt += Number(gas.quantity)
+                            cyl5KgMt += Number(gas.quantity)
                         }
                     }
                     if (gas.kg == 12) {
@@ -548,8 +548,8 @@ export default function deliveryHistory() {
                     }
                 })
 
-                let total4Kg = Number(cyl4KgQty) * Number(cyl4KgRate)
-                let total4KgNc = Number(cyl4KgNcQty) * Number(cyl4KgNcRate)
+                let total5Kg = Number(cyl5KgQty) * Number(cyl5KgRate)
+                let total5KgNc = Number(cyl5KgNcQty) * Number(cyl5KgNcRate)
 
                 let total12Kg = Number(cyl12KgQty) * Number(cyl12KgRate)
                 let total12KgNc = Number(cyl12KgNcQty) * Number(cyl12KgNcRate)
@@ -560,9 +560,9 @@ export default function deliveryHistory() {
                 let total21Kg = Number(cyl21KgQty) * Number(cyl21KgRate)
                 let total21KgNc = Number(cyl21KgNcQty) * Number(cyl21KgNcRate)
 
-                let ncTotal = Number(total4KgNc) + Number(total12KgNc) + Number(total15KgNc) + Number(total21KgNc)
+                let ncTotal = Number(total5KgNc) + Number(total12KgNc) + Number(total15KgNc) + Number(total21KgNc)
 
-                let totalTotal = Number(total12Kg) + Number(total15Kg) + Number(total21Kg) + Number(total4Kg)
+                let totalTotal = Number(total12Kg) + Number(total15Kg) + Number(total21Kg) + Number(total5Kg)
 
                 let received = Number(totalCash) + Number(totalOnline)
 
@@ -577,7 +577,7 @@ export default function deliveryHistory() {
                 // }
 
                 if (
-                    total4KgNc + total12KgNc + total15KgNc + total21KgNc > 0
+                    total5KgNc + total12KgNc + total15KgNc + total21KgNc > 0
                 ) {
                     csvData.push([
 
@@ -588,13 +588,13 @@ export default function deliveryHistory() {
 
                         "NC",
                         //"4KG CYL",
-                        cyl4KgNcQty + "",
+                        cyl5KgNcQty + "",
                         //"MT",
                         "",
                         //"Rate",
-                        cyl4KgNcRate + "",
+                        cyl5KgNcRate + "",
                         //"Total",
-                        total4KgNc + "",
+                        total5KgNc + "",
 
                         //"12KG CYL",
                         cyl12KgNcQty + "",
@@ -631,7 +631,7 @@ export default function deliveryHistory() {
                         ncTotal + ""
                     ])
                 }
-                if (total4Kg + total12Kg + total15Kg + total21Kg > 0) {
+                if (total5Kg + total12Kg + total15Kg + total21Kg > 0) {
                     csvData.push([
                         //"Date",
                         date + "",
@@ -639,13 +639,13 @@ export default function deliveryHistory() {
                         titleCase(delivery.customer.name) + "",
                         "",
                         //"4KG CYL",
-                        cyl4KgQty + "",
+                        cyl5KgQty + "",
                         //"MT",
-                        cyl4KgMt + "",
+                        cyl5KgMt + "",
                         //"Rate",
-                        cyl4KgRate + "",
+                        cyl5KgRate + "",
                         //"Total",
-                        total4Kg + "",
+                        total5Kg + "",
                         //"12KG CYL",
                         cyl12KgQty + "",
                         //"MT",
@@ -700,7 +700,7 @@ export default function deliveryHistory() {
                     //gasInfo
                     cylinder_list,
                     // 4KG Group
-                    {cylinders: cyl4KgQty, mt: cyl4KgMt, rate: cyl4KgRate},
+                    {cylinders: cyl5KgQty, mt: cyl5KgMt, rate: cyl5KgRate},
                     // 12KG Group
                     {cylinders: cyl12KgQty, mt: cyl12KgMt, rate: cyl12KgRate},
                     // 15KG Group
@@ -1113,13 +1113,13 @@ const Row = React.memo(function Row({
             ], color: COLORS.WHITE
         },
         {
-            key: 'kg4', cells: [
-                {value: Cell(decimalFix(row.kg4.cylinders), did, 4, "quantity")},
-                {value: decimalFix(row.kg4.mt)},
-                {value: Cell(decimalFix(row.kg4.rate, true), did, 4, "gas_price")},
-                {value: Cell(decimalFix(row.kg4.total, true), did, 4, "total")}
+            key: 'kg5', cells: [
+                {value: Cell(decimalFix(row.kg5.cylinders), did, 5, "quantity")},
+                {value: decimalFix(row.kg5.mt)},
+                {value: Cell(decimalFix(row.kg5.rate, true), did, 5, "gas_price")},
+                {value: Cell(decimalFix(row.kg5.total, true), did, 5, "total")}
             ],
-            color: COLORS.KG_4
+            color: COLORS.KG_5
         },
         {
             key: 'kg12', cells: [
@@ -1562,25 +1562,4 @@ function calculateGasGroup(cylinders, mt, rate) {
         rate,
         total: Number(cylinders) * Number(rate)
     };
-}
-
-const Cell = ({onClick, children}) => {
-    return <Box
-        onClick={() => {
-            onClick()
-        }}
-        sx={{
-            backgroundColor: "transparent",
-            border: "none",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "black",
-            fontWeight: "bold",
-        }}
-    >
-          <span>{
-              children
-          }</span>
-    </Box>
 }

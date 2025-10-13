@@ -231,7 +231,7 @@ export const GasEditUi = ({
         setGasData(tempGas); // Update the gasData state
     }
     for (const [index, gas] of gasList.entries()) {
-        if ((gas.company_name.toLowerCase().includes(editName.toLowerCase()) && editName.length > 0)) {
+        if ((gas.company_name.toLowerCase().includes(editName.toLowerCase()) && editName.length > 0) && gas.is_active) {
             glist.push(
                 <ListItem key={index}>
                     <ListItemButton onClick={() => {
