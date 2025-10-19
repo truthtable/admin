@@ -34,7 +34,6 @@ import { addGasDelivery, deleteGasDelivery, updateGasDelivery } from "../../redu
 import { updateDelivery } from "../../state/UpdateDelivery.jsx";
 import DateTimePickerField from "../DateTimePickerField.tsx";
 import FormLabel from "@mui/joy/FormLabel";
-import { C } from "../../../dist/assets/react-csv-BKeQu2Ie.js";
 
 export const GasEditUi = ({
      createdAt,
