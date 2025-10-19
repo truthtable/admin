@@ -39,6 +39,7 @@ export const GasEditUi = ({
                               createdAt,
                               selectedGasList,
                               customer,
+                              custId,
                               deliveryBoy,
                               deleveryId,
                               payments,
@@ -55,9 +56,10 @@ export const GasEditUi = ({
     const dispatch = useDispatch();
     let onlinePayment = {id: null, amount: 0, method: null};
     let cashPayment = {id: null, amount: 0, method: null};
-    const [customerId, setCustomerId] = useState(null);
-    const [deliverBoyId, setDeliverBoyId] = useState(null);
+    const [customerId, setCustomerId] = useState(custId);
+    const [deliverBoyId, setDeliverBoyId] = useState(deleveryId);
     const [checked, setChecked] = useState(correction);
+    //console.log({checked})
     const [timeStamp, setTimeStamp] = useState(() => {
         if (createdAt) {
             function parseToEpoch(dateStr) {
@@ -81,8 +83,6 @@ export const GasEditUi = ({
             return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}T${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
         }
     });
-    //console.log({timeStamp})
-
     payments.forEach((payment) => {
         if (payment.method == 0) {
             cashPayment = {
@@ -231,7 +231,7 @@ export const GasEditUi = ({
         setGasData(tempGas); // Update the gasData state
     }
     for (const [index, gas] of gasList.entries()) {
-        if ((gas.company_name.toLowerCase().includes(editName.toLowerCase()) && editName.length > 0) && gas.is_active) {
+        if ((gas.company_name.toLowerCase().includes(editName.toLowerCase()) && editName.length > 0)) {
             glist.push(
                 <ListItem key={index}>
                     <ListItemButton onClick={() => {
@@ -258,6 +258,9 @@ export const GasEditUi = ({
                 setEdit(true);
             }}
             startDecorator={<MdEdit/>}
+            sx={{
+                whiteSpace: "nowrap"
+            }}
         >{
             isAddNewDeliveryModal ? "Add New Delivery" : "Edit"
         }</Button>
@@ -337,16 +340,16 @@ export const GasEditUi = ({
         const tempPayment = [
             {
                 deliverie_id: deleveryId,
-                customer_id: customer,
-                courier_boy_id: deliveryBoy,
+                customer_id: customerId,
+                courier_boy_id: deliverBoyId,
                 id: onlinePayment.id,
                 amount: onlineAmount.amount,
                 method: 1
             },
             {
                 deliverie_id: deleveryId,
-                customer_id: customer,
-                courier_boy_id: deliveryBoy,
+                customer_id: customerId,
+                courier_boy_id: deliverBoyId,
                 id: cashPayment.id,
                 amount: cashAmount.amount,
                 method: 0
@@ -477,7 +480,7 @@ export const GasEditUi = ({
                     }}/>
                 </Sheet>
 
-                {isAddNewDeliveryModal ? <Sheet className="mb-3">
+                <Sheet className="mb-3">
                     <FormLabel>Customer</FormLabel>
                     <Autocomplete
                         placeholder="Select Customer"
@@ -489,9 +492,9 @@ export const GasEditUi = ({
                             fontWeight: 'bold',
                         }}
                     />
-                </Sheet> : ""}
+                </Sheet>
 
-                {isAddNewDeliveryModal ? <Sheet className="mb-3">
+                <Sheet className="mb-3">
                     <FormLabel>Delivery Boy</FormLabel>
                     <Autocomplete
                         placeholder="Select Delivery Boy"
@@ -507,7 +510,7 @@ export const GasEditUi = ({
                         }}
                     />
 
-                </Sheet> : ""}
+                </Sheet>
                 <FormLabel>Amount</FormLabel>
                 <Sheet>
                     <Stack direction={"row"} gap={1} alignContent={"center"} sx={{mb: 1}}>
@@ -724,18 +727,3 @@ export const GasEditUi = ({
         </form>
     </Modal>
 }
-const formatDateTimeLocal = (input) => {
-    // '17/09/25 - 09:06 PM'
-    const [datePart, timePart] = input.split(" - ");
-    const [yy, mm, dd] = datePart.split("/").map(Number);
-    let [hours, minutes] = timePart.split(/[: ]/).map(Number);
-    const period = timePart.includes("PM") ? "PM" : "AM";
-
-    if (period === "PM" && hours < 12) hours += 12;
-    if (period === "AM" && hours === 12) hours = 0;
-
-    const fullYear = yy < 100 ? 2000 + yy : yy;
-
-    // return formatted for datetime-local
-    return `${fullYear}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}T${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
-};

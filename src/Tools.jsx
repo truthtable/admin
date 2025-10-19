@@ -145,3 +145,55 @@ export const getSessionVal = (key) => {
         return null;
     }
 }
+
+
+export const randomLightColor = (seed) => {
+    const rand = () => {
+        seed = (seed * 16807) % 2147483647;
+        return (seed - 1) / 2147483646;
+    };
+    const hue = (rand() * 360 + seed * 37) % 360;
+    const saturation = 45 + rand() * 20;
+    const lightness = 88 + rand() * 6;
+    const h = hue / 360;
+    const s = saturation / 100;
+    const l = lightness / 100;
+    const hue2rgb = (p, q, t) => {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1 / 6) return p + (q - p) * 6 * t;
+        if (t < 1 / 2) return q;
+        if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+        return p;
+    };
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    const r = hue2rgb(p, q, h + 1 / 3);
+    const g = hue2rgb(p, q, h);
+    const b = hue2rgb(p, q, h - 1 / 3);
+    const toHex = (n) => Math.round(n * 255).toString(16).padStart(2, '0');
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+};
+
+export const formatDateToDDMMYY_HHMM = (dateString) => {
+    //convert to epoch
+    var date = new Date(dateString);
+    var dd = String(date.getDate()).padStart(2, '0');
+    var mm = String(date.getMonth() + 1).padStart(2, '0'); //January is 0!
+    var yy = date.getFullYear();
+    var yyyy = yy.toString().slice(2, 4);
+    let str = dd + "/" + mm + "/" + yyyy;
+    let time = date.toLocaleTimeString("en-IN", {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+        timeZone: 'Asia/Kolkata'
+    });
+    time = time.toUpperCase();
+    return str + " - " + time;
+}
+
+export const toNumber = (value) => {
+    const num = Number(value);
+    return isNaN(num) ? 0 : num;
+}
