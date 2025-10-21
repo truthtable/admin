@@ -404,6 +404,7 @@ function App() {
                                 }}
                             >
                                 <Routes>
+                                    <Route path="/" Component={Home}/>{/*✅*/}
                                     <Route path="/admin/" Component={Home}/>{/*✅*/}
                                     {/* delivery boy */}
                                     <Route

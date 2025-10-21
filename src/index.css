@@ -1,56 +1,59 @@
 * {
-     font-family: "Abril Fatface", cursive;
-     font-family: "Caprasimo", cursive;
-     font-family: "Montserrat", sans-serif;
-     transition: color 0.1s ease-in-out;
-     -webkit-transition: color 0.1s ease-in-out;
-     -moz-transition: color 0.1s ease-in-out;
-     -o-transition: color 0.1s ease-in-out;
+    font-family: "Abril Fatface", cursive;
+    font-family: "Caprasimo", cursive;
+    font-family: "Montserrat", sans-serif;
+    transition: color 0.1s ease-in-out;
+    -webkit-transition: color 0.1s ease-in-out;
+    -moz-transition: color 0.1s ease-in-out;
+    -o-transition: color 0.1s ease-in-out;
 
-     transition: background-color 0.1s ease-in-out;
-     -webkit-transition: background-color 0.1s ease-in-out;
-     -moz-transition: background-color 0.1s ease-in-out;
-     -o-transition: background-color 0.1s ease-in-out;
+    transition: background-color 0.1s ease-in-out;
+    -webkit-transition: background-color 0.1s ease-in-out;
+    -moz-transition: background-color 0.1s ease-in-out;
+    -o-transition: background-color 0.1s ease-in-out;
 }
+
 body {
-     background-color: #263043;
+    background-color: #263043;
 }
+
 /* width */
 ::-webkit-scrollbar {
-     width: 10px;
+    width: 10px;
 }
 
 /* Track */
 ::-webkit-scrollbar-track {
-     background: #263043;
+    background: #263043;
 }
 
 /* Handle */
 ::-webkit-scrollbar-thumb {
-     background: #515969;
-     border-radius: 16px;
+    background: #515969;
+    border-radius: 16px;
 }
 
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-     background: #9e9ea4;
+    background: #9e9ea4;
 }
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 .mainBorder {
-     /* border-radius: 32px 0px 0px 0px;
-     -webkit-border-radius: 32px 0px 0px 0px;
-     -moz-border-radius: 32px 0px 0px 0px;
-     background-color: white; */
-     border-radius: 16px 0px 0px 0px;
-     -webkit-border-radius: 16px 0px 0px 0px;
-     -moz-border-radius: 16px 0px 0px 0px;
-     background-color: white;
+    /* border-radius: 32px 0px 0px 0px;
+    -webkit-border-radius: 32px 0px 0px 0px;
+    -moz-border-radius: 32px 0px 0px 0px;
+    background-color: white; */
+    border-radius: 16px 0px 0px 0px;
+    -webkit-border-radius: 16px 0px 0px 0px;
+    -moz-border-radius: 16px 0px 0px 0px;
+    background-color: white;
 }
 
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
-     -webkit-appearance: none;
-     margin: 0;
+    -webkit-appearance: none;
+    margin: 0;
 }

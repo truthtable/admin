@@ -62,7 +62,7 @@ export const GasEditUi = ({
     const [customerId, setCustomerId] = useState(custId);
     const [deliverBoyId, setDeliverBoyId] = useState(deliveryBoyId);
     const [checked, setChecked] = useState(correction);
-    console.log({customerId, deliverBoyId})
+    //console.log({customerId, deliverBoyId})
     const [timeStamp, setTimeStamp] = useState(() => {
         if (createdAt) {
             function parseToEpoch(dateStr) {

@@ -30,11 +30,14 @@ import {
     titleCase,
     toNumber
 } from "../../Tools.jsx";
-import ExportCSV from "../ExportCSV.jsx";
 import {GasEditUi} from "./GasEditUi.jsx";
 import MapObjectManager from "../class/MapArrayManager.jsx";
-import {MdEdit} from "react-icons/md";
+import {MdCallMade, MdCallReceived, MdEdit} from "react-icons/md";
+import ExportCSV from "../ExportCSV.jsx";
 
+const DeliveryRow = React.memo(function DeliveryRow({row}) {
+    return row;
+});
 export default function DeliveryHistory() {
     const dispatch = useDispatch();
     const deliveriesData = useSelector((state) => state.deliverys);
@@ -144,27 +147,33 @@ export default function DeliveryHistory() {
         return {CUSTOMER_LIST: customerList, ADMIN_LIST: adminList, DELIVERY_BOY_LIST: deliveryBoyList};
     }, [users]);
 
-    const loadData = useCallback((
-        force = false,
-        resetPage = false,
-        dateS = dateStart,
-        dateE = dateEnd,
-    ) => {
+    const loadData = useCallback(({
+                                      force = false,
+                                      resetPage = false,
+                                      dateS = dateStart,
+                                      dateE = dateEnd,
+                                      customerId: customerIdParam = undefined,
+                                      deliverBoyId: deliverBoyIdParam = undefined
+                                  }) => {
         let tempPage = page;
         if (resetPage) {
             setPage(1);
             tempPage = 1;
         }
+
+        // Use provided params if passed, otherwise fall back to outer state
+        const effectiveCustomerId = customerIdParam !== undefined ? customerIdParam : customerId;
+        const effectiveDeliverBoyId = deliverBoyIdParam !== undefined ? deliverBoyIdParam : deliverBoyId;
+
         const fetchDeliveriesParams = {
             dateStart: dateS,
             dateEnd: dateE,
-            customer_id: customerId,
-            courier_boy_id: deliverBoyId,
+            customer_id: effectiveCustomerId,
+            courier_boy_id: effectiveDeliverBoyId,
             page: tempPage,
             order: descending ? 'desc' : 'asc',
         };
         if (force) {
-            console.log(fetchDeliveriesParams);
             dispatch(fetchDeliveries(fetchDeliveriesParams));
         }
         if (!userDataLoading && !users && !loading) {
@@ -174,7 +183,7 @@ export default function DeliveryHistory() {
             (!allGasData.data || allGasData.data.data.length === 0)) {
             dispatch(fetchGasData());
         }
-    }, [dateStart, dateEnd, customerId, deliverBoyId, page, loading, dispatch, userDataLoading, users, allGasData]);
+    }, [dateStart, dateEnd, customerId, deliverBoyId, page, loading, dispatch, userDataLoading, users, allGasData, descending]);
 
 
     const handleEditClick = useCallback((delivery, date) => {
@@ -190,34 +199,47 @@ export default function DeliveryHistory() {
     const setDescending = useCallback((val) => {
         storeInLocalStorage("deliveryHistoryOrder", val);
         setTheDescending(val);
-        loadData(true, true);
+        loadData({force: true, resetPage: true});
     }, [loadData]);
 
     const setCustomerId = useCallback((id) => {
         setSessionVal("customerId", id);
         setTheCustomerId(id);
-        loadData(true);
+        loadData({force: true, customerId: id});
     }, [loadData]);
+
+    const useDebouncedCallback = (fn, delay = 300) => {
+        const timer = React.useRef();
+        React.useEffect(() => () => clearTimeout(timer.current), []);
+        return React.useCallback((...args) => {
+            clearTimeout(timer.current);
+            timer.current = setTimeout(() => fn(...args), delay);
+        }, [fn, delay]);
+    };
+
+    const debouncedLoadForCustomer = useDebouncedCallback((id) => {
+        loadData({force: true, customerId: id});
+    }, 400);
 
     const setDeliverBoyId = useCallback((id) => {
         setDeliverTheBoyId(id);
         setSessionVal("deliveryBoyId", id);
-        loadData(true);
+        loadData({force: true, deliverBoyId: id});
     }, [loadData]);
 
     const setDateStart = useCallback((date) => {
         setDateStartState(date);
-        loadData(true, true, date, dateEnd); // Pass resetPage=true and the new date
+        loadData({force: true, resetPage: true, dateS: date, dateE: dateEnd}); // Pass resetPage=true and the new date
     }, [loadData, dateEnd]);
 
     const setDateEnd = useCallback((date) => {
         setDateEndState(date);
-        loadData(true, true, dateStart, date); // Pass resetPage=true and the new date
+        loadData({force: true, resetPage: true, dateS: dateStart, dateE: date}); // Pass resetPage=true and the new date
     }, [loadData, dateStart]);
 
     const loadMore = useCallback(() => {
         setPage(prev => prev + 1);
-        loadData(true);
+        loadData({force: true});
     }, [loadData]);
 
     const updateUrlParams = useCallback((dateStart, dateEnd) => {
@@ -251,7 +273,7 @@ export default function DeliveryHistory() {
 
     useEffect(() => {
         if (shouldReload) {
-            loadData(true);
+            loadData({force: true});
             setShouldReload(false);
         }
     }, [shouldReload, loadData]);
@@ -261,34 +283,36 @@ export default function DeliveryHistory() {
     }, [dateStart, dateEnd, customerId, deliverBoyId, updateUrlParams]);
 
     useEffect(() => {
-        loadData(false);
+        loadData({force: true});
     }, []);
 
     useEffect(() => {
         if (gasDeliverysSucsess) {
             dispatch({type: UPDATE_GAS_DELIVERY_SUCCESS_RESET});
-            loadData(true);
+            loadData({force: true});
         }
     }, [gasDeliverysSucsess, dispatch, loadData]);
 
     useEffect(() => {
         if (updateSuccess) {
             dispatch({type: UPDATE_DELIVERY_SUCCESS_RESET});
-            loadData(true);
+            loadData({force: true});
         }
     }, [updateSuccess, dispatch, loadData]);
 
     const handleSuccess = useCallback(() => {
-        loadData(true);
+        loadData({force: true});
     }, [loadData]);
 
-    console.log("start");
+    let grandTotalAmount = 0;
+    let grandTotalPaid = 0;
 
+    const KGS = new Set();
+    let KGS_COUNT = {}
 
     // Memoize table data processing
     const {columns, csvData, deliveriesMapList} = useMemo(() => {
         const cols = [];
-        const KGS = new Set();
         const deliveriesMapList = [];
         const csvData = [];
 
@@ -296,60 +320,68 @@ export default function DeliveryHistory() {
             return {columns: cols, csvData: [], deliveriesMapList: []};
         }
 
-        console.log("Sorting deliveries");
-        const sortedDeliveries = [...deliveries].sort((a, b) => {
-            const dateA = new Date(a.created_at);
-            const dateB = new Date(b.created_at);
-            if (descending) {
-                return dateB - dateA; // For descending order
-            } else {
-                return dateA - dateB; // For ascending order
-            }
-        });
-        console.log("Sorted deliveries");
+        //console.log("Sorting deliveries");
+        const sortedDeliveries = [...deliveries]
+            .filter(delivery => {
+                    if (deliverBoyId !== null && delivery.courier_boy.id !== deliverBoyId) return false;
+                    if (customerId !== null && delivery.customer.id !== customerId) return false;
+                    if (dateStart && dateEnd) {
+                        const mDateStart = new Date(dateStart);
+                        mDateStart.setHours(0, 0, 0, 0);
 
-        // Collect all KG values
-        console.log("sortedDeliveries start");
-        sortedDeliveries.forEach(delivery => {
-            delivery.gas_deliveries.forEach(gas => {
-                KGS.add(gas.kg);
+                        const mDateEnd = new Date(dateEnd);
+                        mDateEnd.setHours(23, 59, 59, 999);
+
+                        const deliveryDate = new Date(delivery.created_at);
+
+                        if (deliveryDate < mDateStart || deliveryDate > mDateEnd) {
+                            return;
+                        }
+                    }
+                    return true;
+                }
+            )
+            .sort((a, b) => {
+                const dateA = new Date(a.created_at);
+                const dateB = new Date(b.created_at);
+
+                a.gas_deliveries.forEach(gas => {
+                    KGS.add(gas.kg);
+                });
+                b.gas_deliveries.forEach(gas => {
+                    KGS.add(gas.kg);
+                });
+
+                if (descending) {
+                    return dateB - dateA; // For descending order
+                } else {
+                    return dateA - dateB; // For ascending order
+                }
             });
-        });
-        //console.log("sortedDeliveries end");
 
-        // Process deliveries
+        grandTotalAmount = 0;
+        grandTotalPaid = 0;
+        KGS_COUNT = {}
+
         sortedDeliveries.forEach((delivery, i) => {
             const correction = delivery.correction;
             const gasDataMap = new MapObjectManager();
 
-            if (deliverBoyId !== null && delivery.courier_boy.id !== deliverBoyId) return;
-            if (customerId !== null && delivery.customer.id !== customerId) return;
-
-            if (dateStart && dateEnd) {
-                const mDateStart = new Date(dateStart);
-                mDateStart.setHours(0, 0, 0, 0);
-
-                const mDateEnd = new Date(dateEnd);
-                mDateEnd.setHours(23, 59, 59, 999);
-
-                const deliveryDate = new Date(delivery.created_at);
-
-                if (deliveryDate < mDateStart || deliveryDate > mDateEnd) {
-                    return;
-                }
-            }
-
             delivery.gas_deliveries.forEach((gas) => {
                 const k = `kg${gas.kg}`;
                 const entry = {};
+
                 if (gas.nc) {
-                    entry.nc = gas.quantity;
-                    entry.ncRate = gas.gas_price;
+                    entry.nc = Number(gas.quantity);
+                    entry.ncRate = Number(gas.gas_price);
+                    KGS_COUNT[`qty_${gas.kg}`] = (KGS_COUNT[`qty_${gas.kg}`] || 0) + Number(gas.quantity);
                 } else if (gas.is_empty) {
-                    entry.mt = gas.quantity;
+                    entry.mt = Number(gas.quantity);
+                    KGS_COUNT[`mt_${gas.kg}`] = (KGS_COUNT[`mt_${gas.kg}`] || 0) + Number(gas.quantity);
                 } else {
-                    entry.qty = gas.quantity;
-                    entry.rate = gas.gas_price;
+                    entry.qty = Number(gas.quantity);
+                    entry.rate = Number(gas.gas_price);
+                    KGS_COUNT[`qty_${gas.kg}`] = (KGS_COUNT[`qty_${gas.kg}`] || 0) + Number(gas.quantity);
                 }
                 gasDataMap.merge(k, entry);
             });
@@ -384,6 +416,8 @@ export default function DeliveryHistory() {
                     const ncTotal = temp.ncRate ? (Number(temp.nc) * Number(temp.ncRate)) : "-";
                     nCSubTotal += temp.ncRate ? ncTotal : 0;
                     subTotal += (temp.rate ? total : 0) + (temp.ncRate ? ncTotal : 0);
+
+                    console.log("Rendering...")
 
                     temptKgsList.push(
                         <DataCell correction={correction} key={`1delivery-${i}-kg${kg}`} bgColor={randomLightColor(kg)}>
@@ -440,52 +474,63 @@ export default function DeliveryHistory() {
                 }
             });
 
+            grandTotalPaid += received;
+            grandTotalAmount += subTotal;
+
             const balance = subTotal - received;
             const displaySubTotal = subTotal === 0 ? "-" : subTotal;
             const displayReceived = received === 0 ? "-" : received;
             const date = formatDateToDDMMYY_HHMM(delivery.created_at);
             const customerName = titleCase(delivery.customer.name);
 
-            deliveriesMapList.push([
-                <DataCell key={`delivery-${i}-remark`} correction={correction}>
-                    <Chip
-                        color="primary"
-                        onClick={() => handleEditClick(delivery, date)}
-                        size="sm"
-                    >
-                        <MdEdit/>
-                    </Chip>
-                    {
-                        (editRow === delivery.id) && <GasEditUi
-                            key={`delivery-${i}-edit`}
-                            selectedGasList={delivery.gas_deliveries}
-                            customer={delivery.customer.name}
-                            custId={delivery.customer.id}
-                            deliveryBoy={delivery.courier_boy.name}
-                            deleveryId={delivery.id}
-                            payments={delivery.payments}
-                            correction={correction}
-                            openEdit={editRow === delivery.id}
-                            isOutstanding={false}
-                            gasList={gasList}
-                            CUSTOMER_LIST={CUSTOMER_LIST}
-                            DELIVERY_BOY_LIST={DELIVERY_BOY_LIST}
-                            deleveryGasEditUiGasList={deleveryGasEditUiGasList}
-                            onSuccess={handleSuccess}
-                            createdAt={date}
-                            onClose={() => setEditRow(null)}
-                        />
+            deliveriesMapList.push(
+                <DeliveryRow
+                    key={`dRow${i}-${delivery.id}`}
+                    row={
+                        <tr key={`dRow${i}-${delivery.id}`}>
+                            <DataCell key={`delivery-${i}-remark`} correction={correction}>
+                                <Chip
+                                    color="primary"
+                                    onClick={() => handleEditClick(delivery, date)}
+                                    size="sm"
+                                >
+                                    <MdEdit/>
+                                </Chip>
+                                {
+                                    (editRow === delivery.id) && <GasEditUi
+                                        key={`delivery-${i}-edit`}
+                                        selectedGasList={delivery.gas_deliveries}
+                                        customer={delivery.customer.name}
+                                        custId={delivery.customer.id}
+                                        deliveryBoy={delivery.courier_boy.name}
+                                        deleveryId={delivery.id}
+                                        payments={delivery.payments}
+                                        correction={correction}
+                                        openEdit={editRow === delivery.id}
+                                        isOutstanding={false}
+                                        gasList={gasList}
+                                        CUSTOMER_LIST={CUSTOMER_LIST}
+                                        DELIVERY_BOY_LIST={DELIVERY_BOY_LIST}
+                                        deleveryGasEditUiGasList={deleveryGasEditUiGasList}
+                                        onSuccess={handleSuccess}
+                                        createdAt={date}
+                                        onClose={() => setEditRow(null)}
+                                    />
+                                }
+                            </DataCell>
+                            <DataCell correction={correction} key={`delivery-${i}-date`}>{date}</DataCell>
+                            <DataCell correction={correction} key={`delivery-${i}-name`}>{customerName}</DataCell>
+                            {temptKgsList}
+                            <DataCell correction={correction} key={`delivery-${i}-sub`}>{displaySubTotal}</DataCell>
+                            <DataCell correction={correction} key={`delivery-${i}-online`}>{online}</DataCell>
+                            <DataCell correction={correction} key={`delivery-${i}-cash`}>{cash}</DataCell>
+                            <DataCell correction={correction}
+                                      key={`delivery-${i}-received`}>{displayReceived}</DataCell>
+                            <DataCell correction={correction} key={`delivery-${i}-balance`}>{balance}</DataCell>
+                        </tr>
                     }
-                </DataCell>,
-                <DataCell correction={correction} key={`delivery-${i}-date`}>{date}</DataCell>,
-                <DataCell correction={correction} key={`delivery-${i}-name`}>{customerName}</DataCell>,
-                ...temptKgsList,
-                <DataCell correction={correction} key={`delivery-${i}-sub`}>{displaySubTotal}</DataCell>,
-                <DataCell correction={correction} key={`delivery-${i}-online`}>{online}</DataCell>,
-                <DataCell correction={correction} key={`delivery-${i}-cash`}>{cash}</DataCell>,
-                <DataCell correction={correction} key={`delivery-${i}-received`}>{displayReceived}</DataCell>,
-                <DataCell correction={correction} key={`delivery-${i}-balance`}>{balance}</DataCell>
-            ]);
+                />
+            );
 
             const isAllGasEmpty = tempCsvList.every(item => item === "");
             const isAllNcGasEmpty = tempNcCsvList.every(item => item === "");
@@ -555,6 +600,7 @@ export default function DeliveryHistory() {
         <Stack
             sx={{
                 width: "100%",
+                height: "100%",
                 backgroundColor: "white",
                 borderRadius: "lg",
                 overflow: "auto",
@@ -596,181 +642,271 @@ export default function DeliveryHistory() {
             >
                 <LinearProgress/>
             </Box>
-            <Stack
-                sx={{
-                    width: "100%",
-                    overflow: "auto",
-                    flexGrow: 1,
-                    alignItems: "center",
-                }}
-                direction="row"
-                gap={1}
-                mt={.5}
-                mb={.5}
-                pr={.5}
-                alignContent={"end"}
-                justifyContent={"flex-start"}
-            >
-                <ExportCSV
-                    headers={headers}
-                    data={csvData}
-                    filename={`deliveries_${formatDateToDDMMYY(dateStart)}_TO_${formatDateToDDMMYY(dateEnd)}.csv`}
+            <Sheet sx={{flexGrow: 1, width: "100%", height: "100%"}}>
+                <Table
+                    aria-label="collapsible table"
+                    size="md"
+                    stickyHeader={true}
+                    stickyFooter={true}
+                    sx={{
+                        width: "100%",
+                        flexGrow: 1,
+                        wordBreak: "keep-all",
+                        tableLayout: "auto",
+                        fontWeight: "bold",
+                        "& td, & tr": {
+                            paddingTop: 0.5,
+                            paddingBottom: 0.5,
+                            margin: 0,
+                            borderBottomWidth: 0,
+                            height: "unset",
+                            verticalAlign: "middle",
+                        },
+                        "& tbody tr td": {
+                            transition: "all 0.1s ease",
+                        },
+                        "& tbody tr:hover td": {
+                            borderTop: "1px solid #262d43",
+                            borderBottom: "1px solid #262d43",
+                        },
+                    }}
                 >
-                    Download File
-                </ExportCSV>
-                <Divider sx={{backgroundColor: "grey"}} orientation="vertical"/>
-                <GasEditUi
-                    selectedGasList={[]}
-                    customer={0}
-                    deliveryBoy={null}
-                    deleveryId={0}
-                    payments={[]}
-                    correction={false}
-                    openEdit={isAddNewDeliveryModal}
-                    isOutstanding={false}
-                    isAddNewDeliveryModal={true}
-                    gasList={gasList}
-                    CUSTOMER_LIST={CUSTOMER_LIST}
-                    DELIVERY_BOY_LIST={DELIVERY_BOY_LIST}
-                    deleveryGasEditUiGasList={deleveryGasEditUiGasList}
-                    onSuccess={handleSuccess}
-                    createdAt={null}
-                />
-                <Divider sx={{flexGrow: 1, opacity: 0}}/>
-                <span style={{fontWeight: "bold", color: "black", whiteSpace: "nowrap"}}>
+                    <thead>
+                    <tr className="!p-0 !m-0">
+                        <th colSpan={columns.length + 1} className="!p-0 !m-0">
+                            <Stack
+                                direction="column"
+                                className="!p-0 !m-0 w-full"
+                            >
+                                <Divider className="bg-white h-1"/>
+                                <Stack
+                                    sx={{
+                                        width: "100%",
+                                        // flexGrow: 1,
+                                        alignItems: "center",
+                                    }}
+                                    className="!p-0 !m-0"
+                                    direction="row"
+                                    gap={1}
+                                    alignContent={"end"}
+                                    justifyContent={"flex-start"}
+                                >
+                                    <ExportCSV
+                                        headers={headers}
+                                        data={csvData}
+                                        filename={`deliveries_${formatDateToDDMMYY(dateStart)}_TO_${formatDateToDDMMYY(dateEnd)}.csv`}
+                                    >
+                                        Download File
+                                    </ExportCSV>
+                                    <Divider sx={{backgroundColor: "grey"}} orientation="vertical"/>
+                                    <GasEditUi
+                                        selectedGasList={[]}
+                                        customer={0}
+                                        deliveryBoy={null}
+                                        deleveryId={0}
+                                        payments={[]}
+                                        correction={false}
+                                        openEdit={isAddNewDeliveryModal}
+                                        isOutstanding={false}
+                                        isAddNewDeliveryModal={true}
+                                        gasList={gasList}
+                                        CUSTOMER_LIST={CUSTOMER_LIST}
+                                        DELIVERY_BOY_LIST={DELIVERY_BOY_LIST}
+                                        deleveryGasEditUiGasList={deleveryGasEditUiGasList}
+                                        onSuccess={handleSuccess}
+                                        createdAt={null}
+                                    />
+                                    <Divider sx={{flexGrow: 1, opacity: 0}}/>
+                                    <span style={{fontWeight: "bold", color: "black", whiteSpace: "nowrap"}}>
                          Reverse Order
                     </span>
-                <Switch
-                    checked={descending}
-                    onChange={(event) => {
-                        setDescending(event.target.checked);
-                    }}
-                />
-                <Divider sx={{backgroundColor: "grey"}} orientation="vertical"/>
-                <span style={{fontWeight: "bold", color: "black", whiteSpace: "nowrap"}}>
+                                    <Switch
+                                        checked={descending}
+                                        onChange={(event) => {
+                                            setDescending(event.target.checked);
+                                        }}
+                                    />
+                                    <Divider sx={{backgroundColor: "grey"}} orientation="vertical"/>
+                                    <span style={{fontWeight: "bold", color: "black", whiteSpace: "nowrap"}}>
                          Customer :
                     </span>
-                <Autocomplete
-                    placeholder="Select Customer"
-                    options={[{id: null, label: "Show All"}, ...CUSTOMER_LIST]}
-                    value={[{
-                        id: null,
-                        label: "Show All"
-                    }, ...CUSTOMER_LIST].find(option => option.id === customerId) || null}
-                    getOptionLabel={(option) => option.label}
-                    isOptionEqualToValue={(option, value) => option?.id === value?.id}
-                    onChange={(_, value) => {
-                        setCustomerId(value?.id ?? null);
-                    }}
-                    sx={{fontWeight: 'bold', minWidth: 150}}
-                />
-                <Divider sx={{backgroundColor: "grey"}} orientation="vertical"/>
-                <span style={{fontWeight: "bold", color: "black", whiteSpace: "nowrap"}}>
+                                    <Autocomplete
+                                        placeholder="Select Customer"
+                                        options={[{id: null, label: "Show All"}, ...CUSTOMER_LIST]}
+                                        value={[{
+                                            id: null,
+                                            label: "Show All"
+                                        }, ...CUSTOMER_LIST].find(option => option.id === customerId) || null}
+                                        getOptionLabel={(option) => option.label}
+                                        isOptionEqualToValue={(option, value) => option?.id === value?.id}
+                                        onChange={(_, value) => {
+                                            //setCustomerId(value?.id ?? null);
+                                            const id = value?.id ?? null;
+                                            setSessionVal("customerId", id); // immediate session update if desired
+                                            setTheCustomerId(id);             // immediate UI update
+                                            debouncedLoadForCustomer(id);     // debounced network/load
+                                        }}
+                                        sx={{fontWeight: 'bold', minWidth: 150}}
+                                    />
+                                    <Divider sx={{backgroundColor: "grey"}} orientation="vertical"/>
+                                    <span style={{fontWeight: "bold", color: "black", whiteSpace: "nowrap"}}>
                          Delivery Boy :
                     </span>
-                <Select
-                    defaultValue={deliverBoyId || null}
-                    placeholder="Select Delivery Boy"
-                    onChange={(event, value) => {
-                        setDeliverBoyId(value === "" ? null : value);
-                    }}
-                    sx={{minWidth: 150}}
-                >
-                    <Option value="">Show All</Option>
-                    {[...DELIVERY_BOY_LIST.entries()].map(([courierId, user]) => (
-                        <Option key={courierId} value={courierId}>
-                            {titleCase(user.name)}
-                        </Option>
-                    ))}
-                </Select>
-                <Divider sx={{backgroundColor: "grey"}} orientation="vertical"/>
-                <span style={{fontWeight: "bold", color: "black", whiteSpace: "nowrap"}}>
+                                    <Select
+                                        defaultValue={deliverBoyId || null}
+                                        placeholder="Select Delivery Boy"
+                                        onChange={(event, value) => {
+                                            setDeliverBoyId(value === "" ? null : value);
+                                        }}
+                                        sx={{minWidth: 150}}
+                                    >
+                                        <Option value="">Show All</Option>
+                                        {[...DELIVERY_BOY_LIST.entries()].map(([courierId, user]) => (
+                                            <Option key={courierId} value={courierId}>
+                                                {titleCase(user.name)}
+                                            </Option>
+                                        ))}
+                                    </Select>
+                                    <Divider sx={{backgroundColor: "grey"}} orientation="vertical"/>
+                                    <span style={{fontWeight: "bold", color: "black", whiteSpace: "nowrap"}}>
                          Date :
                     </span>
-                <Input
-                    type="date"
-                    defaultValue={dateStart}
-                    onChange={(event) => {
-                        setDateStart(event.target.value);
-                    }}
-                    sx={{minWidth: 150}}
-                />
-                <Input
-                    type="date"
-                    defaultValue={dateEnd}
-                    onChange={(event) => {
-                        setDateEnd(event.target.value);
-                    }}
-                    sx={{minWidth: 150}}
-                />
-            </Stack>
-            <Stack sx={{backgroundColor: "lightblue", width: "100%", flexGrow: 1}}>
-                <Sheet sx={{flexGrow: 1}}>
-                    <Table
-                        aria-label="collapsible table"
-                        size="md"
-                        stickyHeader={true}
-                        sx={{
-                            wordBreak: "keep-all",
-                            tableLayout: "auto",
-                            fontWeight: "bold",
-                            "& td, & tr": {
-                                paddingTop: 0.5,
-                                paddingBottom: 0.5,
-                                margin: 0,
-                                borderBottomWidth: 0,
-                                height: "unset",
-                                verticalAlign: "middle",
-                            },
-                            "& tbody tr td": {
-                                transition: "all 0.1s ease",
-                            },
-                            "& tbody tr:hover td": {
-                                borderTop: "1px solid #262d43",
-                                borderBottom: "1px solid #262d43",
-                            },
-                        }}
-                    >
-                        <thead>
+                                    <Input
+                                        type="date"
+                                        defaultValue={dateStart}
+                                        onChange={(event) => {
+                                            setDateStart(event.target.value);
+                                        }}
+                                        sx={{minWidth: 150}}
+                                    />
+                                    <Input
+                                        type="date"
+                                        defaultValue={dateEnd}
+                                        onChange={(event) => {
+                                            setDateEnd(event.target.value);
+                                        }}
+                                        sx={{minWidth: 150}}
+                                    />
+                                </Stack>
+                                <Divider className="bg-white h-1"/>
+                            </Stack>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th style={{width: 40}} aria-label="empty"/>
+                        {columns.map((col, index) => (
+                            <th
+                                key={`${index}_${col.column}`}
+                                style={{
+                                    textAlign: "center",
+                                    backgroundColor: col.color,
+                                    wordBreak: "break-space",
+                                }}
+                            >
+                                {col.column}
+                            </th>
+                        ))}
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {deliveriesMapList.length === 0 && (
                         <tr>
-                            <th style={{width: 40}} aria-label="empty"/>
-                            {columns.map((col, index) => (
-                                <th
-                                    key={`${index}_${col.column}`}
-                                    style={{
-                                        textAlign: "center",
-                                        backgroundColor: col.color,
-                                        wordBreak: "break-space",
+                            <td colSpan={columns.length + 1}
+                                style={{textAlign: "center", fontWeight: "bold", fontSize: "1.8em"}}>
+                                {
+                                    !loading ? "No Deliveries Found" : "Please Wait..."
+                                }
+                            </td>
+                        </tr>
+                    )}
+                    {
+                        deliveriesMapList
+                    }
+                    </tbody>
+                    <tfoot>
+                    <tr>
+                        <td colSpan={columns.length + 1}>
+                            <Stack
+                                direction="row"
+                                gap={1}
+                                alignItems="center"
+                            >
+                                {
+                                    [...KGS].sort((a, b) => a - b).map((kg, index) => (
+                                        <Stack
+                                            key={`kgCountList${index}`}
+                                            className="rounded-md  py-0.5 px-2.5 border border-transparent text-sm text-black transition-all shadow-sm"
+                                            direction="row"
+                                            gap={.5}
+                                            alignItems="center"
+                                            sx={{
+                                                backgroundColor: randomLightColor(kg),
+                                            }}
+                                        >
+                                            <span>{kg}kg</span>
+                                            <Divider className="!bg-black" orientation="vertical"/>
+                                            <MdCallMade/>
+                                            <span>{
+                                                KGS_COUNT[`qty_${kg}`] || 0
+                                            }</span>
+                                            <span>-</span>
+                                            <MdCallReceived/>
+                                            <span>{
+                                                KGS_COUNT[`mt_${kg}`] || 0
+                                            }</span>
+                                            <span>=</span>
+                                            <span>{
+                                                (KGS_COUNT[`qty_${kg}`] || 0) - (KGS_COUNT[`mt_${kg}`] || 0)
+                                            }</span>
+                                        </Stack>
+                                    ))
+                                }
+                                <Divider className="!bg-transparent flex-grow" orientation="vertical"/>
+                                <Stack
+                                    className="rounded-md  py-0.5 px-2.5 border border-transparent text-sm text-black transition-all shadow-sm"
+                                    direction="row"
+                                    gap={1}
+                                    alignItems="center"
+                                    sx={{
+                                        backgroundColor: "#BBDCE5",
                                     }}
                                 >
-                                    {col.column}
-                                </th>
-                            ))}
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {deliveriesMapList.length === 0 && (
-                            <tr>
-                                <td colSpan={columns.length + 1}
-                                    style={{textAlign: "center", fontWeight: "bold", fontSize: "1.8em"}}>
-                                    Please Wait
-                                </td>
-                            </tr>
-                        )}
-                        {deliveriesMapList.map((row, index) => (
-                            <tr key={`dRow${index}`}>
-                                {row.map((value) => value)}
-                            </tr>
-                        ))}
-                        </tbody>
-                    </Table>
-                </Sheet>
-            </Stack>
+                                    <span className="text-black">Total Amount : ₹{grandTotalAmount}</span>
+                                </Stack>
+                                <Stack
+                                    className="rounded-md  py-0.5 px-2.5 border border-transparent text-sm text-black transition-all shadow-sm"
+                                    direction="row"
+                                    gap={1}
+                                    alignItems="center"
+                                    sx={{
+                                        backgroundColor: "#D3ECCD",
+                                    }}
+                                >
+                                    <span className="text-black">Total Paid : ₹{grandTotalPaid}</span>
+                                </Stack>
+                                <Stack
+                                    className="rounded-md  py-0.5 px-2.5 border border-transparent text-sm text-black transition-all shadow-sm"
+                                    direction="row"
+                                    gap={1}
+                                    alignItems="center"
+                                    sx={{
+                                        backgroundColor: "#FFF1CA",
+                                    }}
+                                >
+                                    <span
+                                        className="text-black">Total Balance : ₹{grandTotalAmount - grandTotalPaid}</span>
+                                </Stack>
+                            </Stack>
+                        </td>
+                    </tr>
+                    </tfoot>
+                </Table>
+            </Sheet>
         </Stack>
     );
 }
 
-const DataCell = React.memo(({bgColor = "white", correction = false, children}) => {
+export const DataCell = React.memo(({bgColor = "white", correction = false, children}) => {
     return (
         <td style={{backgroundColor: bgColor}}>
             <div
