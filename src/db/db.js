@@ -18,7 +18,7 @@ class LocalDB extends Dexie {
     constructor() {
         super(DB_NAME);
         //NOTE : Delete When removing from remote
-        this.version(2).stores({
+        this.version(3).stores({
             customer: [
                 CUSTOMER_FIELDS.ID,
                 CUSTOMER_FIELDS.USER_ID,

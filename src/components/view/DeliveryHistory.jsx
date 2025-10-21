@@ -33,7 +33,7 @@ import {
 import {GasEditUi} from "./GasEditUi.jsx";
 import MapObjectManager from "../class/MapArrayManager.jsx";
 import {MdCallMade, MdCallReceived, MdEdit} from "react-icons/md";
-import ExportCSV from "../ExportCSV.jsx";
+import ExportODS from "../ExportODS.jsx";
 
 const DeliveryRow = React.memo(function DeliveryRow({row}) {
     return row;
@@ -691,13 +691,21 @@ export default function DeliveryHistory() {
                                     alignContent={"end"}
                                     justifyContent={"flex-start"}
                                 >
-                                    <ExportCSV
+                                    {/*<ExportCSV*/}
+                                    {/*    headers={headers}*/}
+                                    {/*    data={csvData}*/}
+                                    {/*    filename={`deliveries_${formatDateToDDMMYY(dateStart)}_TO_${formatDateToDDMMYY(dateEnd)}.csv`}*/}
+                                    {/*>*/}
+                                    {/*    Download File*/}
+                                    {/*</ExportCSV>*/}
+                                    <ExportODS
                                         headers={headers}
                                         data={csvData}
-                                        filename={`deliveries_${formatDateToDDMMYY(dateStart)}_TO_${formatDateToDDMMYY(dateEnd)}.csv`}
+                                        filename={`deliveries_${formatDateToDDMMYY(dateStart)}_TO_${formatDateToDDMMYY(dateEnd)}`}
+                                        sumColumns={['sub total', 'total payment', 'balance']}
                                     >
-                                        Download File
-                                    </ExportCSV>
+                                        Download
+                                    </ExportODS>
                                     <Divider sx={{backgroundColor: "grey"}} orientation="vertical"/>
                                     <GasEditUi
                                         selectedGasList={[]}
