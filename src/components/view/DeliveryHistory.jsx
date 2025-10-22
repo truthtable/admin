@@ -21,6 +21,7 @@ import {fetchUser} from "../../redux/actions/userActions.js";
 import {UPDATE_GAS_DELIVERY_SUCCESS_RESET} from "../../redux/actions/gasDeliveryActions.js";
 import gasServices from "../../services/gas-services.jsx";
 import {
+    decimalFix,
     formatDateToDDMMYY_HHMM,
     getFromLocalStorage,
     getSessionVal,
@@ -48,7 +49,6 @@ export default function DeliveryHistory() {
     const allGasData = useSelector((state) => state.gas);
     const {gasDeliverysSucsess} = useSelector((state) => state.gasDelivery);
 
-    const [page, setPage] = useState(1);
     const [isAddNewDeliveryModal, setIsAddNewDeliveryModal] = useState(false);
     const [shouldReload, setShouldReload] = useState(false);
 
@@ -149,31 +149,17 @@ export default function DeliveryHistory() {
 
     const loadData = useCallback(({
                                       force = false,
-                                      resetPage = false,
-                                      dateS = dateStart,
-                                      dateE = dateEnd,
-                                      customerId: customerIdParam = undefined,
-                                      deliverBoyId: deliverBoyIdParam = undefined
                                   }) => {
-        let tempPage = page;
-        if (resetPage) {
-            setPage(1);
-            tempPage = 1;
-        }
-
-        // Use provided params if passed, otherwise fall back to outer state
-        const effectiveCustomerId = customerIdParam !== undefined ? customerIdParam : customerId;
-        const effectiveDeliverBoyId = deliverBoyIdParam !== undefined ? deliverBoyIdParam : deliverBoyId;
 
         const fetchDeliveriesParams = {
-            dateStart: dateS,
-            dateEnd: dateE,
-            customer_id: effectiveCustomerId,
-            courier_boy_id: effectiveDeliverBoyId,
-            page: tempPage,
+            dateStart: dateStart,
+            dateEnd: dateEnd,
+            customer_id: customerId,
+            courier_boy_id: deliverBoyId,
             order: descending ? 'desc' : 'asc',
         };
         if (force) {
+            //api call
             dispatch(fetchDeliveries(fetchDeliveriesParams));
         }
         if (!userDataLoading && !users && !loading) {
@@ -183,7 +169,7 @@ export default function DeliveryHistory() {
             (!allGasData.data || allGasData.data.data.length === 0)) {
             dispatch(fetchGasData());
         }
-    }, [dateStart, dateEnd, customerId, deliverBoyId, page, loading, dispatch, userDataLoading, users, allGasData, descending]);
+    }, [dateStart, dateEnd, customerId, deliverBoyId, loading, dispatch, userDataLoading, users, allGasData, descending]);
 
 
     const handleEditClick = useCallback((delivery, date) => {
@@ -199,14 +185,12 @@ export default function DeliveryHistory() {
     const setDescending = useCallback((val) => {
         storeInLocalStorage("deliveryHistoryOrder", val);
         setTheDescending(val);
-        loadData({force: true, resetPage: true});
-    }, [loadData]);
+    }, []);
 
     const setCustomerId = useCallback((id) => {
         setSessionVal("customerId", id);
         setTheCustomerId(id);
-        loadData({force: true, customerId: id});
-    }, [loadData]);
+    }, []);
 
     const useDebouncedCallback = (fn, delay = 300) => {
         const timer = React.useRef();
@@ -224,23 +208,15 @@ export default function DeliveryHistory() {
     const setDeliverBoyId = useCallback((id) => {
         setDeliverTheBoyId(id);
         setSessionVal("deliveryBoyId", id);
-        loadData({force: true, deliverBoyId: id});
-    }, [loadData]);
+    }, []);
 
     const setDateStart = useCallback((date) => {
         setDateStartState(date);
-        loadData({force: true, resetPage: true, dateS: date, dateE: dateEnd}); // Pass resetPage=true and the new date
-    }, [loadData, dateEnd]);
+    }, []);
 
     const setDateEnd = useCallback((date) => {
         setDateEndState(date);
-        loadData({force: true, resetPage: true, dateS: dateStart, dateE: date}); // Pass resetPage=true and the new date
-    }, [loadData, dateStart]);
-
-    const loadMore = useCallback(() => {
-        setPage(prev => prev + 1);
-        loadData({force: true});
-    }, [loadData]);
+    }, []);
 
     const updateUrlParams = useCallback((dateStart, dateEnd) => {
         const fullHash = window.location.hash.substring(1);
@@ -276,7 +252,7 @@ export default function DeliveryHistory() {
             loadData({force: true});
             setShouldReload(false);
         }
-    }, [shouldReload, loadData]);
+    }, [shouldReload]);
 
     useEffect(() => {
         updateUrlParams(dateStart, dateEnd);
@@ -284,21 +260,22 @@ export default function DeliveryHistory() {
 
     useEffect(() => {
         loadData({force: true});
-    }, []);
+    }, [customerId, deliverBoyId, dateStart, dateEnd, descending]);
+
 
     useEffect(() => {
         if (gasDeliverysSucsess) {
             dispatch({type: UPDATE_GAS_DELIVERY_SUCCESS_RESET});
             loadData({force: true});
         }
-    }, [gasDeliverysSucsess, dispatch, loadData]);
+    }, [gasDeliverysSucsess, dispatch]);
 
     useEffect(() => {
         if (updateSuccess) {
             dispatch({type: UPDATE_DELIVERY_SUCCESS_RESET});
             loadData({force: true});
         }
-    }, [updateSuccess, dispatch, loadData]);
+    }, [updateSuccess, dispatch]);
 
     const handleSuccess = useCallback(() => {
         loadData({force: true});
@@ -879,7 +856,7 @@ export default function DeliveryHistory() {
                                         backgroundColor: "#BBDCE5",
                                     }}
                                 >
-                                    <span className="text-black">Total Amount : ₹{grandTotalAmount}</span>
+                                    <span className="text-black">Total Amount : ₹{decimalFix(grandTotalAmount)}</span>
                                 </Stack>
                                 <Stack
                                     className="rounded-md  py-0.5 px-2.5 border border-transparent text-sm text-black transition-all shadow-sm"
@@ -890,7 +867,7 @@ export default function DeliveryHistory() {
                                         backgroundColor: "#D3ECCD",
                                     }}
                                 >
-                                    <span className="text-black">Total Paid : ₹{grandTotalPaid}</span>
+                                    <span className="text-black">Total Paid : ₹{decimalFix(grandTotalPaid)}</span>
                                 </Stack>
                                 <Stack
                                     className="rounded-md  py-0.5 px-2.5 border border-transparent text-sm text-black transition-all shadow-sm"
@@ -902,7 +879,7 @@ export default function DeliveryHistory() {
                                     }}
                                 >
                                     <span
-                                        className="text-black">Total Balance : ₹{grandTotalAmount - grandTotalPaid}</span>
+                                        className="text-black">Total Balance : ₹{decimalFix(grandTotalAmount - grandTotalPaid)}</span>
                                 </Stack>
                             </Stack>
                         </td>
