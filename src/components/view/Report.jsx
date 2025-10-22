@@ -1,18 +1,18 @@
 import React, {useEffect, useRef, useState} from "react";
 import {
+    Autocomplete,
     Box,
     Button,
     Card,
-    Checkbox,
     CircularProgress,
     Divider,
     Input,
     LinearProgress,
-    Option,
-    Select,
     Sheet,
     Stack,
-    Table
+    Switch,
+    Table,
+    TextField
 } from "@mui/joy";
 import {useDispatch, useSelector} from 'react-redux';
 import {fetchCustomers} from "../../redux/actions/customerActions";
@@ -21,13 +21,13 @@ import {useReactToPrint} from "react-to-print";
 import {fetchOrders} from "../../redux/actions/purchaseOrderActions.js";
 import {getPlants} from "../../redux/actions/plantsActions.js";
 import {fetchGasData} from "../../state/GasList.jsx";
-import {FaArrowLeft} from "react-icons/fa";
+import {FaArrowLeft, FaRegUserCircle} from "react-icons/fa";
 import {useLocation} from "react-router";
-import {decimalFix, formatDateToDDMMYY_HHMM, randomLightColor, titleCase} from "../../Tools.jsx";
+import {dashIfZero, decimalFix, formatDateToDDMMYY_HHMM, randomLightColor, titleCase, toNumber} from "../../Tools.jsx";
 import {sendBillToCustomer} from "../../redux/billSlice.js";
-import html2pdf from 'html2pdf.js';
 import MapObjectManager from "../class/MapArrayManager.jsx";
 import {DataCell} from "./DeliveryHistory.jsx";
+import {GrLocation} from "react-icons/gr";
 
 const CUSTOMER = "customer";
 const DELIVERY = "delivery";
@@ -47,48 +47,6 @@ export const Report = ({isLogged}) => {
 
     const contentRef = useRef();
     const reactToPrintFn = useReactToPrint({contentRef})
-
-    const downloadPDFContent = async (contentRef) => {
-        if (!contentRef?.current) {
-            alert('No content to download');
-            return;
-        }
-
-        try {
-            const element = contentRef.current;
-
-            // Ensure the element is visible
-            if (!element.offsetParent) {
-                throw new Error('Element is not visible or not in DOM');
-            }
-
-            const dateString = new Date().toISOString().slice(0, 10).replace(/-/g, '-');
-            const fileName = `bill_${dateString}.pdf`;
-
-            const opt = {
-                margin: 10, // Add 10mm padding (all sides)
-                filename: fileName,
-                image: {type: 'jpeg', quality: 0.98},
-                html2canvas: {
-                    scale: window.devicePixelRatio || 2,
-                    useCORS: true,
-                    scrollX: 0,
-                    scrollY: 0,
-                },
-                jsPDF: {
-                    unit: 'mm',
-                    format: 'a4',
-                    orientation: 'portrait',
-                }
-            };
-
-            await html2pdf().set(opt).from(element).save();
-
-        } catch (error) {
-            console.error('Error generating PDF:', error);
-            alert('Error generating PDF. Please try again.');
-        }
-    };
 
     const [selected, setSelected] = React.useState(() => (
         orderData?.orderId ? PURCHASE : CUSTOMER
@@ -120,12 +78,6 @@ export const Report = ({isLogged}) => {
         alert("Bill sent successfully");
     }
 
-    // console.log({
-    //      reportLoading,
-    //      report,
-    //      reportError
-    // });
-
     const Customer = () => {
         const [selectedCustomer, setSelectedCustomer] = React.useState(Number(searchParams.get('customer')) || null);
 
@@ -151,13 +103,15 @@ export const Report = ({isLogged}) => {
             }
         });
 
-        const [showNewConnections, setShowNewConnections] = useState(false);
+        const selectedCustomerObj = customers.find(c => c.id === selectedCustomer) || null;
+
+        const [addOutstanding, setAddOutstanding] = useState(false);
 
 
         //console.log('selectedCustomer', selectedCustomer);
 
         const handleSubmit = () => {
-            console.log(selectedCustomer, startDate, endDate);
+            //console.log(selectedCustomer, startDate, endDate);
             if (
                 selectedCustomer === undefined ||
                 selectedCustomer === null ||
@@ -196,14 +150,18 @@ export const Report = ({isLogged}) => {
         }, []);
 
         //     console.log(report)
-        let grandTotal = 0;
-        let grandTotalPaid = 0;
-        let grandGasQuantity = 0;
-        let grandPendingQuantity = 0;
+        let grandQtyTotal = 0;
+        let grandQtyKgTotal = 0;
+        let grandMtTotal = 0;
+        let grandMtKgTotal = 0;
+        let grandOrderTotal = 0;
+        let grandTotalOnline = 0;
+        let grandTotalCash = 0;
 
         const KGS = new Set();
-        const head = []
+        const KGS_COUNT = []
         const rows = [];
+        const heads = [];
 
         try {
             const sortedDeliveries = [...report.deliveries].sort((a, b) => {
@@ -211,26 +169,42 @@ export const Report = ({isLogged}) => {
                 const dateB = new Date(b.created_at);
 
                 a.gas_deliveries.forEach(gas => {
-                    KGS.add(gas.kg);
+                    KGS.add(gas.gas_cylinder.kg);
+                });
+                b.gas_deliveries.forEach(gas => {
+                    KGS.add(gas.gas_cylinder.kg);
                 });
 
-                return dateA - dateB; // For ascending order
+                return dateA - dateB;
             });
+            // const sortedDeliveries = [...report.deliveries].map((d) = {
+            //     return
+            // })
             sortedDeliveries.forEach((delivery, i) => {
                 const correction = delivery.correction;
                 const gasDataMap = new MapObjectManager();
                 try {
                     delivery.gas_deliveries.forEach((gas, index) => {
-                        const k = `kg${gas.kg}`;
+                        //console.log(gas);
+                        const k = `kg${gas.gas_cylinder.kg}`;
                         const entry = {};
                         if (gas.nc) {
-                            entry.nc = gas.quantity;
-                            entry.ncRate = gas.gas_price;
+                            entry.nc = toNumber(gas.quantity);
+                            entry.ncRate = toNumber(gas.price);
+                            KGS_COUNT[`sent${gas.gas_cylinder.kg}`] = (KGS_COUNT[`sent${gas.gas_cylinder.kg}`] || 0) + toNumber(gas.quantity);
+                            grandQtyTotal += toNumber(gas.quantity);
+                            grandQtyKgTotal += toNumber(gas.quantity) * toNumber(gas.gas_cylinder.kg);
                         } else if (gas.is_empty) {
-                            entry.mt = gas.quantity;
+                            entry.mt = toNumber(gas.quantity);
+                            KGS_COUNT[`mt${gas.gas_cylinder.kg}`] = (KGS_COUNT[`mt${gas.gas_cylinder.kg}`] || 0) + toNumber(gas.quantity);
+                            grandMtTotal += toNumber(gas.quantity);
+                            grandMtKgTotal += toNumber(gas.quantity) * toNumber(gas.gas_cylinder.kg);
                         } else {
-                            entry.qty = gas.quantity;
-                            entry.rate = gas.gas_price;
+                            entry.qty = toNumber(gas.quantity);
+                            entry.rate = toNumber(gas.price);
+                            KGS_COUNT[`sent${gas.gas_cylinder.kg}`] = (KGS_COUNT[`sent${gas.gas_cylinder.kg}`] || 0) + toNumber(gas.quantity);
+                            grandQtyTotal += toNumber(gas.quantity);
+                            grandQtyKgTotal += toNumber(gas.quantity) * toNumber(gas.gas_cylinder.kg);
                         }
                         gasDataMap.merge(k, entry);
                     })
@@ -243,7 +217,7 @@ export const Report = ({isLogged}) => {
                     let cash = 0;
                     let online = 0;
                     delivery?.payments?.forEach(payment => {
-                        const amount = Number(payment.amount);
+                        const amount = toNumber(payment.amount);
                         if (payment.method === 0) {
                             cash += amount;
                         } else if (payment.method === 1) {
@@ -251,15 +225,18 @@ export const Report = ({isLogged}) => {
                         }
                         received += amount;
                     });
+                    grandTotalCash += cash;
+                    grandTotalOnline += online;
                     const sortedKGS = [...KGS].sort((a, b) => a - b);
                     sortedKGS.forEach(kg => {
                         const temp = gasObjs[`kg${kg}`];
                         if (temp) {
-                            const total = temp.rate ? (Number(temp.qty) * Number(temp.rate)) : "-";
+                            const total = temp.rate ? (toNumber(temp.qty) * toNumber(temp.rate)) : "-";
                             normalSubTotal += temp.rate ? total : 0;
-                            const ncTotal = temp.ncRate ? (Number(temp.nc) * Number(temp.ncRate)) : "-";
+                            const ncTotal = temp.ncRate ? (toNumber(temp.nc) * toNumber(temp.ncRate)) : "-";
                             nCSubTotal += temp.ncRate ? ncTotal : 0;
                             subTotal += (temp.rate ? total : 0) + (temp.ncRate ? ncTotal : 0);
+
                             temptKgsList.push(
                                 <DataCell correction={correction} key={`1delivery-${i}-kg${kg}`}
                                           bgColor={randomLightColor(kg)}>
@@ -301,32 +278,66 @@ export const Report = ({isLogged}) => {
                             );
                         }
                     })
-                    const balance = subTotal - received;
+                    grandOrderTotal += subTotal;
+                    let balance = 0;
+                    if (subTotal === 0 && received < 0) {
+                        balance = "-";
+                    } else {
+                        balance = subTotal - received;
+                    }
+
                     const displaySubTotal = subTotal === 0 ? "-" : subTotal;
                     const displayReceived = received === 0 ? "-" : received;
                     const date = formatDateToDDMMYY_HHMM(delivery.created_at);
-                    const customerName = titleCase("NAME");
-
+                    const note = "note"
                     rows.push([
                         <tr key={`dRow${i}`}>
                             <DataCell correction={correction} key={`delivery-${i}-date`}>{date}</DataCell>
-                            <DataCell correction={correction} key={`delivery-${i}-name`}>{customerName}</DataCell>
+                            {/*<DataCell correction={correction} key={`delivery-${i}-note`}>{note}</DataCell>*/}
                             {temptKgsList}
                             <DataCell correction={correction} key={`delivery-${i}-sub`}>{displaySubTotal}</DataCell>
-                            <DataCell correction={correction} key={`delivery-${i}-online`}>{online}</DataCell>
-                            <DataCell correction={correction} key={`delivery-${i}-cash`}>{cash}</DataCell>
+                            <DataCell correction={correction}
+                                      key={`delivery-${i}-online`}>{dashIfZero(online)}</DataCell>
+                            <DataCell correction={correction} key={`delivery-${i}-cash`}>{dashIfZero(cash)}</DataCell>
                             <DataCell correction={correction}
                                       key={`delivery-${i}-received`}>{displayReceived}</DataCell>
-                            <DataCell correction={correction} key={`delivery-${i}-balance`}>{balance}</DataCell>
+                            <DataCell correction={correction}
+                                      key={`delivery-${i}-balance`}>{(balance < 1) ? "-" : balance}</DataCell>
                         </tr>
                     ]);
                 } catch (err) {
-                    console.log(err);
+                    console.warn(err);
                 }
             })
         } catch (e) {
             console.log(e);
         }
+        console.log(KGS_COUNT)
+        heads.push([
+            <th key="h1date" className="!text-center">date</th>,
+            ...[...KGS].sort((a, b) => a - b).map(kg => {
+                const color = randomLightColor(kg);
+                return (<>
+                    <th key={`h2kg${kg}`} className="!text-center" style={{backgroundColor: color}}>
+                        {kg}kg
+                    </th>
+                    <th key={`h3mt${kg}`} className="!text-center" style={{backgroundColor: color}}>
+                        mt
+                    </th>
+                    <th key={`h4krate${kg}`} className="!text-center" style={{backgroundColor: color}}>
+                        rate
+                    </th>
+                    <th key={`h2total${kg}`} className="!text-center" style={{backgroundColor: color}}>
+                        total
+                    </th>
+                </>)
+            }),
+            <th key={`subt`} className="!text-center">sub total</th>,
+            <th key={`cash`} className="!text-center">cash</th>,
+            <th key={`upi`} className="!text-center">online</th>,
+            <th key={`ttl`} className="!text-center">total</th>,
+            <th key={`bal`} className="!text-center">balance</th>,
+        ])
         return (
             <Stack
                 sx={{
@@ -363,24 +374,44 @@ export const Report = ({isLogged}) => {
                                    }}>
                                         Customer&nbsp;:&nbsp;
                                    </span>
-                            <Select
-                                placeholder="Select User"
-                                variant="outlined"
-                                sx={{
-                                    width: "100%",
-                                    minWidth: {xs: '100%', md: '200px'}
-                                }}
-                                onChange={(event, value) => {
-                                    setSelectedCustomer(value);
-                                }}
-                                defaultValue={selectedCustomer}
-                            >
-                                {customers.map((customer, index) => (
-                                    <Option key={index + "payment_option"} value={customer.id}>
-                                        {customer.user.name} : <span> {customer.user.address}</span>
-                                    </Option>
-                                ))}
-                            </Select>
+                            <Autocomplete
+                                options={customers}
+                                getOptionLabel={(c) => c ? titleCase(`${c.user.name} : ${c.user.address}`) : 'Select User'}
+                                value={selectedCustomerObj}
+                                onChange={(event, value) => setSelectedCustomer(value ? value.id : null)}
+                                isOptionEqualToValue={(option, value) => option?.id === value?.id}
+                                renderOption={(props, option) => (
+                                    <li {...props} key={option.id}>
+                                        <Stack className="group bg-white p-2 ps-2 shadow-md hover:!bg-blue-100"
+                                               direction="column">
+                                            <Stack direction="row" gap={1} alignItems="center">
+                                                <FaRegUserCircle/>
+                                                <span
+                                                    className="!text-black !font-bold">{titleCase(option.user.name)}</span>
+                                            </Stack>
+                                            <Stack direction="row" gap={1} alignItems="center">
+                                                <GrLocation/>
+                                                <span className="!text-black">{titleCase(option.user.address)}</span>
+                                            </Stack>
+                                        </Stack>
+                                        <Divider orientation="horizontal"/>
+                                    </li>
+                                )}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        placeholder="Select User"
+                                        variant="outlined"
+                                        inputProps={{
+                                            ...params.inputProps,
+                                            // keep placeholder visible when value is null
+                                            'aria-label': 'select-user'
+                                        }}
+                                    />
+                                )}
+                                sx={{width: '100%', minWidth: {xs: '100%', md: '200px'}}}
+                                className="!text-black !font-bold"
+                            />
                         </Stack>
                     </Stack>
 
@@ -445,23 +476,21 @@ export const Report = ({isLogged}) => {
                                 alignItems: {xs: 'flex-start', md: 'center'}
                             }}
                         >
-                                   <span style={{
-                                       fontWeight: "bold",
-                                       color: "black",
-                                       minWidth: {xs: '100%', md: 'auto'},
-                                       whiteSpace: 'nowrap'
-                                   }}>
-                                        New Connections :
-                                   </span>
-                            <Checkbox
-                                label=""
+                            <span style={{
+                                fontWeight: "bold",
+                                color: "black",
+                                minWidth: {xs: '100%', md: 'auto'},
+                                whiteSpace: 'nowrap'
+                            }}>Add Outstanding :</span>
+                            <Switch
                                 size="lg"
-                                checked={showNewConnections}
+                                checked={addOutstanding}
                                 onChange={(e) => {
-                                    setShowNewConnections(e.target.checked);
+                                    setAddOutstanding(e.target.checked);
                                 }}
                             />
                         </Stack>
+
                     </Stack>
 
                     <Divider sx={{backgroundColor: "#979797", m: 1}}/>
@@ -497,6 +526,7 @@ export const Report = ({isLogged}) => {
                     }}
                 >
                     <Stack
+                        gap={0.5}
                         sx={{
                             padding: {xs: 1, md: 4},
                             m: {xs: 0, md: 2},
@@ -518,41 +548,63 @@ export const Report = ({isLogged}) => {
                         {
                             (report) ? (
                                 <>
-                                             <span style={{fontWeight: "bold", color: "black"}}>
+                                    <Stack direction="row" gap={2}>
+                                        <Divider className="w-full" orientation={"vertical"}
+                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                        <span style={{fontWeight: "bold", color: "black"}}>
                                                   {
-                                                      `Customer : ${report.customer.user.name}`
+                                                      `Customer : ${titleCase(report.customer.user.name)}`
                                                   }
                                              </span>
-                                    <span style={{fontWeight: "bold", color: "black"}}>
+                                        <Divider className="w-full" orientation={"vertical"}
+                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                        <span style={{fontWeight: "bold", color: "black"}}>
                                                   {
-                                                      `Address : ${report.customer.user.address}`
+                                                      `Address : ${titleCase(report.customer.user.address)}`
                                                   }
                                              </span>
-                                    <span style={{fontWeight: "bold", color: "black"}}>
+                                        <Divider className="w-full" orientation={"vertical"}
+                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                        <span style={{fontWeight: "bold", color: "black"}}>
                                                   {
                                                       `Phone No. : ${report.customer.user.phone_no}`
                                                   }
                                              </span>
-                                    <span style={{fontWeight: "bold", color: "black"}}>
+                                        <Divider className="w-full" orientation={"vertical"}
+                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                        <span style={{fontWeight: "bold", color: "black"}}>
                                                   {
                                                       `Bill Date Range : ${startDate} to ${endDate}`
                                                   }
                                              </span>
-                                    <Divider sx={{backgroundColor: "#979797", m: 1}}/>
-                                    <span style={{fontWeight: "bold", color: "black"}}>
-                                                  {
-                                                      "Delivered Gas List"
-                                                  }
-                                             </span>
+                                        <Divider className="w-full" orientation={"vertical"}
+                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                    </Stack>
                                     <Table
                                         borderAxis="both"
-                                        size="sm"
+                                        size="md"
                                         variant="outlined"
-                                        sx={{width: "100%", mt: 1, tableLayout: "auto",}}
+                                        color="neutral"
+                                        sx={{
+                                            width: "100%",
+                                            tableLayout: "auto",
+                                            border: "1px solid #5f5f5f",
+                                            borderCollapse: "collapse",
+                                            borderSpacing: 0,
+                                            "& th, & td": {
+                                                border: "1px solid #5f5f5f",
+                                                boxSizing: "border-box",
+                                                padding: "0px",
+                                                margin: "0px",
+                                                height: "unset",
+                                            },
+                                        }}
                                     >
                                         <thead>
                                         <tr>
-
+                                            {
+                                                heads
+                                            }
                                         </tr>
                                         </thead>
                                         <tbody>
@@ -561,37 +613,71 @@ export const Report = ({isLogged}) => {
                                         }
                                         </tbody>
                                     </Table>
-                                    <span style={{fontWeight: "bold", color: "black", marginTop: 8}}>
+                                    <Divider sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                    <Stack direction="row" gap={2}>
+                                        <Divider className="w-full" orientation={"vertical"}
+                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                        {
+                                            [...KGS].sort((a, b) => a - b).map((kg, index) => {
+                                                return (<><Stack direction="column">
+                                                <span
+                                                    className="font-bold text-black">{`${kg}KG`} : {toNumber(KGS_COUNT[`sent${kg}`])}</span>
+                                                        <Divider className="w-full" orientation={"horizontal"}
+                                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                                        <span
+                                                            className="font-bold text-black">{`MT`} : {toNumber(KGS_COUNT[`mt${kg}`])}</span>
+                                                        <Divider className="w-full" orientation={"horizontal"}
+                                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                                        <span
+                                                            className="font-bold text-black">{`Pending`} : {toNumber(KGS_COUNT[`sent${kg}`]) - toNumber(KGS_COUNT[`mt${kg}`])}</span>
+                                                    </Stack>
+                                                        <Divider className="w-full" orientation={"vertical"}
+                                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                                    </>
+                                                )
+                                            })
+                                        }
+                                    </Stack>
+                                    <Divider sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                    <Stack direction="row" gap={2}>
+                                        <Divider className="w-full" orientation={"vertical"}
+                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                        <span
+                                            className="font-bold text-black">{`Total KG : ${grandQtyKgTotal}`}kg</span>
+                                        <Divider className="w-full" orientation={"vertical"}
+                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                        <span className="font-bold text-black">{`Total MT: ${grandMtKgTotal}`}kg</span>
+                                        <Divider className="w-full" orientation={"vertical"}
+                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                        <span
+                                            className="font-bold text-black">{`Total Pending: ${(grandQtyKgTotal - grandMtKgTotal)}`}kg</span>
+                                    </Stack>
+                                    <Divider sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                    <Stack direction="row" gap={2}>
+                                        <Divider className="w-full" orientation={"vertical"}
+                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                        <span className="font-bold text-black">
                                                   {
-                                                      `Total Received Gas Quantity : ${grandGasQuantity}`
+                                                      `Grand Total : ₹${decimalFix(grandOrderTotal)}`
                                                   }
                                              </span>
-                                    <span style={{fontWeight: "bold", color: "black"}}>
+                                        <Divider className="w-full" orientation={"vertical"}
+                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                        <span style={{fontWeight: "bold", color: "#0A6847"}}>
                                                   {
-                                                      `Total Pending Gas Quantity : ${grandPendingQuantity}`
+                                                      `Total Paid : ₹${decimalFix(grandTotalOnline + grandTotalCash)}`
                                                   }
                                              </span>
-                                    <span style={{fontWeight: "bold", color: "black", marginTop: 8}}>
-                                                  {
-                                                      `Grand Total : ${grandTotal}₹`
-                                                  }
-                                             </span>
-                                    <span style={{fontWeight: "bold", color: "#0A6847"}}>
-                                                  {
-                                                      `Total Paid : ${grandTotalPaid}₹`
-                                                  }
-                                             </span>
-                                    <Divider sx={{backgroundColor: "#979797", m: 1, opacity: 0.5}}/>
-                                    <span style={{fontWeight: "bold", color: "#A0153E"}}>
+                                        <Divider className="w-full" orientation={"vertical"}
+                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                        <span style={{fontWeight: "bold", color: "#af4831"}}>
                                                   {
 
-                                                      `Total Remaining : ${grandTotal - grandTotalPaid}₹`
+                                                      `Total Remaining : ₹${decimalFix(grandOrderTotal - (grandTotalOnline + grandTotalCash))}`
                                                   }
                                              </span>
-                                    <span style={{fontWeight: "bold", color: "black"}}>
-                                                  {
-                                                  }
-                                             </span>
+                                    </Stack>
+                                    <Divider sx={{backgroundColor: "#979797", opacity: 0.5}}/>
                                     <Ending/>
                                 </>
                             ) : (<>
@@ -667,19 +753,19 @@ export const Report = ({isLogged}) => {
                                 width: {xs: '100%', md: 'auto'}
                             }}
                         >
-                            {"Print Bill"}
+                            {"Download"}
                         </Button>
                         <Divider sx={{backgroundColor: "#979797", m: 1, opacity: 0.5}}/>
-                        <Button
-                            onClick={() => {
-                                downloadPDFContent(contentRef)
-                            }}
-                            sx={{
-                                width: {xs: '100%', md: 'auto'}
-                            }}
-                        >
-                            {"Download Bill"}
-                        </Button>
+                        {/*<Button*/}
+                        {/*    onClick={() => {*/}
+                        {/*        downloadPDFContent(contentRef)*/}
+                        {/*    }}*/}
+                        {/*    sx={{*/}
+                        {/*        width: {xs: '100%', md: 'auto'}*/}
+                        {/*    }}*/}
+                        {/*>*/}
+                        {/*    {"Download Bill"}*/}
+                        {/*</Button>*/}
                     </div>
                 </Stack>
             </Stack>

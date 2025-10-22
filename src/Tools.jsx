@@ -197,3 +197,11 @@ export const toNumber = (value) => {
     const num = Number(value);
     return isNaN(num) ? 0 : num;
 }
+
+export const dashIfZero = (value) => {
+    const num = Number(value);
+    if (isNaN(num) || num === 0) {
+        return "-";
+    }
+    return num;
+}

@@ -21,6 +21,7 @@ import {fetchUser} from "../../redux/actions/userActions.js";
 import {UPDATE_GAS_DELIVERY_SUCCESS_RESET} from "../../redux/actions/gasDeliveryActions.js";
 import gasServices from "../../services/gas-services.jsx";
 import {
+    dashIfZero,
     decimalFix,
     formatDateToDDMMYY_HHMM,
     getFromLocalStorage,
@@ -35,6 +36,7 @@ import {GasEditUi} from "./GasEditUi.jsx";
 import MapObjectManager from "../class/MapArrayManager.jsx";
 import {MdCallMade, MdCallReceived, MdEdit} from "react-icons/md";
 import ExportODS from "../ExportODS.jsx";
+import {FaArrowDown} from "react-icons/fa";
 
 const DeliveryRow = React.memo(function DeliveryRow({row}) {
     return row;
@@ -281,20 +283,35 @@ export default function DeliveryHistory() {
         loadData({force: true});
     }, [loadData]);
 
-    let grandTotalAmount = 0;
-    let grandTotalPaid = 0;
-
-    const KGS = new Set();
-    let KGS_COUNT = {}
-
     // Memoize table data processing
-    const {columns, csvData, deliveriesMapList} = useMemo(() => {
+    const {
+        columns,
+        csvData,
+        deliveriesMapList,
+        kgSet,
+        kgsCount,
+        grandTotalAmount,
+        grandTotalPaid
+    } = useMemo(() => {
         const cols = [];
         const deliveriesMapList = [];
         const csvData = [];
 
+        let totalAmount = 0;
+        let totalPaid = 0;
+        const KGS = new Set();
+        let KGS_COUNT = {}
+
         if (!deliveries || !allGasData.data || allGasData.data.data.length === 0 || !users || allGasData.isLoading || loading || userDataLoading) {
-            return {columns: cols, csvData: [], deliveriesMapList: []};
+            return {
+                columns: cols,
+                csvData: [],
+                deliveriesMapList: [],
+                kgSet: KGS,
+                kgsCount: KGS_COUNT,
+                grandTotalAmount: 0,
+                grandTotalPaid: 0
+            };
         }
 
         //console.log("Sorting deliveries");
@@ -336,10 +353,6 @@ export default function DeliveryHistory() {
                 }
             });
 
-        grandTotalAmount = 0;
-        grandTotalPaid = 0;
-        KGS_COUNT = {}
-
         sortedDeliveries.forEach((delivery, i) => {
             const correction = delivery.correction;
             const gasDataMap = new MapObjectManager();
@@ -349,16 +362,16 @@ export default function DeliveryHistory() {
                 const entry = {};
 
                 if (gas.nc) {
-                    entry.nc = Number(gas.quantity);
-                    entry.ncRate = Number(gas.gas_price);
-                    KGS_COUNT[`qty_${gas.kg}`] = (KGS_COUNT[`qty_${gas.kg}`] || 0) + Number(gas.quantity);
+                    entry.nc = toNumber(gas.quantity);
+                    entry.ncRate = toNumber(gas.gas_price);
+                    KGS_COUNT[`qty_${gas.kg}`] = (KGS_COUNT[`qty_${gas.kg}`] || 0) + toNumber(gas.quantity);
                 } else if (gas.is_empty) {
-                    entry.mt = Number(gas.quantity);
-                    KGS_COUNT[`mt_${gas.kg}`] = (KGS_COUNT[`mt_${gas.kg}`] || 0) + Number(gas.quantity);
+                    entry.mt = toNumber(gas.quantity);
+                    KGS_COUNT[`mt_${gas.kg}`] = (KGS_COUNT[`mt_${gas.kg}`] || 0) + toNumber(gas.quantity);
                 } else {
-                    entry.qty = Number(gas.quantity);
-                    entry.rate = Number(gas.gas_price);
-                    KGS_COUNT[`qty_${gas.kg}`] = (KGS_COUNT[`qty_${gas.kg}`] || 0) + Number(gas.quantity);
+                    entry.qty = toNumber(gas.quantity);
+                    entry.rate = toNumber(gas.gas_price);
+                    KGS_COUNT[`qty_${gas.kg}`] = (KGS_COUNT[`qty_${gas.kg}`] || 0) + toNumber(gas.quantity);
                 }
                 gasDataMap.merge(k, entry);
             });
@@ -375,7 +388,7 @@ export default function DeliveryHistory() {
             let online = 0;
 
             delivery?.payments?.forEach(payment => {
-                const amount = Number(payment.amount);
+                const amount = toNumber(payment.amount);
                 if (payment.method === 0) {
                     cash += amount;
                 } else if (payment.method === 1) {
@@ -388,13 +401,13 @@ export default function DeliveryHistory() {
             sortedKGS.forEach(kg => {
                 const temp = gasObjs[`kg${kg}`];
                 if (temp) {
-                    const total = temp.rate ? (Number(temp.qty) * Number(temp.rate)) : "-";
+                    const total = temp.rate ? (toNumber(temp.qty) * toNumber(temp.rate)) : "-";
                     normalSubTotal += temp.rate ? total : 0;
-                    const ncTotal = temp.ncRate ? (Number(temp.nc) * Number(temp.ncRate)) : "-";
+                    const ncTotal = temp.ncRate ? (toNumber(temp.nc) * toNumber(temp.ncRate)) : "-";
                     nCSubTotal += temp.ncRate ? ncTotal : 0;
                     subTotal += (temp.rate ? total : 0) + (temp.ncRate ? ncTotal : 0);
 
-                    console.log("Rendering...")
+                    //console.log("Rendering...")
 
                     temptKgsList.push(
                         <DataCell correction={correction} key={`1delivery-${i}-kg${kg}`} bgColor={randomLightColor(kg)}>
@@ -451,14 +464,20 @@ export default function DeliveryHistory() {
                 }
             });
 
-            grandTotalPaid += received;
-            grandTotalAmount += subTotal;
-
-            const balance = subTotal - received;
+            totalPaid += received;
+            totalAmount += subTotal;
+            let balance = 0
+            if (subTotal === 0) {
+                balance = totalPaid;
+            } else {
+                balance = subTotal - received;
+            }
             const displaySubTotal = subTotal === 0 ? "-" : subTotal;
             const displayReceived = received === 0 ? "-" : received;
             const date = formatDateToDDMMYY_HHMM(delivery.created_at);
             const customerName = titleCase(delivery.customer.name);
+
+            //console.log({delivery})
 
             deliveriesMapList.push(
                 <DeliveryRow
@@ -480,6 +499,7 @@ export default function DeliveryHistory() {
                                         customer={delivery.customer.name}
                                         custId={delivery.customer.id}
                                         deliveryBoy={delivery.courier_boy.name}
+                                        deliveryBoyId={delivery.courier_boy.id}
                                         deleveryId={delivery.id}
                                         payments={delivery.payments}
                                         correction={correction}
@@ -499,8 +519,9 @@ export default function DeliveryHistory() {
                             <DataCell correction={correction} key={`delivery-${i}-name`}>{customerName}</DataCell>
                             {temptKgsList}
                             <DataCell correction={correction} key={`delivery-${i}-sub`}>{displaySubTotal}</DataCell>
-                            <DataCell correction={correction} key={`delivery-${i}-online`}>{online}</DataCell>
-                            <DataCell correction={correction} key={`delivery-${i}-cash`}>{cash}</DataCell>
+                            <DataCell correction={correction}
+                                      key={`delivery-${i}-online`}>{dashIfZero(online)}</DataCell>
+                            <DataCell correction={correction} key={`delivery-${i}-cash`}>{dashIfZero(cash)}</DataCell>
                             <DataCell correction={correction}
                                       key={`delivery-${i}-received`}>{displayReceived}</DataCell>
                             <DataCell correction={correction} key={`delivery-${i}-balance`}>{balance}</DataCell>
@@ -564,8 +585,16 @@ export default function DeliveryHistory() {
             {column: "balance", color: "white"}
         );
 
-        return {columns: cols, csvData, deliveriesMapList};
-    }, [deliveries, descending, deliverBoyId, customerId, urlParams, gasList, CUSTOMER_LIST, DELIVERY_BOY_LIST, deleveryGasEditUiGasList, handleSuccess]);
+        return {
+            columns: cols,
+            csvData,
+            deliveriesMapList,
+            kgSet: new Set(KGS),
+            kgsCount: {...KGS_COUNT},
+            grandTotalAmount: totalAmount,
+            grandTotalPaid: totalPaid
+        };
+    }, [deliveries, descending, deliverBoyId, customerId, urlParams, gasList, CUSTOMER_LIST, DELIVERY_BOY_LIST, deleveryGasEditUiGasList, handleSuccess, editRow]);
 
     const headers = useMemo(() => {
         const h = columns.map((col) => col.column);
@@ -681,7 +710,14 @@ export default function DeliveryHistory() {
                                         filename={`deliveries_${formatDateToDDMMYY(dateStart)}_TO_${formatDateToDDMMYY(dateEnd)}`}
                                         sumColumns={['sub total', 'total payment', 'balance']}
                                     >
-                                        Download
+                                        <Stack
+                                            direction="row"
+                                            gap={0.5}
+                                            alignItems="center"
+                                        >
+                                            <FaArrowDown/>
+                                            <span>Download</span>
+                                        </Stack>
                                     </ExportODS>
                                     <Divider sx={{backgroundColor: "grey"}} orientation="vertical"/>
                                     <GasEditUi
@@ -817,7 +853,7 @@ export default function DeliveryHistory() {
                                 alignItems="center"
                             >
                                 {
-                                    [...KGS].sort((a, b) => a - b).map((kg, index) => (
+                                    [...(kgSet || [])].sort((a, b) => a - b).map((kg, index) => (
                                         <Stack
                                             key={`kgCountList${index}`}
                                             className="rounded-md  py-0.5 px-2.5 border border-transparent text-sm text-black transition-all shadow-sm"
@@ -831,18 +867,12 @@ export default function DeliveryHistory() {
                                             <span>{kg}kg</span>
                                             <Divider className="!bg-black" orientation="vertical"/>
                                             <MdCallMade/>
-                                            <span>{
-                                                KGS_COUNT[`qty_${kg}`] || 0
-                                            }</span>
+                                            <span>{kgsCount?.[`qty_${kg}`] || 0}</span>
                                             <span>-</span>
                                             <MdCallReceived/>
-                                            <span>{
-                                                KGS_COUNT[`mt_${kg}`] || 0
-                                            }</span>
+                                            <span>{kgsCount?.[`mt_${kg}`] || 0}</span>
                                             <span>=</span>
-                                            <span>{
-                                                (KGS_COUNT[`qty_${kg}`] || 0) - (KGS_COUNT[`mt_${kg}`] || 0)
-                                            }</span>
+                                            <span>{(kgsCount?.[`qty_${kg}`] || 0) - (kgsCount?.[`mt_${kg}`] || 0)}</span>
                                         </Stack>
                                     ))
                                 }

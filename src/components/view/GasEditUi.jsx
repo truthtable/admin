@@ -93,7 +93,7 @@ export const GasEditUi = ({
                 amount: Number(payment.amount),
                 method: payment.method
             }
-        } else {
+        } else if (payment.method == 1) {
             onlinePayment = {
                 id: payment.id,
                 amount: Number(payment.amount),
