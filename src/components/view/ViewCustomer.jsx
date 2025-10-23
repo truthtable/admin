@@ -756,17 +756,18 @@ function Balance({data}) {
                         alignItems="start"
                         justifyContent="flex-start">
                         <ModalClose variant="outlined"/>
-                        <Typography>Adjust Balance</Typography>
+                        <Typography className="text-black font-bold">Adjust Balance</Typography>
                         <Divider className="mb-10"/>
-                        <span>Balance</span>
-                        <pre>{decimalFix(data.totalBalance, true)}</pre>
-                        <span>Outstanding Balance</span>
+                        <span className="text-black font-bold">Balance</span>
+                        <pre className="text-black font-bold">{decimalFix(data.totalBalance, true)}</pre>
+                        <span className="text-black font-bold">Outstanding Balance</span>
                         <Input
                             size="sm"
                             type="text"
                             inputMode="numeric"
                             pattern="\d*"
                             placeholder="Enter Amount"
+                            className="text-black font-bold"
                             value={amount}
                             onChange={(e) => {
                                 const num = e.target.value.replace(/[^\d\-\.]/g, "");
@@ -790,7 +791,8 @@ function Balance({data}) {
                                     dispatch(
                                         adjustBalance({
                                             customerId: data.id,
-                                            amount: amt
+                                            amount: amt * -1,
+                                            oldAmount: data.totalBalance,
                                         })
                                     );
                                     setShowModal(false);

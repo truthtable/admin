@@ -353,6 +353,12 @@ export default function DeliveryHistory() {
                 }
             });
 
+        if (sortedDeliveries.length === 1) {
+            sortedDeliveries[0].gas_deliveries.forEach(gas => {
+                KGS.add(gas.kg);
+            });
+        }
+
         sortedDeliveries.forEach((delivery, i) => {
             const correction = delivery.correction;
             const gasDataMap = new MapObjectManager();
@@ -467,12 +473,7 @@ export default function DeliveryHistory() {
             totalPaid += received;
             totalAmount += subTotal;
             let balance = 0
-            // console.log({subTotal})
-            // if (subTotal === 0) {
-            //     balance = totalPaid;
-            // } else {
             balance = subTotal - received;
-            //}
             const displaySubTotal = subTotal === 0 ? "-" : subTotal;
             const displayReceived = received === 0 ? "-" : received;
             const date = formatDateToDDMMYY_HHMM(delivery.created_at);
