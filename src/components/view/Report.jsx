@@ -11,8 +11,7 @@ import {
     Sheet,
     Stack,
     Switch,
-    Table,
-    TextField
+    Table
 } from "@mui/joy";
 import {useDispatch, useSelector} from 'react-redux';
 import {fetchCustomers} from "../../redux/actions/customerActions";
@@ -41,6 +40,8 @@ export const Report = ({isLogged}) => {
     const hashPart = currentUrl.substring(hashIndex + 1);
     const url = new URL(hashPart, window.location.origin);
     const searchParams = new URLSearchParams(url.search);
+
+    let isLogoded = sessionStorage?.getItem("authToken") !== null;
 
     const location = useLocation();
     const orderData = location.state;
@@ -135,7 +136,7 @@ export const Report = ({isLogged}) => {
         };
 
         useEffect(() => {
-            if (customers.length === 0 && !customersLoading) {
+            if (customers.length === 0 && !customersLoading && isLogoded) {
                 dispatch(fetchCustomers());
             }
             try {
@@ -162,6 +163,10 @@ export const Report = ({isLogged}) => {
         const KGS_COUNT = []
         const rows = [];
         const heads = [];
+
+        const apiTotalPaid = report?.totalPaid || 0;
+        const apiTotalBill = report?.totalPrice || 0;
+        let apiOutstanding = apiTotalBill - apiTotalPaid
 
         try {
             const sortedDeliveries = [...report.deliveries].sort((a, b) => {
@@ -238,7 +243,7 @@ export const Report = ({isLogged}) => {
                             subTotal += (temp.rate ? total : 0) + (temp.ncRate ? ncTotal : 0);
 
                             temptKgsList.push(
-                                <DataCell correction={correction} key={`1delivery-${i}-kg${kg}`}
+                                <DataCell correction={correction} key={`1delivery-${delivery.id}-kg${kg}`}
                                           bgColor={randomLightColor(kg)}>
                                     <span>{temp.qty || "-"}</span>
                                     {temp.nc && (<>
@@ -246,9 +251,9 @@ export const Report = ({isLogged}) => {
                                         <span className="text-blue-700">{temp.nc}</span>
                                     </>)}
                                 </DataCell>,
-                                <DataCell correction={correction} key={`2delivery-${i}-kg${kg}`}
+                                <DataCell correction={correction} key={`2delivery-${delivery.id}-kg${kg}`}
                                           bgColor={randomLightColor(kg)}>{temp.mt || "-"}</DataCell>,
-                                <DataCell correction={correction} key={`3delivery-${i}-kg${kg}`}
+                                <DataCell correction={correction} key={`3delivery-${delivery.id}-kg${kg}`}
                                           bgColor={randomLightColor(kg)}>
                                     <span>{temp.rate || "-"}</span>
                                     {temp.nc && (<>
@@ -256,7 +261,7 @@ export const Report = ({isLogged}) => {
                                         <span className="text-blue-700">{temp.ncRate}</span>
                                     </>)}
                                 </DataCell>,
-                                <DataCell correction={correction} key={`4delivery-${i}-kg${kg}`}
+                                <DataCell correction={correction} key={`4delivery-${delivery.id}-kg${kg}`}
                                           bgColor={randomLightColor(kg)}>
                                     <span>{total}</span>
                                     {temp.nc && (<>
@@ -267,13 +272,13 @@ export const Report = ({isLogged}) => {
                             );
                         } else {
                             temptKgsList.push(
-                                <DataCell correction={correction} key={`1delivery-${i}-kg${kg}`}
+                                <DataCell correction={correction} key={`1delivery-${delivery.id}-kg${kg}`}
                                           bgColor={randomLightColor(kg)}>{"-"}</DataCell>,
-                                <DataCell correction={correction} key={`2delivery-${i}-kg${kg}`}
+                                <DataCell correction={correction} key={`2delivery-${delivery.id}-kg${kg}`}
                                           bgColor={randomLightColor(kg)}>{"-"}</DataCell>,
-                                <DataCell correction={correction} key={`3delivery-${i}-kg${kg}`}
+                                <DataCell correction={correction} key={`3delivery-${delivery.id}-kg${kg}`}
                                           bgColor={randomLightColor(kg)}>{"-"}</DataCell>,
-                                <DataCell correction={correction} key={`4delivery-${i}-kg${kg}`}
+                                <DataCell correction={correction} key={`4delivery-${delivery.id}-kg${kg}`}
                                           bgColor={randomLightColor(kg)}>{"-"}</DataCell>
                             );
                         }
@@ -288,7 +293,8 @@ export const Report = ({isLogged}) => {
                     const note = "note"
                     rows.push([
                         <tr key={`dRow${i}`}>
-                            <DataCell correction={correction} key={`delivery-${i}-date`}>{date}</DataCell>
+                            <DataCell textNoWrap={""} correction={correction}
+                                      key={`delivery-${i}-date`}>{date}</DataCell>
                             {/*<DataCell correction={correction} key={`delivery-${i}-note`}>{note}</DataCell>*/}
                             {temptKgsList}
                             <DataCell correction={correction} key={`delivery-${i}-sub`}>{displaySubTotal}</DataCell>
@@ -314,25 +320,25 @@ export const Report = ({isLogged}) => {
             ...[...KGS].sort((a, b) => a - b).map(kg => {
                 const color = randomLightColor(kg);
                 return (<>
-                    <th key={`h2kg${kg}`} className="!text-center" style={{backgroundColor: color}}>
+                    <th key={`h2kg${kg}1`} className="!text-center" style={{backgroundColor: color}}>
                         {kg}kg
                     </th>
-                    <th key={`h3mt${kg}`} className="!text-center" style={{backgroundColor: color}}>
+                    <th key={`h3mt${kg}2`} className="!text-center" style={{backgroundColor: color}}>
                         mt
                     </th>
-                    <th key={`h4krate${kg}`} className="!text-center" style={{backgroundColor: color}}>
+                    <th key={`h4krate${kg}3`} className="!text-center" style={{backgroundColor: color}}>
                         rate
                     </th>
-                    <th key={`h2total${kg}`} className="!text-center" style={{backgroundColor: color}}>
+                    <th key={`h2total${kg}4`} className="!text-center" style={{backgroundColor: color}}>
                         total
                     </th>
                 </>)
             }),
-            <th key={`subt`} className="!text-center">sub total</th>,
-            <th key={`cash`} className="!text-center">cash</th>,
-            <th key={`upi`} className="!text-center">online</th>,
-            <th key={`ttl`} className="!text-center">total</th>,
-            <th key={`bal`} className="!text-center">balance</th>,
+            <th key={`subt234`} className="!text-center">sub total</th>,
+            <th key={`cash345`} className="!text-center">cash</th>,
+            <th key={`upi34`} className="!text-center">online</th>,
+            <th key={`ttl354`} className="!text-center">total</th>,
+            <th key={`bal345`} className="!text-center">bal</th>,
         ])
         return (
             <Stack
@@ -376,35 +382,35 @@ export const Report = ({isLogged}) => {
                                 value={selectedCustomerObj}
                                 onChange={(event, value) => setSelectedCustomer(value ? value.id : null)}
                                 isOptionEqualToValue={(option, value) => option?.id === value?.id}
-                                renderOption={(props, option) => (
-                                    <li {...props} key={option.id}>
-                                        <Stack className="group bg-white p-2 ps-2 shadow-md hover:!bg-blue-100"
-                                               direction="column">
-                                            <Stack direction="row" gap={1} alignItems="center">
-                                                <FaRegUserCircle/>
-                                                <span
-                                                    className="!text-black !font-bold">{titleCase(option.user.name)}</span>
+                                slotProps={{
+                                    listbox: {
+                                        sx: {
+                                            padding: 0,
+                                        }
+                                    }
+                                }}
+                                renderOption={(props, option) => {
+                                    const {key, ownerState, ...otherProps} = props;
+                                    return (
+                                        <li {...otherProps} key={option.id}>
+                                            <Stack className="group bg-white p-2 ps-2 shadow-md hover:!bg-blue-100"
+                                                   direction="column">
+                                                <Stack direction="row" gap={1} alignItems="center">
+                                                    <FaRegUserCircle/>
+                                                    <span
+                                                        className="!text-black !font-bold">{titleCase(option.user.name)}</span>
+                                                </Stack>
+                                                <Stack direction="row" gap={1} alignItems="center">
+                                                    <GrLocation/>
+                                                    <span
+                                                        className="!text-black">{titleCase(option.user.address)}</span>
+                                                </Stack>
                                             </Stack>
-                                            <Stack direction="row" gap={1} alignItems="center">
-                                                <GrLocation/>
-                                                <span className="!text-black">{titleCase(option.user.address)}</span>
-                                            </Stack>
-                                        </Stack>
-                                        <Divider orientation="horizontal"/>
-                                    </li>
-                                )}
-                                renderInput={(params) => (
-                                    <TextField
-                                        {...params}
-                                        placeholder="Select User"
-                                        variant="outlined"
-                                        inputProps={{
-                                            ...params.inputProps,
-                                            // keep placeholder visible when value is null
-                                            'aria-label': 'select-user'
-                                        }}
-                                    />
-                                )}
+                                            <Divider orientation="horizontal"/>
+                                        </li>
+                                    );
+                                }}
+                                placeholder="Select User"
                                 sx={{width: '100%', minWidth: {xs: '100%', md: '200px'}}}
                                 className="!text-black !font-bold"
                             />
@@ -575,6 +581,13 @@ export const Report = ({isLogged}) => {
                                              </span>
                                         <Divider className="w-full" orientation={"vertical"}
                                                  sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                        <span style={{fontWeight: "bold", color: "black"}}>
+                                                  {
+                                                      `last Outstanding : ₹${decimalFix(apiOutstanding - (grandOrderTotal - (grandTotalOnline + grandTotalCash)))}`
+                                                  }
+                                             </span>
+                                        <Divider className="w-full" orientation={"vertical"}
+                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
                                     </Stack>
                                     <Table
                                         borderAxis="both"
@@ -597,7 +610,7 @@ export const Report = ({isLogged}) => {
                                         }}
                                     >
                                         <thead>
-                                        <tr>
+                                        <tr key={"headerRow"}>
                                             {
                                                 heads
                                             }
@@ -1268,10 +1281,4 @@ function Ending() {
             </div>
         </>
     )
-}
-
-const Data = ({children}) => {
-    return <td>
-        {children}
-    </td>
 }

@@ -791,7 +791,7 @@ function Balance({data}) {
                                     dispatch(
                                         adjustBalance({
                                             customerId: data.id,
-                                            amount: amt * -1,
+                                            amount: amt,
                                             oldAmount: data.totalBalance,
                                         })
                                     );

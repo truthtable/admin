@@ -923,12 +923,17 @@ export default function DeliveryHistory() {
     );
 }
 
-export const DataCell = React.memo(({bgColor = "white", correction = false, children}) => {
+export const DataCell = React.memo(({
+                                        bgColor = "white",
+                                        correction = false,
+                                        textNoWrap = "!text-nowrap",
+                                        children
+                                    }) => {
     return (
         <td style={{backgroundColor: bgColor}}>
             <div
+                className={`${textNoWrap} !p-1`}
                 style={{
-                    whiteSpace: "nowrap",
                     color: correction ? "red" : "black",
                     fontWeight: "bold",
                     display: "flex",
