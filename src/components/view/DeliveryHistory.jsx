@@ -467,11 +467,12 @@ export default function DeliveryHistory() {
             totalPaid += received;
             totalAmount += subTotal;
             let balance = 0
-            if (subTotal === 0) {
-                balance = totalPaid;
-            } else {
-                balance = subTotal - received;
-            }
+            // console.log({subTotal})
+            // if (subTotal === 0) {
+            //     balance = totalPaid;
+            // } else {
+            balance = subTotal - received;
+            //}
             const displaySubTotal = subTotal === 0 ? "-" : subTotal;
             const displayReceived = received === 0 ? "-" : received;
             const date = formatDateToDDMMYY_HHMM(delivery.created_at);

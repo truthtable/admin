@@ -280,11 +280,12 @@ export const Report = ({isLogged}) => {
                     })
                     grandOrderTotal += subTotal;
                     let balance = 0;
-                    if (subTotal === 0 && received < 0) {
-                        balance = "-";
-                    } else {
-                        balance = subTotal - received;
-                    }
+                    // if (subTotal === 0 && received < 0) {
+                    //     balance = "-";
+                    // } else {
+                    console.log(subTotal)
+                    balance = subTotal - received;
+                    //}
 
                     const displaySubTotal = subTotal === 0 ? "-" : subTotal;
                     const displayReceived = received === 0 ? "-" : received;
