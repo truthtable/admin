@@ -46,7 +46,7 @@ const ExportODS = (props) => {
         ws['!ref'] = XLSX.utils.encode_range(range);
 
         XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
-        XLSX.writeFile(wb, `${props.filename}.ods`, {bookType: 'ods'});
+        XLSX.writeFile(wb, `${props.filename}.xlsx`, {bookType: 'xlsx'});
     };
 
     return (

@@ -314,7 +314,7 @@ export const Report = ({isLogged}) => {
         } catch (e) {
             console.log(e);
         }
-        console.log(KGS_COUNT)
+        //console.log(KGS_COUNT)
         heads.push([
             <th key="h1date" className="!text-center">date</th>,
             ...[...KGS].sort((a, b) => a - b).map(kg => {
@@ -338,8 +338,10 @@ export const Report = ({isLogged}) => {
             <th key={`cash345`} className="!text-center">cash</th>,
             <th key={`upi34`} className="!text-center">online</th>,
             <th key={`ttl354`} className="!text-center">total</th>,
-            <th key={`bal345`} className="!text-center">bal</th>,
+            <th key={`bal345`} className="!text-center">balance</th>,
         ])
+
+
         return (
             <Stack
                 sx={{
@@ -581,11 +583,12 @@ export const Report = ({isLogged}) => {
                                              </span>
                                         <Divider className="w-full" orientation={"vertical"}
                                                  sx={{backgroundColor: "#979797", opacity: 0.5}}/>
-                                        <span style={{fontWeight: "bold", color: "black"}}>
+                                        {addOutstanding ?? <span style={{fontWeight: "bold", color: "black"}}>
                                                   {
                                                       `last Outstanding : ₹${decimalFix(apiOutstanding - (grandOrderTotal - (grandTotalOnline + grandTotalCash)))}`
                                                   }
-                                             </span>
+                                        </span>
+                                        }
                                         <Divider className="w-full" orientation={"vertical"}
                                                  sx={{backgroundColor: "#979797", opacity: 0.5}}/>
                                     </Stack>
