@@ -108,6 +108,7 @@ export const Report = ({isLogged}) => {
 
         const [addOutstanding, setAddOutstanding] = useState(false);
 
+        console.log({addOutstanding});
 
         //console.log('selectedCustomer', selectedCustomer);
 
@@ -316,29 +317,29 @@ export const Report = ({isLogged}) => {
         }
         //console.log(KGS_COUNT)
         heads.push([
-            <th key="h1date" className="!text-center">date</th>,
+            <th key="h1date" className="!text-center !border-b-0">date</th>,
             ...[...KGS].sort((a, b) => a - b).map(kg => {
                 const color = randomLightColor(kg);
                 return (<>
-                    <th key={`h2kg${kg}1`} className="!text-center" style={{backgroundColor: color}}>
+                    <th key={`h2kg${kg}1`} className="!text-center !border-b-0" style={{backgroundColor: color}}>
                         {kg}kg
                     </th>
-                    <th key={`h3mt${kg}2`} className="!text-center" style={{backgroundColor: color}}>
+                    <th key={`h3mt${kg}2`} className="!text-center !border-b-0" style={{backgroundColor: color}}>
                         mt
                     </th>
-                    <th key={`h4krate${kg}3`} className="!text-center" style={{backgroundColor: color}}>
+                    <th key={`h4krate${kg}3`} className="!text-center !border-b-0" style={{backgroundColor: color}}>
                         rate
                     </th>
-                    <th key={`h2total${kg}4`} className="!text-center" style={{backgroundColor: color}}>
+                    <th key={`h2total${kg}4`} className="!text-center !border-b-0" style={{backgroundColor: color}}>
                         total
                     </th>
                 </>)
             }),
-            <th key={`subt234`} className="!text-center">sub total</th>,
-            <th key={`cash345`} className="!text-center">cash</th>,
-            <th key={`upi34`} className="!text-center">online</th>,
-            <th key={`ttl354`} className="!text-center">total</th>,
-            <th key={`bal345`} className="!text-center">balance</th>,
+            <th key={`subt234`} className="!text-center !border-b-0">sub total</th>,
+            <th key={`cash345`} className="!text-center !border-b-0">cash</th>,
+            <th key={`upi34`} className="!text-center !border-b-0">online</th>,
+            <th key={`ttl354`} className="!text-center !border-b-0">total</th>,
+            <th key={`bal345`} className="!text-center !border-b-0">balance</th>,
         ])
 
 
@@ -485,7 +486,7 @@ export const Report = ({isLogged}) => {
                                 color: "black",
                                 minWidth: {xs: '100%', md: 'auto'},
                                 whiteSpace: 'nowrap'
-                            }}>Add Outstanding :</span>
+                            }}>Outstanding :</span>
                             <Switch
                                 size="lg"
                                 checked={addOutstanding}
@@ -530,7 +531,6 @@ export const Report = ({isLogged}) => {
                     }}
                 >
                     <Stack
-                        gap={0.5}
                         sx={{
                             padding: {xs: 1, md: 4},
                             m: {xs: 0, md: 2},
@@ -552,46 +552,68 @@ export const Report = ({isLogged}) => {
                         {
                             (report) ? (
                                 <>
-                                    <Stack direction="row" gap={2}>
-                                        <Divider className="w-full" orientation={"vertical"}
-                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                    <Table
+                                        variant="outlined"
+                                        color="neutral"
+                                        sx={{
+                                            width: "100%",
+                                            tableLayout: "auto",
+                                            borderCollapse: "collapse",
+                                            borderSpacing: 0,
+                                            "& th, & td": {
+                                                border: "1px solid #5f5f5f",
+                                                margin: "0px",
+                                                height: "unset",
+                                                whiteSpace: "break-spaces",
+                                            },
+                                        }}
+                                    >
+                                        <thead>
+                                        <tr className="!border-b-0">
+                                            <th className="!border-b-0">
                                         <span style={{fontWeight: "bold", color: "black"}}>
                                                   {
                                                       `Customer : ${titleCase(report.customer.user.name)}`
                                                   }
                                              </span>
-                                        <Divider className="w-full" orientation={"vertical"}
-                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                            </th>
+                                            <th className="!border-b-0">
                                         <span style={{fontWeight: "bold", color: "black"}}>
                                                   {
                                                       `Address : ${titleCase(report.customer.user.address)}`
                                                   }
                                              </span>
-                                        <Divider className="w-full" orientation={"vertical"}
-                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                            </th>
+                                            <th className="!border-b-0">
                                         <span style={{fontWeight: "bold", color: "black"}}>
                                                   {
                                                       `Phone No. : ${report.customer.user.phone_no}`
                                                   }
                                              </span>
-                                        <Divider className="w-full" orientation={"vertical"}
-                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                            </th>
+                                            <th className="!border-b-0">
                                         <span style={{fontWeight: "bold", color: "black"}}>
                                                   {
                                                       `Bill Date Range : ${startDate} to ${endDate}`
                                                   }
                                              </span>
-                                        <Divider className="w-full" orientation={"vertical"}
-                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
-                                        {addOutstanding ?? <span style={{fontWeight: "bold", color: "black"}}>
+                                            </th>
+
+                                            {addOutstanding ? <>
+                                                <th className="!border-b-0">
+                                            <span style={{fontWeight: "bold", color: "black"}}>
                                                   {
-                                                      `last Outstanding : ₹${decimalFix(apiOutstanding - (grandOrderTotal - (grandTotalOnline + grandTotalCash)))}`
+                                                      `Outstanding : ₹${decimalFix(apiOutstanding - (grandOrderTotal - (grandTotalOnline + grandTotalCash)))}`
                                                   }
                                         </span>
-                                        }
-                                        <Divider className="w-full" orientation={"vertical"}
-                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
-                                    </Stack>
+                                                    <Divider className="w-full" orientation={"vertical"}
+                                                             sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                                </th>
+                                            </> : <></>
+                                            }
+                                        </tr>
+                                        </thead>
+                                    </Table>
                                     <Table
                                         borderAxis="both"
                                         size="md"
@@ -625,7 +647,33 @@ export const Report = ({isLogged}) => {
                                         }
                                         </tbody>
                                     </Table>
-                                    <Divider sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                    <Table
+                                        variant="outlined"
+                                        color="neutral"
+                                        sx={{
+                                            width: "100%",
+                                            tableLayout: "auto",
+                                            borderCollapse: "collapse",
+                                            borderSpacing: 0,
+                                            "& th, & td": {
+                                                border: "1px solid #5f5f5f",
+                                                margin: "0px",
+                                                height: "unset",
+                                                whiteSpace: "break-spaces",
+                                            },
+                                        }}
+                                    >
+                                        <thead>
+                                        <tr className="!border-t-0">
+                                            <th className="!border-t-0 !border-b-1">
+                                                <span style={{fontWeight: "bold", color: "black"}}>
+
+                                                </span>
+                                            </th>
+                                        </tr>
+                                        </thead>
+                                    </Table>
+                                    <Divider sx={{backgroundColor: "#979797", opacity: 0.5, m: 1}}/>
                                     <Stack direction="row" gap={2}>
                                         <Divider className="w-full" orientation={"vertical"}
                                                  sx={{backgroundColor: "#979797", opacity: 0.5}}/>
@@ -1258,7 +1306,7 @@ function Heading() {
                </span>
             <span style={{color: "black", textAlign: "center"}}><i>Address:SHREE RAM DISTRIBUTOR SHOP NO. 3 OPP ESSAR PUMP , NEAR DADRA GARDEN VAPI SILVASSA ROAD DADRA , DADRA NAGAR HAVELI (U.T.), <br/> Phone: +917984240723, Email : jitenrpande@gmail.com
                </i></span>
-            <Divider sx={{backgroundColor: "#979797", m: 1}}/>
+            {/*<Divider sx={{backgroundColor: "#979797", m: 1}}/>*/}
         </>
     )
 }
