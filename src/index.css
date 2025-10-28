@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+@tailwind utilities;
 * {
     font-family: "Abril Fatface", cursive;
     font-family: "Caprasimo", cursive;
@@ -40,9 +41,6 @@ body {
     background: #9e9ea4;
 }
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 .mainBorder {
     /* border-radius: 32px 0px 0px 0px;
     -webkit-border-radius: 32px 0px 0px 0px;

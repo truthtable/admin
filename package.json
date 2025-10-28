@@ -43,6 +43,7 @@
     "react-router-dom": "^7.9.4",
     "react-to-print": "^3.2.0",
     "react-virtuoso": "^4.14.1",
+    "react-window": "^2.2.1",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

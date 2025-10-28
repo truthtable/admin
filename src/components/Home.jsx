@@ -7,6 +7,7 @@ import {Box, CircularProgress} from "@mui/joy";
 import {useDispatch, useSelector} from "react-redux";
 import {fetchCount} from "../state/Count";
 import {MdOutlineGasMeter} from "react-icons/md";
+import {RiMoneyRupeeCircleFill} from "react-icons/ri";
 
 const DashboardCard = ({
                            title,
@@ -15,9 +16,9 @@ const DashboardCard = ({
                            count,
                            loading
                        }) => (
-    <Link to={link} className="link shadow-lg">
+    <Link to={link} className="link shadow-lg mask-radial-closest-corner">
         <div className="card-inner">
-            <h3>{title}</h3>
+            <h3 className="font-bold">{title}</h3>
             <Icon className="card_icon"/>
         </div>
         <div>
@@ -62,6 +63,12 @@ const dashboardCards = [
         title: 'Delivery Boy',
         icon: BsPeopleFill,
         link: '/admin/readDeliveryBoy',
+        getCount: (counts) => counts?.courier_boy_count || 0
+    },
+    {
+        title: 'Expense',
+        icon: RiMoneyRupeeCircleFill,
+        link: '/admin/expense',
         getCount: (counts) => counts?.courier_boy_count || 0
     },
     {

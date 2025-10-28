@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import React, {useCallback, useEffect, useMemo, useState} from "react";
+import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {
     Autocomplete,
     Box,
@@ -167,8 +167,16 @@ export default function DeliveryHistory() {
         if (!userDataLoading && !users && !loading) {
             dispatch(fetchUser());
         }
-        if (!allGasData.isError && !allGasData.isLoading && !loading && !userDataLoading &&
-            (!allGasData.data || allGasData.data.data.length === 0)) {
+        if (
+            !allGasData.isError
+            && !allGasData.isLoading
+            && !loading
+            && !userDataLoading
+            && (
+                !allGasData.data
+                || allGasData.data.data.length === 0
+            )
+        ) {
             dispatch(fetchGasData());
         }
     }, [dateStart, dateEnd, customerId, deliverBoyId, loading, dispatch, userDataLoading, users, allGasData, descending]);
@@ -195,7 +203,7 @@ export default function DeliveryHistory() {
     }, []);
 
     const useDebouncedCallback = (fn, delay = 300) => {
-        const timer = React.useRef();
+        const timer = useRef();
         React.useEffect(() => () => clearTimeout(timer.current), []);
         return React.useCallback((...args) => {
             clearTimeout(timer.current);

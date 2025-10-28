@@ -784,14 +784,13 @@ export const Report = ({isLogged}) => {
                                         }
 
                                         const currentUrl = window.location.href;
-                                        const amount = grandTotal - grandTotalPaid;
                                         //const customerNumber = report.customer.user.phone_no;
                                         const customerNumber = "917984847918";
 
                                         dispatch(sendBillToCustomer(
                                             currentUrl,
                                             customerNumber,
-                                            amount.toString()
+                                            decimalFix(grandOrderTotal - (grandTotalOnline + grandTotalCash)).toString()
                                         ));
                                     }}
                                     sx={{
