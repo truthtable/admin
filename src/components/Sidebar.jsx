@@ -53,8 +53,13 @@ function Sidebar({openSidebarToggle, OpenSidebar}) {
                         // { label: "Gas Cylinders", path: "/admin/read", icon: <FcFullBattery className="icon" /> },
                         {label: "Bills & Reports", path: "/admin/report", icon: <FcDocument className="icon"/>},
                         // { label: "Setting", path: "/admin/", icon: <FcRating className="icon" /> },
-                    ].map((data, index) => (
-                        <Link to={data.path} key={index}>
+                    ].map((data, index) => {
+                        if (!(process.env.NODE_ENV === 'development')) {
+                            if (data.label === 'Expense') {
+                                return null;
+                            }
+                        }
+                        return (<Link to={data.path} key={index}>
                             <li className="sidebar-list-item">
                                 {data.icon}
                                 <Box
@@ -72,8 +77,8 @@ function Sidebar({openSidebarToggle, OpenSidebar}) {
                                     }}
                                 >{data.label}</Box>
                             </li>
-                        </Link>
-                    ))
+                        </Link>)
+                    })
                 }
             </ul>
         </aside>

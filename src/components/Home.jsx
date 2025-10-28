@@ -107,16 +107,24 @@ export const Home = () => {
                 <h3 style={{color: 'white'}}>Admin Dashboard</h3>
             </div>
             <div className="main-cards">
-                {dashboardCards.map(({title, icon, link, getCount}) => (
-                    <DashboardCard
-                        key={link}
-                        title={title}
-                        icon={icon}
-                        link={link}
-                        count={getCount(counts)}
-                        loading={isLoading}
-                    />
-                ))}
+                {dashboardCards.map(({title, icon, link, getCount}) => {
+                    if (!(process.env.NODE_ENV === 'development')) {
+                        console.log("Running in production mode");
+                        if (title === 'Expense') {
+                            return null;
+                        }
+                    }
+                    return (
+                        <DashboardCard
+                            key={link}
+                            title={title}
+                            icon={icon}
+                            link={link}
+                            count={getCount(counts)}
+                            loading={isLoading}
+                        />
+                    )
+                })}
             </div>
         </Box>
     );
