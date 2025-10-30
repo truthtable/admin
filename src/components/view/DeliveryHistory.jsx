@@ -321,7 +321,7 @@ export default function DeliveryHistory() {
         const KGS = new Set();
         let KGS_COUNT = {}
 
-        if (!deliveries || !allGasData.data || allGasData.data.data.length === 0 || !users || allGasData.isLoading || loading || userDataLoading) {
+        if (!deliveries || !allGasData.data || allGasData.data?.data?.length === 0 || !users || allGasData.isLoading || loading || userDataLoading) {
             return {
                 columns: cols,
                 csvData: [],

@@ -490,6 +490,9 @@ export const GasEditUi = ({
                         placeholder={
                             (customerId === null) ? "Select Customer" : CUSTOMER_LIST.find(c => c.id === customerId).label
                         }
+                        defaultValue={
+                            CUSTOMER_LIST.find(c => c.id === customerId)
+                        }
                         options={CUSTOMER_LIST}
                         getOptionLabel={(option) => option.label}
                         isOptionEqualToValue={(option, value) => option.id === value.id}
@@ -511,6 +514,10 @@ export const GasEditUi = ({
                             id: courierId,
                             label: user.name,
                         }))}
+                        defaultValue={deliveryBoyId != null ? {
+                            id: deliveryBoyId,
+                            label: DELIVERY_BOY_LIST.get(deliveryBoyId)?.name ?? ""
+                        } : null}
                         getOptionLabel={(option) => option.label}
                         isOptionEqualToValue={(option, value) => option.id === value.id}
                         onChange={(_, value) => handleDeliveryBoyChange(value ? value.id : null)}
