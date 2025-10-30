@@ -497,6 +497,7 @@ export const GasEditUi = ({
                         sx={{
                             fontWeight: 'bold',
                         }}
+                        required={true}
                     />
                 </Sheet>
 
@@ -516,6 +517,7 @@ export const GasEditUi = ({
                         sx={{
                             fontWeight: 'bold',
                         }}
+                        required={true}
                     />
                 </Sheet>
                 <FormLabel>Amount</FormLabel>
