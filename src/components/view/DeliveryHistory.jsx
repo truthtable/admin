@@ -37,6 +37,7 @@ import MapObjectManager from "../class/MapArrayManager.jsx";
 import {MdCallMade, MdCallReceived, MdEdit} from "react-icons/md";
 import ExportODS from "../ExportODS.jsx";
 import {FaArrowDown} from "react-icons/fa";
+import {addNewGasDeliveryReset} from "../../redux/delivery/gasEditDelivery.js";
 
 const DeliveryRow = React.memo(function DeliveryRow({row}) {
     return row;
@@ -44,6 +45,8 @@ const DeliveryRow = React.memo(function DeliveryRow({row}) {
 export default function DeliveryHistory() {
     const dispatch = useDispatch();
     const deliveriesData = useSelector((state) => state.deliverys);
+    const deliveriesEdit = useSelector((state) => state.modifyGasDelivery);
+    //console.log(deliveriesEdit)
     const deliveries = deliveriesData.deliveries;
     const loading = deliveriesData.loading;
     const updateSuccess = deliveriesData.updateSuccess;
@@ -272,6 +275,14 @@ export default function DeliveryHistory() {
         loadData({force: true});
     }, [customerId, deliverBoyId, dateStart, dateEnd, descending]);
 
+    useEffect(() => {
+        // console.log(deliveriesEdit)
+        if (deliveriesEdit.isSuccessful) {
+            //console.log("Reloading due to successful delivery edit/add");
+            loadData({force: true});
+            dispatch(addNewGasDeliveryReset())
+        }
+    }, [deliveriesEdit]);
 
     useEffect(() => {
         if (gasDeliverysSucsess) {
@@ -651,7 +662,7 @@ export default function DeliveryHistory() {
             <Box
                 sx={{
                     width: "100%",
-                    display: (allGasData.isLoading || loading || userDataLoading) ? "flex" : "none",
+                    display: (allGasData.isLoading || loading || userDataLoading || deliveriesEdit.isLoading) ? "flex" : "none",
                     justifyContent: "center",
                     alignItems: "center",
                 }}

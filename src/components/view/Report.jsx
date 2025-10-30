@@ -34,7 +34,6 @@ const PURCHASE = "purchase";
 
 export const Report = ({isLogged}) => {
 
-
     const currentUrl = window.location.href;
     const hashIndex = currentUrl.indexOf('#');
     const hashPart = currentUrl.substring(hashIndex + 1);

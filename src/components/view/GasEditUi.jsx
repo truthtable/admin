@@ -3,6 +3,7 @@ import {
     Autocomplete,
     Box,
     Button,
+    Card,
     Chip,
     Divider,
     Input,
@@ -26,7 +27,6 @@ import {useDispatch} from "react-redux";
 import {TbCylinder} from "react-icons/tb";
 import {MdEdit, MdKeyboardArrowRight} from "react-icons/md";
 import {RiDeleteBinFill} from "react-icons/ri";
-import {axiosInstance as axios, URL as API_URL} from "../../services/Api.jsx";
 import {ImCross} from "react-icons/im";
 import {deleteDeliveryById} from "../../redux/actions/deliveryActions.js";
 import {updateOrCreateCustomerPayments} from "../../redux/customerPaymentsUpdateOrCreate.js";
@@ -34,6 +34,8 @@ import {addGasDelivery, deleteGasDelivery, updateGasDelivery} from "../../redux/
 import {updateDelivery} from "../../state/UpdateDelivery.jsx";
 import DateTimePickerField from "../DateTimePickerField.tsx";
 import FormLabel from "@mui/joy/FormLabel";
+import {addNewGasDelivery} from "../../redux/delivery/gasEditDelivery.js";
+import {decimalFix, toNumber} from "../../Tools.jsx";
 
 export const GasEditUi = ({
                               createdAt,
@@ -105,6 +107,7 @@ export const GasEditUi = ({
     const [onlineAmount, setOnlineAmountState] = useState(onlinePayment);
     let online = 0
     let cash = 0
+    let grandTotal = 0;
     const setOnlineAmount = (amount) => {
         online = Number(amount)
         setOnlineAmountState({id: onlinePayment.id, amount: Number(amount), method: onlinePayment.method})
@@ -190,9 +193,9 @@ export const GasEditUi = ({
 
         // Check existing combinations
         const combinations = [
+            {nc: false, is_empty: false},
             {nc: true, is_empty: false},
             {nc: false, is_empty: true},
-            {nc: false, is_empty: false}
         ];
 
         // Find which combination is available
@@ -363,7 +366,6 @@ export const GasEditUi = ({
             }
         ]
         if (isAddNewDeliveryModal) {
-            const api_url = API_URL + "api/storeList";
             const tDeliveryGasList = deliveryGasList.map((gas) => {
                 //console.log(gas);
                 return {
@@ -385,36 +387,23 @@ export const GasEditUi = ({
                 }
             })
             try {
-                const linuxEpoch = new Date(timeStamp).getTime() / 1000;
-                const mPayload = {
-                    courier_boy_id: (deliverBoyId),
-                    customer_id: Number(customerId),
+                dispatch(addNewGasDelivery({
+                    deliverBoyId: deliverBoyId,
+                    customerId: customerId,
                     delivery_gas_list: tDeliveryGasList,
                     received_gas_list: tMtGasList,
                     payments: tempPayment,
-                    newBalance: 0,
-                    payment_method: 0,
-                    received_amount: 0,
-                    created_at: linuxEpoch,
-                }
-                //console.log(mPayload);
-                let success = false;
-                const response = await axios().post(api_url, mPayload);
-                console.log("API Response:", response.data);
-                success = response.data.isSuccessfull;
-                if (success) {
-                    //reset data when done
-                    setCustomerId(null);
-                    setDeliverBoyId(null);
-                    setChecked(false);
-                    setOnlineAmountState({id: null, amount: 0, method: null});
-                    setCashAmountState({id: null, amount: 0, method: null});
-                    setGasData(new Map());
-                    setDeletedGasData(new Map());
-                    setEditName("");
-                    setEdit(false);
-                    onSuccess();
-                }
+                    timeStamp: timeStamp
+                }))
+                setCustomerId(null);
+                setDeliverBoyId(null);
+                setChecked(false);
+                setOnlineAmountState({id: null, amount: 0, method: null});
+                setCashAmountState({id: null, amount: 0, method: null});
+                setGasData(new Map());
+                setDeletedGasData(new Map());
+                setEditName("");
+                setEdit(false);
             } catch (error) {
                 console.error("API Error:", error);
             }
@@ -531,7 +520,7 @@ export const GasEditUi = ({
                 </Sheet>
                 <FormLabel>Amount</FormLabel>
                 <Sheet>
-                    <Stack direction={"row"} gap={1} alignContent={"center"} sx={{mb: 1}}>
+                    <Stack direction={"row"} gap={1} alignContent={"center"} sx={{mb: 1}} alignItems="center">
                         <Chip
                             size="lg"
                             color="success"
@@ -574,13 +563,25 @@ export const GasEditUi = ({
                                 maxWidth: "128px",
                             }}
                         />
+                        <Chip
+                            size="lg"
+                            color="primary"
+                            sx={{
+                                fontWeight: "bold"
+                            }}
+                        >
+                            Total :
+                        </Chip>
+                        <span className="b">
+                           ₹{decimalFix(toNumber(onlineAmount.amount) + toNumber(cashAmount.amount))}
+                        </span>
                     </Stack>
                     {
                         !isOutstanding ? (<>
                             <span className="b">&nbsp;Gas List</span>
                             <List
                                 sx={{
-                                    backgroundColor: "#FFF1DB"
+                                    backgroundColor: "#FFF1DB",
                                 }}
                             >
                                 {
@@ -667,6 +668,27 @@ export const GasEditUi = ({
                                     </ListItemContent>
                                 </ListItem>
                             </List>
+                            <Card
+                                color="warning"
+                                invertedColors
+                                orientation="vertical"
+                                size="sm"
+                                variant="soft"
+                                sx={{
+                                    display: "flex",
+                                    overflow: "auto",
+                                    p: 0,
+                                    mt: 0,
+                                    maxHeight: "90vh",
+                                    borderTopRightRadius: 0,
+                                    borderTopLeftRadius: 0,
+                                }}>
+                                <List>
+                                    {
+                                        glist
+                                    }
+                                </List>
+                            </Card>
                             <span className="b">&nbsp;Correction</span>
                             <Stack direction="row" gap={1} alignContent={"center"} sx={{mb: 1}}>
                                 <Switch
@@ -698,18 +720,41 @@ export const GasEditUi = ({
                             </Stack>
                         </>) : ""
                     }
-
                 </Sheet>
-                <Sheet sx={{
-                    overflow: "auto",
-                    maxHeight: "90vh",
-                }}>
-                    <List>
-                        {
-                            glist
-                        }
-                    </List>
-                </Sheet>
+                <Card size="sm" className="mb-1 !p-1 !text-black">
+                    <Stack direction="column" spacing={.5}>
+                        {(() => {
+                            const l = [...gasData.values()].map((data) => {
+                                if (data.is_empty) {
+                                    return
+                                }
+                                let total = toNumber(data.gas_price) * toNumber(data.quantity);
+                                grandTotal += total;
+                                return (<span className="!text-black font-bold" key={"ttle_gas_edit" + data.id}>
+                                    {
+                                        data.nc ? "NC " : ""
+                                    }
+                                    {
+                                        (deleveryGasEditUiGasList.find((gas) => gas.props.value == data.gas_id).props.children)
+                                    }
+                                    {" - "}
+                                    Total :
+                                    {" "}
+                                    ₹{decimalFix(total)}
+                                </span>)
+                            })
+                            return (l);
+                        })()}
+                        <Divider orientation="horizontal"/>
+                        <span className="!text-black font-bold">
+                        Sub Total : ₹{decimalFix(grandTotal)}
+                        </span>
+                        <Divider orientation="horizontal"/>
+                        <span className="!text-black font-bold">
+                        Balance : ₹{decimalFix(grandTotal - (toNumber(onlineAmount.amount) + toNumber(cashAmount.amount)))}
+                        </span>
+                    </Stack>
+                </Card>
                 <Stack direction="row" gap={1} justifyContent={"flex-end"} alignItems={"flex-end"}>
                     <Box
                         sx={{
