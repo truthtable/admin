@@ -623,6 +623,18 @@ export default function DeliveryHistory() {
         return h;
     }, [columns]);
 
+    let customerName = ""
+    if (customerId !== null) {
+        const customerObj = CUSTOMER_LIST.find(cust => cust.id === customerId);
+        if (customerObj) {
+            customerName = titleCase(customerObj.label);
+            //replace " " with "_"
+            customerName = customerName.replace(/ /g, "_");
+            //remove special characters
+            customerName = customerName.replace(/[^\w\s]/gi, '');
+            customerName = customerName + "_";
+        }
+    }
     return (
         <Stack
             sx={{
@@ -728,8 +740,8 @@ export default function DeliveryHistory() {
                                     <ExportODS
                                         headers={headers}
                                         data={csvData}
-                                        filename={`deliveries_${formatDateToDDMMYY(dateStart)}_TO_${formatDateToDDMMYY(dateEnd)}`}
-                                        sumColumns={['sub total', 'total payment', 'balance']}
+                                        filename={`${customerName}Deliveries_${formatDateToDDMMYY(dateStart)}_TO_${formatDateToDDMMYY(dateEnd)}`}
+                                        sumColumns={['kg', 'mt', 'sub total', 'total payment', 'balance']}
                                     >
                                         <Stack
                                             direction="row"

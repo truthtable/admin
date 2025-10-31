@@ -27,17 +27,18 @@ const ExportODS = (props) => {
 
         // Find column indices and add sum formulas
         columnsToSum.forEach(columnName => {
-            const columnIndex = props.headers.findIndex(h =>
-                (h.label || h).toLowerCase().includes(columnName.toLowerCase())
-            );
+            props.headers.forEach((header, columnIndex) => {
+                const headerText = (header.label || header).toLowerCase();
 
-            if (columnIndex >= 0) {
-                const col = XLSX.utils.encode_col(columnIndex);
-                ws[`${col}${lastRowIndex + 1}`] = {
-                    t: 'n',
-                    f: `SUM(${col}2:${col}${lastRowIndex})`
-                };
-            }
+                // Check if the header contains the column name
+                if (headerText.includes(columnName.toLowerCase())) {
+                    const col = XLSX.utils.encode_col(columnIndex);
+                    ws[`${col}${lastRowIndex + 1}`] = {
+                        t: 'n',
+                        f: `SUM(${col}2:${col}${lastRowIndex})`
+                    };
+                }
+            });
         });
 
         // Update range to include formula row
