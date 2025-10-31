@@ -18,7 +18,6 @@ const ExportODS = (props) => {
 
         // Add formula row at the end
         const lastRowIndex = wsData.length; // 0-indexed
-
         // Add "Total" text in the first column of the formula row
         ws[`A${lastRowIndex + 1}`] = {
             t: 's',
