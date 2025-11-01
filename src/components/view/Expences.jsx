@@ -62,10 +62,32 @@ export default function Expences() {
 
     console.log({expenses, expenceLoading, expenceError});
 
-    const totalExpences = (expenses) ? expenses.reduce((acc, expence) => acc + expence.amount, 0) : 0;
+    const totalExpences = (expenses) ? expenses
+        .filter((expence) => toNumber(expence.user_id) == toNumber(USER_ID))
+        .filter((expence) => {
+            // Filter by date range
+            const expenceDate = new Date(expence.created_at);
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            // Set time to the end of the day for end date
+            end.setHours(23, 59, 59, 999);
+            return expenceDate >= start && expenceDate <= end;
+        })
+        .reduce((acc, expence) => acc + expence.amount, 0) : 0;
     //console.log(totalExpences);
     console.log(expenses, USER_ID);
-    let onlySelectedDeliveryBoy = (expenses) ? expenses.filter((expence) => toNumber(expence.user_id) == toNumber(USER_ID)) : null;
+    let onlySelectedDeliveryBoy = (expenses) ? expenses
+            .filter((expence) => toNumber(expence.user_id) == toNumber(USER_ID))
+            .filter((expence) => {
+                // Filter by date range
+                const expenceDate = new Date(expence.created_at);
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                // Set time to the end of the day for end date
+                end.setHours(23, 59, 59, 999);
+                return expenceDate >= start && expenceDate <= end;
+            })
+        : null;
 
     const get = () => {
         dispatch(fetchExpences({
