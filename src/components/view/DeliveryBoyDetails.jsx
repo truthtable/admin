@@ -226,7 +226,7 @@ export default function DeliveryBoyDetails() {
             </Modal>
         )
     }
-
+    console.log(deliveryBoyData)
     return (
         <div
             style={{
@@ -311,7 +311,7 @@ export default function DeliveryBoyDetails() {
 
                             <td>
                                 <Link
-                                    to={"/admin/expence?user_id=" + deliveryBoyData[index].id + "&user_name=" + deliveryBoyData[index].username + "&start_date=" + startDate + "&end_date=" + endDate}
+                                    to={"/admin/expence?user_id=" + deliveryBoyData[index].id + "&user_name=" + deliveryBoyData[index].user?.name + "&start_date=" + startDate + "&end_date=" + endDate}
                                 >
                                     <Button
                                         variant="soft"

@@ -4,6 +4,7 @@ import {fetchExpences, updateExpence} from '../../redux/actions/expencesActions'
 import {Box, Button, Divider, Input, LinearProgress, Stack, Table} from '@mui/joy';
 import {FcDown} from 'react-icons/fc';
 import gasServices from '../../services/gas-services';
+import {titleCase, toNumber} from "../../Tools.jsx";
 
 export default function Expences() {
     //get user_id from url
@@ -64,7 +65,7 @@ export default function Expences() {
     const totalExpences = (expenses) ? expenses.reduce((acc, expence) => acc + expence.amount, 0) : 0;
     //console.log(totalExpences);
     console.log(expenses, USER_ID);
-    let onlySelectedDeliveryBoy = (expenses) ? expenses.filter((expence) => expence.user_id == USER_ID) : null;
+    let onlySelectedDeliveryBoy = (expenses) ? expenses.filter((expence) => toNumber(expence.user_id) == toNumber(USER_ID)) : null;
 
     const get = () => {
         dispatch(fetchExpences({
@@ -172,7 +173,7 @@ export default function Expences() {
                 </tr>
                 </thead>
                 <tbody>
-                {onlySelectedDeliveryBoy.map((expence) => (
+                {onlySelectedDeliveryBoy?.map((expence) => (
                     <tr key={expence.id}
                         style={{
                             backgroundColor: expence.error ? "#ffe8e8" : "white"
@@ -209,7 +210,7 @@ export default function Expences() {
                                    style={{
                                        color: expence.error ? "red" : "black"
                                    }}
-                            >{expence.reason}</span></Box>
+                            >{titleCase(expence.reason)}</span></Box>
                         </td>
                         <td style={{fontWeight: "bold"}}>
                             <Box
