@@ -47,7 +47,19 @@ export const Report = ({isLogged}) => {
 
     const contentRef = useRef();
     const reactToPrintFn = useReactToPrint({contentRef})
-
+    const reactToPrintDwnFn = useReactToPrint({
+        contentRef,
+        documentTitle: 'Report',
+        print: async (printIframe) => {
+            const document = printIframe.contentDocument;
+            if (document) {
+                const html = document.documentElement.outerHTML;
+                // For PDF, you'll need a library like html2pdf or jsPDF
+                const html2pdf = (await import('html2pdf.js')).default;
+                html2pdf().from(html).save('report.pdf');
+            }
+        }
+    });
     const [selected, setSelected] = React.useState(() => (
         orderData?.orderId ? PURCHASE : CUSTOMER
     ));
@@ -77,6 +89,7 @@ export const Report = ({isLogged}) => {
     if (isBillSuccess) {
         alert("Bill sent successfully");
     }
+
 
     const Customer = () => {
         const [selectedCustomer, setSelectedCustomer] = React.useState(Number(searchParams.get('customer')) || null);
@@ -168,6 +181,8 @@ export const Report = ({isLogged}) => {
         const apiTotalBill = report?.totalPrice || 0;
         let apiOutstanding = apiTotalBill - apiTotalPaid
 
+        console.log(report?.deliveries)
+
         try {
             const sortedDeliveries = [...report.deliveries].sort((a, b) => {
                 const dateA = new Date(a.created_at);
@@ -185,6 +200,12 @@ export const Report = ({isLogged}) => {
             // const sortedDeliveries = [...report.deliveries].map((d) = {
             //     return
             // })
+            if (sortedDeliveries.length === 1) {
+                sortedDeliveries[0].gas_deliveries.forEach(gas => {
+                    KGS.add(gas.gas_cylinder.kg);
+                });
+            }
+
             sortedDeliveries.forEach((delivery, i) => {
                 const correction = delivery.correction;
                 const gasDataMap = new MapObjectManager();
@@ -559,6 +580,7 @@ export const Report = ({isLogged}) => {
                                             tableLayout: "auto",
                                             borderCollapse: "collapse",
                                             borderSpacing: 0,
+                                            mt: 1,
                                             "& th, & td": {
                                                 border: "1px solid #5f5f5f",
                                                 margin: "0px",
@@ -811,19 +833,21 @@ export const Report = ({isLogged}) => {
                                 width: {xs: '100%', md: 'auto'}
                             }}
                         >
-                            {"Download"}
+                            {"Print"}
                         </Button>
                         <Divider sx={{backgroundColor: "#979797", m: 1, opacity: 0.5}}/>
-                        {/*<Button*/}
-                        {/*    onClick={() => {*/}
-                        {/*        downloadPDFContent(contentRef)*/}
-                        {/*    }}*/}
-                        {/*    sx={{*/}
-                        {/*        width: {xs: '100%', md: 'auto'}*/}
-                        {/*    }}*/}
-                        {/*>*/}
-                        {/*    {"Download Bill"}*/}
-                        {/*</Button>*/}
+                        <Button
+                            onClick={() => {
+                                reactToPrintDwnFn()
+                                // downloadPDFContent()
+                                //download file as PDF
+                            }}
+                            sx={{
+                                width: {xs: '100%', md: 'auto'}
+                            }}
+                        >
+                            {"Download Bill"}
+                        </Button>
                     </div>
                 </Stack>
             </Stack>

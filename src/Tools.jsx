@@ -168,11 +168,10 @@ export const randomLightColor = (seed) => {
     };
     const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
     const p = 2 * l - q;
-    const r = hue2rgb(p, q, h + 1 / 3);
-    const g = hue2rgb(p, q, h);
-    const b = hue2rgb(p, q, h - 1 / 3);
-    const toHex = (n) => Math.round(n * 255).toString(16).padStart(2, '0');
-    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    const r = Math.round(hue2rgb(p, q, h + 1 / 3) * 255);
+    const g = Math.round(hue2rgb(p, q, h) * 255);
+    const b = Math.round(hue2rgb(p, q, h - 1 / 3) * 255);
+    return `rgb(${r}, ${g}, ${b})`;
 };
 
 export const formatDateToDDMMYY_HHMM = (dateString) => {

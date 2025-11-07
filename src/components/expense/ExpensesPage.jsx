@@ -10,6 +10,7 @@ export default function ExpensesPage() {
 
     const {userDataLoading, users} = useSelector((state) => state.user);
     const expence = useSelector((state) => state.expence);
+    const [expenseType, setExpenseType] = React.useState('all');
     //console.log(users)
     useEffect(() => {
         if ((expence.expenses === null) && !expence.expenceLoading) {
@@ -21,7 +22,7 @@ export default function ExpensesPage() {
     },);
     let rows = [];
     //let courierNames = {};
-    rows = expence.expenses?.map((expense) => {
+    rows = expence?.expenses?.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).map((expense) => {
         const courierId = expense.user_id;
         const courierName = users.find((user) => user.courier_boys[0]?.id === courierId)?.name
         return (
@@ -42,15 +43,10 @@ export default function ExpensesPage() {
             <Select
                 placeholder="Select Expense Type"
                 className="!text-black"
+                defaultValue={expenseType}
+                onChange={(e) => setExpenseType(e.target.value)}
             >
-                <Option value="office">Office Expenses</Option>
-                <Option value="expense">Expenses</Option>
-            </Select>
-            <span className="font-bold text-black">Expenses By :</span>
-            <Select
-                placeholder="Select Expenses By"
-                className="!text-black"
-            >
+                <Option value="all">All Expenses</Option>
                 <Option value="office">Office Expenses</Option>
                 <Option value="expense">Expenses</Option>
             </Select>

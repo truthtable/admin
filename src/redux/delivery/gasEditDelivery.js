@@ -61,6 +61,12 @@ export const addNewGasDelivery = (deliveryData) => async (dispatch) => {
         dispatch(gasEditDeliverySlice.actions.deliveryFailed(e.message));
     }
 }
-
+export const updateGasDelivery = (deliveryId, deliveryData) => async (dispatch) => {
+    try {
+    } catch (error) {
+        console.log(error);
+        dispatch(gasEditDeliverySlice.actions.deliveryFailed(error.message));
+    }
+}
 export default gasEditDeliverySlice.reducer;
 
