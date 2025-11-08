@@ -565,6 +565,7 @@ export const GasEditUi = ({
                         <Input
                             startDecorator={<span>₹</span>}
                             type="number"
+                            disabled={isOutstanding}
                             value={
                                 cashAmount.amount === null ? "" : cashAmount.amount
                             }
