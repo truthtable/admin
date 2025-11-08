@@ -38,6 +38,7 @@ import {MdCallMade, MdCallReceived, MdEdit} from "react-icons/md";
 import ExportODS from "../ExportODS.jsx";
 import {FaArrowDown} from "react-icons/fa";
 import {addNewGasDeliveryReset} from "../../redux/delivery/gasEditDelivery.js";
+import {resetCustomerPaymentsUpdateOrCreateSuccess} from "../../redux/customerPaymentsUpdateOrCreate.js";
 
 const DeliveryRow = React.memo(function DeliveryRow({row}) {
     return row;
@@ -46,7 +47,8 @@ export default function DeliveryHistory() {
     const dispatch = useDispatch();
     const deliveriesData = useSelector((state) => state.deliverys);
     const deliveriesEdit = useSelector((state) => state.modifyGasDelivery);
-    //console.log(deliveriesEdit)
+    const customerPaymentsUpdateOrCreate = useSelector((state) => state.customerPaymentsUpdateOrCreate);
+    //console.log(customerPaymentsUpdateOrCreate)
     const deliveries = deliveriesData.deliveries;
     const loading = deliveriesData.loading;
     const updateSuccess = deliveriesData.updateSuccess;
@@ -300,6 +302,13 @@ export default function DeliveryHistory() {
         }
     }, [updateSuccess, dispatch]);
 
+    useEffect(() => {
+        if (customerPaymentsUpdateOrCreate.isCustomerPaymentsUpdateOrCreateSuccess) {
+            dispatch(resetCustomerPaymentsUpdateOrCreateSuccess())
+            loadData({force: true});
+        }
+    }, [customerPaymentsUpdateOrCreate, dispatch]);
+
     const handleSuccess = useCallback(() => {
         loadData({force: true});
     }, [loadData]);
@@ -548,12 +557,12 @@ export default function DeliveryHistory() {
                                     }
                                 </DataCell>
                                 <DataCell correction={correction} key={`delivery-${i}-date`}>{date}</DataCell>
-                                <DataCell correction={correction} key={`delivery-${i}-name`}>{customerName}</DataCell>
-                                <DataCell colspan={temptKgsList.length} correction={correction}>
+                                <DataCell colspan={temptKgsList.length + 1} correction={correction}
+                                          key={`delivery-${i}-name`}>{customerName} &nbsp;|&nbsp;
                                     Old Balance {toNumber(oldBal)} &nbsp;|&nbsp;New
                                     Balance {-1 * toNumber(newBal)}
                                 </DataCell>
-                                <DataCell correction={correction} colspan={3} key={`delivery-${i}-sub`}>-</DataCell>
+                                <DataCell correction={correction} colspan={3} key={`delivery-${i}-sub`}></DataCell>
                                 <DataCell correction={correction}
                                           key={`delivery-${i}-received`}>{displayReceived}</DataCell>
                                 <DataCell correction={correction} key={`delivery-${i}-balance`}>{balance}</DataCell>
@@ -754,7 +763,7 @@ export default function DeliveryHistory() {
             <Box
                 sx={{
                     width: "100%",
-                    display: (allGasData.isLoading || loading || userDataLoading || deliveriesEdit.isLoading) ? "flex" : "none",
+                    display: (allGasData.isLoading || loading || userDataLoading || deliveriesEdit.isLoading || customerPaymentsUpdateOrCreate.isCustomerPaymentsUpdateOrCreateLoading) ? "flex" : "none",
                     justifyContent: "center",
                     alignItems: "center",
                 }}
@@ -1049,7 +1058,7 @@ export const DataCell = React.memo(({
                     color: correction ? "red" : "black",
                     fontWeight: "bold",
                     display: "flex",
-                    alignItems: "center",
+                    alignItems: (colspan > 0) ? "start" : "center",
                     justifyContent: "center",
                     flexDirection: "column",
                 }}

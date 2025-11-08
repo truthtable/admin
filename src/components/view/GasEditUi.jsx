@@ -99,7 +99,7 @@ export const GasEditUi = ({
         } else if (payment.method == 1) {
             onlinePayment = {
                 id: payment.id,
-                amount: Number(payment.amount),
+                amount: Number(payment.amount) * (isOutstanding ? -1 : 1),
                 method: payment.method
             }
         }
@@ -354,7 +354,7 @@ export const GasEditUi = ({
                 customer_id: customerId,
                 courier_boy_id: deliverBoyId,
                 id: onlinePayment.id,
-                amount: onlineAmount.amount,
+                amount: onlineAmount.amount * (isOutstanding ? -1 : 1),
                 method: 1
             },
             {
