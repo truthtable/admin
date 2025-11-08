@@ -56,6 +56,7 @@ const ViewCustomer = () => {
         customerPaymentsUpdateOrCreateErrorMessage,
         isCustomerPaymentsUpdateOrCreateSuccess
     } = useSelector((state) => state.customerPaymentsUpdateOrCreate);
+    console.log(isCustomerPaymentsUpdateOrCreateSuccess)
     const c = useSelector((state) => state.localCustomers);
     const localCustomers = c.customers || [];
     //console.log({c, localCustomers})
@@ -114,12 +115,15 @@ const ViewCustomer = () => {
             dispatch(fetchGas())
         }
         if (isCustomerPaymentsUpdateOrCreateSuccess) {
+            //reload the page
+            console.log("reload page after payment update/create");
+            dispatch(fetchCustomerData());
             dispatch(customerPaymentsUpdateOrCreateReset())
         }
         if (updateCustomer.isSuccessful) {
             dispatch(fetchCustomerData());
         }
-    }, [customerData, gasList, gasLoading, dispatch, updateCustomer]);
+    }, [customerData, gasList, gasLoading, dispatch, updateCustomer, isCustomerPaymentsUpdateOrCreateSuccess]);
     useEffect(() => {
         // firebase update
         const unsubscribe = gasServices.listenDataChange(() => {
@@ -741,6 +745,13 @@ function Balance({data}) {
     const dispatch = useDispatch();
     const [showModal, setShowModal] = useState(false);
     const [amount, setAmount] = useState(0);
+    const [created_at, setCreatedAt] = useState(() => new Date().toISOString());
+    const toLocalInputValue = (iso = new Date().toISOString()) => {
+        const d = new Date(iso);
+        const tzOffsetMs = d.getTimezoneOffset() * 60000;
+        return new Date(d - tzOffsetMs).toISOString().slice(0, 16); // YYYY-MM-DDTHH:mm
+    };
+    console.log(data)
     if (showModal) {
         return (
             <Modal
@@ -755,11 +766,27 @@ function Balance({data}) {
                         spacing={1}
                         alignItems="start"
                         justifyContent="flex-start">
-                        <ModalClose variant="outlined"/>
+                        {/*<ModalClose variant="outlined"/>*/}
+                        <Typography className="text-blue-950 italic font-bold">{
+                            data.name + " - " + data.address
+                        }</Typography>
+                        <Divider className="mb-10"/>
                         <Typography className="text-black font-bold">Adjust Balance</Typography>
                         <Divider className="mb-10"/>
                         <span className="text-black font-bold">Balance</span>
                         <pre className="text-black font-bold">{decimalFix(data.totalBalance, true)}</pre>
+                        <Divider className="mb-10"/>
+                        <span className="text-black font-bold">Date</span>
+                        <Input
+                            size="sm"
+                            type="datetime-local"
+                            className="text-black font-bold"
+                            value={toLocalInputValue(created_at)}
+                            onChange={(e) => {
+                                // e.target.value is local 'YYYY-MM-DDTHH:mm'; convert to ISO (UTC)
+                                setCreatedAt(new Date(e.target.value).toISOString());
+                            }}
+                        />
                         <span className="text-black font-bold">Outstanding Balance</span>
                         <Input
                             size="sm"
@@ -786,16 +813,21 @@ function Balance({data}) {
                             </Button>
                             <Button
                                 onClick={() => {
-                                    let amt = Number(amount);
-                                    amt = amt * -1;
-                                    dispatch(
-                                        adjustBalance({
-                                            customerId: data.id,
-                                            amount: amt,
-                                            oldAmount: data.totalBalance,
-                                        })
-                                    );
-                                    setShowModal(false);
+                                    if (confirm("Confirm balance adjustment.")) {
+                                        let amt = Number(amount);
+                                        amt = amt * -1;
+                                        //convert created_at to epoch time
+                                        const epochTime = Math.floor(new Date(created_at).getTime() / 1000);
+                                        dispatch(
+                                            adjustBalance({
+                                                customerId: data.id,
+                                                amount: amt,
+                                                oldAmount: data.totalBalance,
+                                                created_at: epochTime,
+                                            })
+                                        );
+                                        setShowModal(false);
+                                    }
                                 }}
                             >
                                 Save

@@ -47,8 +47,9 @@ export const GasEditUi = ({
                               deliveryBoyId = null,
                               payments,
                               correction,
+                              isAdmin = false,
                               openEdit,
-                              isOutstanding,
+                              isOutstanding = false,
                               gasList,
                               CUSTOMER_LIST,
                               DELIVERY_BOY_LIST,
@@ -487,6 +488,7 @@ export const GasEditUi = ({
                 <Sheet className="mb-3">
                     <FormLabel>Customer</FormLabel>
                     <Autocomplete
+                        disabled={isOutstanding}
                         placeholder={
                             (customerId === null) ? "Select Customer" : CUSTOMER_LIST.find(c => c.id === customerId).label
                         }
@@ -504,7 +506,7 @@ export const GasEditUi = ({
                     />
                 </Sheet>
 
-                <Sheet className="mb-3">
+                {isOutstanding ? <></> : (<Sheet className="mb-3">
                     <FormLabel>Delivery Boy</FormLabel>
                     <Autocomplete
                         placeholder={
@@ -526,7 +528,7 @@ export const GasEditUi = ({
                         }}
                         required={true}
                     />
-                </Sheet>
+                </Sheet>)}
                 <FormLabel>Amount</FormLabel>
                 <Sheet>
                     <Stack direction={"row"} gap={1} alignContent={"center"} sx={{mb: 1}} alignItems="center">
@@ -537,7 +539,7 @@ export const GasEditUi = ({
                                 fontWeight: "bold"
                             }}
                         >
-                            Online
+                            {isOutstanding ? "New Balance" : "Online"}
                         </Chip>
                         <Input
                             startDecorator={<span>₹</span>}
@@ -558,7 +560,7 @@ export const GasEditUi = ({
                                 fontWeight: "bold"
                             }}
                         >
-                            Cash
+                            {isOutstanding ? "Old Balance" : "Cash"}
                         </Chip>
                         <Input
                             startDecorator={<span>₹</span>}
@@ -576,12 +578,13 @@ export const GasEditUi = ({
                             size="lg"
                             color="primary"
                             sx={{
-                                fontWeight: "bold"
+                                fontWeight: "bold",
+                                display: isOutstanding ? "none" : "flex",
                             }}
                         >
                             Total :
                         </Chip>
-                        <span className="b">
+                        <span className="b" style={{display: isOutstanding ? "none" : "block"}}>
                            ₹{decimalFix(toNumber(onlineAmount.amount) + toNumber(cashAmount.amount))}
                         </span>
                     </Stack>
@@ -730,7 +733,9 @@ export const GasEditUi = ({
                         </>) : ""
                     }
                 </Sheet>
-                <Card size="sm" className="mb-1 !p-1 !text-black">
+                <Card sx={{
+                    display: isOutstanding ? "none" : "block",
+                }} size="sm" className="mb-1 !p-1 !text-black">
                     <Stack direction="column" spacing={.5}>
                         {(() => {
                             const l = [...gasData.values()].map((data) => {
@@ -764,6 +769,7 @@ export const GasEditUi = ({
                         </span>
                     </Stack>
                 </Card>
+                <Divider orientation={"horizontal"} className="!m-4 opacity-0"/>
                 <Stack direction="row" gap={1} justifyContent={"flex-end"} alignItems={"flex-end"}>
                     <Box
                         sx={{

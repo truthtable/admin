@@ -152,6 +152,8 @@ export default function DeliveryHistory() {
         return {CUSTOMER_LIST: customerList, ADMIN_LIST: adminList, DELIVERY_BOY_LIST: deliveryBoyList};
     }, [users]);
 
+    //console.log(ADMIN_LIST)
+
     const loadData = useCallback(({
                                       force = false,
                                   }) => {
@@ -412,11 +414,16 @@ export default function DeliveryHistory() {
             let cash = 0;
             let online = 0;
 
+            let oldBal = 0;
+            let newBal = 0;
+
             delivery?.payments?.forEach(payment => {
                 const amount = toNumber(payment.amount);
                 if (payment.method === 0) {
+                    oldBal = payment.amount;
                     cash += amount;
                 } else if (payment.method === 1) {
+                    newBal = payment.amount;
                     online += amount;
                 }
                 received += amount;
@@ -498,88 +505,159 @@ export default function DeliveryHistory() {
             const date = formatDateToDDMMYY_HHMM(delivery.created_at);
             const customerName = titleCase(delivery.customer.name);
 
-            //console.log({delivery})
+            let isAdmin = false;
+            if (ADMIN_LIST.get(delivery?.courier_boy.id)) {
+                isAdmin = true;
+            }
 
-            deliveriesMapList.push(
-                <DeliveryRow
-                    key={`dRow${i}-${delivery.id}`}
-                    row={
-                        <tr key={`dRow${i}-${delivery.id}`}>
-                            <DataCell key={`delivery-${i}-remark`} correction={correction}>
-                                <Chip
-                                    color="primary"
-                                    onClick={() => handleEditClick(delivery, date)}
-                                    size="sm"
-                                >
-                                    <MdEdit/>
-                                </Chip>
-                                {
-                                    (editRow === delivery.id) && <GasEditUi
-                                        key={`delivery-${i}-edit`}
-                                        selectedGasList={delivery.gas_deliveries}
-                                        customer={delivery.customer.name}
-                                        custId={delivery.customer.id}
-                                        deliveryBoy={delivery.courier_boy.name}
-                                        deliveryBoyId={delivery.courier_boy.id}
-                                        deleveryId={delivery.id}
-                                        payments={delivery.payments}
-                                        correction={correction}
-                                        openEdit={editRow === delivery.id}
-                                        isOutstanding={false}
-                                        gasList={gasList}
-                                        CUSTOMER_LIST={CUSTOMER_LIST}
-                                        DELIVERY_BOY_LIST={DELIVERY_BOY_LIST}
-                                        deleveryGasEditUiGasList={deleveryGasEditUiGasList}
-                                        onSuccess={handleSuccess}
-                                        createdAt={date}
-                                        onClose={() => setEditRow(null)}
-                                    />
-                                }
-                            </DataCell>
-                            <DataCell correction={correction} key={`delivery-${i}-date`}>{date}</DataCell>
-                            <DataCell correction={correction} key={`delivery-${i}-name`}>{customerName}</DataCell>
-                            {temptKgsList}
-                            <DataCell correction={correction} key={`delivery-${i}-sub`}>{displaySubTotal}</DataCell>
-                            <DataCell correction={correction}
-                                      key={`delivery-${i}-online`}>{dashIfZero(online)}</DataCell>
-                            <DataCell correction={correction} key={`delivery-${i}-cash`}>{dashIfZero(cash)}</DataCell>
-                            <DataCell correction={correction}
-                                      key={`delivery-${i}-received`}>{displayReceived}</DataCell>
-                            <DataCell correction={correction} key={`delivery-${i}-balance`}>{balance}</DataCell>
-                        </tr>
-                    }
-                />
-            );
+            if (isAdmin) {
+                deliveriesMapList.push(
+                    <DeliveryRow
+                        key={`dRow${i}-${delivery.id}`}
+                        row={
+                            <tr key={`dRow${i}-${delivery.id}`}>
+                                <DataCell key={`delivery-${i}-remark`} correction={correction}>
+                                    <Chip
+                                        color="primary"
+                                        onClick={() => handleEditClick(delivery, date)}
+                                        size="sm"
+                                    >
+                                        <MdEdit/>
+                                    </Chip>
+                                    {
+                                        (editRow === delivery.id) && <GasEditUi
+                                            key={`delivery-${i}-edit`}
+                                            selectedGasList={delivery.gas_deliveries}
+                                            customer={delivery.customer.name}
+                                            custId={delivery.customer.id}
+                                            deliveryBoy={delivery.courier_boy.name}
+                                            deliveryBoyId={delivery.courier_boy.id}
+                                            deleveryId={delivery.id}
+                                            payments={delivery.payments}
+                                            correction={correction}
+                                            openEdit={editRow === delivery.id}
+                                            isOutstanding={true}
+                                            gasList={gasList}
+                                            CUSTOMER_LIST={CUSTOMER_LIST}
+                                            DELIVERY_BOY_LIST={DELIVERY_BOY_LIST}
+                                            deleveryGasEditUiGasList={deleveryGasEditUiGasList}
+                                            onSuccess={handleSuccess}
+                                            createdAt={date}
+                                            onClose={() => setEditRow(null)}
+                                        />
+                                    }
+                                </DataCell>
+                                <DataCell correction={correction} key={`delivery-${i}-date`}>{date}</DataCell>
+                                <DataCell correction={correction} key={`delivery-${i}-name`}>{customerName}</DataCell>
+                                <DataCell colspan={temptKgsList.length} correction={correction}>
+                                    Old Balance {toNumber(oldBal)} &nbsp;|&nbsp;New
+                                    Balance {-1 * toNumber(newBal)}
+                                </DataCell>
+                                <DataCell correction={correction} colspan={3} key={`delivery-${i}-sub`}>-</DataCell>
+                                <DataCell correction={correction}
+                                          key={`delivery-${i}-received`}>{displayReceived}</DataCell>
+                                <DataCell correction={correction} key={`delivery-${i}-balance`}>{balance}</DataCell>
+                            </tr>
+                        }
+                    />
+                )
+            } else {
+                deliveriesMapList.push(
+                    <DeliveryRow
+                        key={`dRow${i}-${delivery.id}`}
+                        row={
+                            <tr key={`dRow${i}-${delivery.id}`}>
+                                <DataCell key={`delivery-${i}-remark`} correction={correction}>
+                                    <Chip
+                                        color="primary"
+                                        onClick={() => handleEditClick(delivery, date)}
+                                        size="sm"
+                                    >
+                                        <MdEdit/>
+                                    </Chip>
+                                    {
+                                        (editRow === delivery.id) && <GasEditUi
+                                            key={`delivery-${i}-edit`}
+                                            selectedGasList={delivery.gas_deliveries}
+                                            customer={delivery.customer.name}
+                                            custId={delivery.customer.id}
+                                            deliveryBoy={delivery.courier_boy.name}
+                                            deliveryBoyId={delivery.courier_boy.id}
+                                            deleveryId={delivery.id}
+                                            payments={delivery.payments}
+                                            correction={correction}
+                                            openEdit={editRow === delivery.id}
+                                            isOutstanding={false}
+                                            gasList={gasList}
+                                            CUSTOMER_LIST={CUSTOMER_LIST}
+                                            DELIVERY_BOY_LIST={DELIVERY_BOY_LIST}
+                                            deleveryGasEditUiGasList={deleveryGasEditUiGasList}
+                                            onSuccess={handleSuccess}
+                                            createdAt={date}
+                                            onClose={() => setEditRow(null)}
+                                        />
+                                    }
+                                </DataCell>
+                                <DataCell correction={correction} key={`delivery-${i}-date`}>{date}</DataCell>
+                                <DataCell correction={correction} key={`delivery-${i}-name`}>{customerName}</DataCell>
+                                {temptKgsList}
+                                <DataCell correction={correction} key={`delivery-${i}-sub`}>{displaySubTotal}</DataCell>
+                                <DataCell correction={correction}
+                                          key={`delivery-${i}-online`}>{dashIfZero(online)}</DataCell>
+                                <DataCell correction={correction}
+                                          key={`delivery-${i}-cash`}>{dashIfZero(cash)}</DataCell>
+                                <DataCell correction={correction}
+                                          key={`delivery-${i}-received`}>{displayReceived}</DataCell>
+                                <DataCell correction={correction} key={`delivery-${i}-balance`}>{balance}</DataCell>
+                            </tr>
+                        }
+                    />
+                );
+            }
 
             const isAllGasEmpty = tempCsvList.every(item => item === "");
             const isAllNcGasEmpty = tempNcCsvList.every(item => item === "");
 
-            if (!isAllNcGasEmpty) {
+            if (isAdmin) {
                 csvData.push([
                     date,
                     customerName,
-                    "NC",
-                    ...tempNcCsvList,
-                    nCSubTotal,
-                    isAllGasEmpty ? online : "",
-                    isAllGasEmpty ? cash : "",
-                    isAllGasEmpty ? received : "",
-                    isAllGasEmpty ? balance : nCSubTotal
-                ]);
-            }
-
-            if (!isAllGasEmpty || (isAllNcGasEmpty && received !== "" && received !== "-" && received !== 0)) {
-                csvData.push([
-                    date,
-                    customerName,
-                    isAllGasEmpty ? "Payment" : "",
+                    "Balance Adjustment",
                     ...tempCsvList,
-                    normalSubTotal,
-                    online,
-                    cash,
-                    received,
-                    isAllNcGasEmpty ? balance : (toNumber(normalSubTotal) - toNumber(received))
+                    "",
+                    "",
+                    "",
+                    displayReceived,
+                    (toNumber(normalSubTotal) - toNumber(received))
                 ]);
+            } else {
+                if (!isAllNcGasEmpty) {
+                    csvData.push([
+                        date,
+                        customerName,
+                        "NC",
+                        ...tempNcCsvList,
+                        nCSubTotal,
+                        isAllGasEmpty ? online : "",
+                        isAllGasEmpty ? cash : "",
+                        isAllGasEmpty ? received : "",
+                        isAllGasEmpty ? balance : nCSubTotal
+                    ]);
+                }
+
+                if (!isAllGasEmpty || (isAllNcGasEmpty && received !== "" && received !== "-" && received !== 0)) {
+                    csvData.push([
+                        date,
+                        customerName,
+                        isAllGasEmpty ? "Payment" : "",
+                        ...tempCsvList,
+                        normalSubTotal,
+                        online,
+                        cash,
+                        received,
+                        isAllNcGasEmpty ? balance : (toNumber(normalSubTotal) - toNumber(received))
+                    ]);
+                }
             }
         });
 
@@ -650,27 +728,29 @@ export default function DeliveryHistory() {
                 flexGrow: 1
             }}
         >
-            {editRow && editDelivery && (
-                <GasEditUi
-                    selectedGasList={editDelivery.gas_deliveries}
-                    customer={editDelivery.customer.name}
-                    custId={editDelivery.customer.id}
-                    deliveryBoy={editDelivery.courier_boy.name}
-                    deliveryBoyId={editDelivery.courier_boy.id}
-                    deleveryId={editDelivery.id}
-                    payments={editDelivery.payments}
-                    correction={editDelivery.correction}
-                    openEdit={true}
-                    isOutstanding={false}
-                    gasList={gasList}
-                    CUSTOMER_LIST={CUSTOMER_LIST}
-                    DELIVERY_BOY_LIST={DELIVERY_BOY_LIST}
-                    deleveryGasEditUiGasList={deleveryGasEditUiGasList}
-                    onSuccess={handleSuccess}
-                    createdAt={editDelivery.formattedDate}
-                    onClose={handleEditClose}
-                />
-            )}
+            {
+                //     editRow && editDelivery && (
+                //     <GasEditUi
+                //         selectedGasList={editDelivery.gas_deliveries}
+                //         customer={editDelivery.customer.name}
+                //         custId={editDelivery.customer.id}
+                //         deliveryBoy={editDelivery.courier_boy.name}
+                //         deliveryBoyId={editDelivery.courier_boy.id}
+                //         deleveryId={editDelivery.id}
+                //         payments={editDelivery.payments}
+                //         correction={editDelivery.correction}
+                //         openEdit={true}
+                //         isOutstanding={false}
+                //         gasList={gasList}
+                //         CUSTOMER_LIST={CUSTOMER_LIST}
+                //         DELIVERY_BOY_LIST={DELIVERY_BOY_LIST}
+                //         deleveryGasEditUiGasList={deleveryGasEditUiGasList}
+                //         onSuccess={handleSuccess}
+                //         createdAt={editDelivery.formattedDate}
+                //         onClose={handleEditClose}
+                //     />
+                // )
+            }
             <Box
                 sx={{
                     width: "100%",
@@ -958,10 +1038,11 @@ export const DataCell = React.memo(({
                                         bgColor = "#ffffff",
                                         correction = false,
                                         textNoWrap = "!text-nowrap",
+                                        colspan = 0,
                                         children
                                     }) => {
     return (
-        <td style={{backgroundColor: `${bgColor}`}}>
+        <td colSpan={colspan} style={{backgroundColor: `${bgColor}`}}>
             <div
                 className={`${textNoWrap} !p-1`}
                 style={{
