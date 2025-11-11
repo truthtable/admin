@@ -1,10 +1,27 @@
 import React, {useEffect} from 'react'
 import {useDispatch, useSelector} from 'react-redux';
 import {fetchExpences, updateExpence} from '../../redux/actions/expencesActions';
-import {Box, Button, Divider, Input, LinearProgress, Stack, Table} from '@mui/joy';
+import {
+    Box,
+    Button,
+    DialogContent,
+    DialogTitle,
+    Divider,
+    Input,
+    LinearProgress,
+    List,
+    ListItem,
+    Modal,
+    ModalDialog,
+    Radio,
+    RadioGroup,
+    Stack,
+    Table
+} from '@mui/joy';
 import {FcDown} from 'react-icons/fc';
 import gasServices from '../../services/gas-services';
 import {titleCase, toNumber} from "../../Tools.jsx";
+import ModalClose from "@mui/joy/ModalClose";
 
 export default function Expences() {
     //get user_id from url
@@ -36,7 +53,7 @@ export default function Expences() {
             return formattedDate;
         }
     });
-    console.log(startDate)
+    //console.log(startDate)
     const [endDate, setEndDate] = React.useState(() => {
         if (END_DATE) {
             return END_DATE;
@@ -60,7 +77,7 @@ export default function Expences() {
         expenceError,
     } = useSelector((state) => state.expence);
 
-    console.log({expenses, expenceLoading, expenceError});
+    //console.log({expenses, expenceLoading, expenceError});
 
     const totalExpences = (expenses) ? expenses
         .filter((expence) => toNumber(expence.user_id) == toNumber(USER_ID))
@@ -75,7 +92,7 @@ export default function Expences() {
         })
         .reduce((acc, expence) => acc + expence.amount, 0) : 0;
     //console.log(totalExpences);
-    console.log(expenses, USER_ID);
+    //console.log(expenses);
     let onlySelectedDeliveryBoy = (expenses) ? expenses
             .filter((expence) => toNumber(expence.user_id) == toNumber(USER_ID))
             .filter((expence) => {
@@ -113,6 +130,8 @@ export default function Expences() {
             }
         });
     }, []);
+
+    document.title = titleCase(`Expences | ${USER_NAME}`)
 
     return (
         <Box
@@ -154,7 +173,7 @@ export default function Expences() {
                     color: "black",
                     padding: "16px",
                 }}>
-                         Expences of {USER_NAME} : <i>₹{totalExpences}</i>
+                         Expences | {titleCase(USER_NAME)} : <i>₹{totalExpences}</i>
                     </span>
                 <Divider sx={{flexGrow: 1}}/>
                 <Stack gap={1} direction={"row"} alignContent={"center"} alignItems={"center"}>
@@ -190,6 +209,7 @@ export default function Expences() {
                 <thead>
                 <tr>
                     <th>Date</th>
+                    <th>Type</th>
                     <th>Reason</th>
                     <th>Amount</th>
                 </tr>
@@ -205,6 +225,9 @@ export default function Expences() {
                             fontWeight: "bold",
                             color: expence.error ? "red" : "black"
                         }}>{formatDate(expence.created_at)}</td>
+                        <td style={{fontWeight: "bold"}}>
+                            <ChangeExpenceType expence={expence}/>
+                        </td>
                         <td style={{fontWeight: "bold"}}>
                             <Box
                                 sx={{
@@ -269,6 +292,112 @@ export default function Expences() {
             </Table>
         </Box>
     )
+}
+
+const ChangeExpenceType = ({expence}) => {
+    const dispatch = useDispatch();
+    const [showOptions, setShowOptions] = React.useState(false);
+    const [value, setValue] = React.useState(expence.expense_type);
+    if (showOptions) {
+        return (<>
+            <Modal open={showOptions} onClose={() => setShowOptions(false)}>
+                <ModalDialog>
+                    <ModalClose/>
+                    <DialogTitle>Modal Dialog</DialogTitle>
+                    <DialogContent>
+                        <Stack gap={1} direction={"column"} alignContent={"center"}>
+                            <RadioGroup aria-label="Your plan" name="people" defaultValue={
+                                (value === 1) ? "Office" : (value === 0) ? "Expense" : null
+                            }
+                                        onChange={(event) => {
+                                            setValue((event.target.value === "Office") ? 1 : 0);
+                                        }}
+                            >
+                                <List
+                                    sx={{
+                                        minWidth: 240,
+                                        '--List-gap': '0.5rem',
+                                        '--ListItem-paddingY': '1rem',
+                                        '--ListItem-radius': '8px',
+                                        '--ListItemDecorator-size': '32px',
+                                        fontWeight: 'bold',
+                                    }}
+                                    className="text-bold"
+                                >
+                                    {['Office', 'Expense'].map((item) => (
+                                        <ListItem variant="outlined" key={item} className="text-bold"
+                                                  sx={{boxShadow: 'sm'}}>
+                                            <Radio
+                                                overlay
+                                                value={item}
+                                                label={item}
+                                                sx={{flexGrow: 1, flexDirection: 'row-reverse'}}
+                                                slotProps={{
+                                                    action: ({checked}) => ({
+                                                        sx: (theme) => ({
+                                                            ...(checked && {
+                                                                inset: -1,
+                                                                border: '2px solid',
+                                                                borderColor: theme.vars.palette.primary[500],
+                                                            }),
+                                                        }),
+                                                    }),
+                                                }}
+                                            />
+                                        </ListItem>
+                                    ))}
+                                </List>
+                            </RadioGroup>
+                            <Stack direction={"row"} alignContent={"center"} gap={1}>
+                                <Button variant="outlined" color="neutral" onClick={() => {
+                                    setShowOptions(false);
+                                }}>Cancel</Button>
+                                <Button variant="solid" color="primary" onClick={() => {
+                                    dispatch(
+                                        updateExpence({
+                                            id: expence.id,
+                                            expense_type: value,
+                                            error: false,
+                                            phone: false
+                                        })
+                                    );
+                                    setShowOptions(false);
+                                }}>Save</Button>
+                            </Stack>
+                        </Stack>
+                    </DialogContent>
+                </ModalDialog>
+            </Modal>
+        </>)
+    } else {
+        return (
+            <>
+                <Box
+                    sx={{
+                        transition: 'all 0.3s',
+                        borderRadius: 'md',
+                        '&:hover': {
+                            backgroundColor: 'lightblue',
+                            p: 1
+                        }
+                    }}
+                    onClick={() => {
+                        setShowOptions(true);
+                    }}
+                ><span className='b'
+                       style={{
+                           color: expence.error ? "red" : "black"
+                       }}
+                >{(() => {
+                    if (expence.expense_type === 1) {
+                        return "Office Expense";
+                    } else if (expence.expense_type === 0) {
+                        return "Expense";
+                    }
+                })()}</span></Box>
+            </>
+        )
+    }
 }
 
 function formatDate(date) {

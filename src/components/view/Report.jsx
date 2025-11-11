@@ -181,7 +181,8 @@ export const Report = ({isLogged}) => {
         const apiTotalBill = report?.totalPrice || 0;
         let apiOutstanding = apiTotalBill - apiTotalPaid
 
-        console.log(report?.deliveries)
+        //console.log(report?.deliveries)
+        document.title = `${titleCase(report?.customer?.user?.name)} - ${startDate} to ${endDate}`
 
         try {
             const sortedDeliveries = [...report.deliveries].sort((a, b) => {
@@ -740,6 +741,20 @@ export const Report = ({isLogged}) => {
                                         <span className="font-bold text-black">
                                                   {
                                                       `Grand Total : ₹${decimalFix(grandOrderTotal)}`
+                                                  }
+                                             </span>
+                                        <Divider className="w-full" orientation={"vertical"}
+                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                        <span style={{fontWeight: "bold", color: "#001BB7"}}>
+                                                  {
+                                                      `Total Cash : ₹${decimalFix(grandTotalCash)}`
+                                                  }
+                                             </span>
+                                        <Divider className="w-full" orientation={"vertical"}
+                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                        <span style={{fontWeight: "bold", color: "#001BB7"}}>
+                                                  {
+                                                      `Total Online : ₹${decimalFix(grandTotalOnline)}`
                                                   }
                                              </span>
                                         <Divider className="w-full" orientation={"vertical"}
