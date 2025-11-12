@@ -16,6 +16,7 @@ import {
     Radio,
     RadioGroup,
     Stack,
+    Switch,
     Table
 } from '@mui/joy';
 import {FcDown} from 'react-icons/fc';
@@ -39,6 +40,13 @@ export default function Expences() {
     //
 
     //
+    const storedReversed = localStorage?.storedReversed ?? false;
+    const [reversed, setReversed] = React.useState(storedReversed);
+    const storeReversed = (value) => {
+        localStorage.storedReversed = value
+        setReversed(value)
+    }
+
     const [startDate, setStartDate] = React.useState(() => {
         if (START_DATE) {
             return START_DATE;
@@ -104,6 +112,15 @@ export default function Expences() {
                 end.setHours(23, 59, 59, 999);
                 return expenceDate >= start && expenceDate <= end;
             })
+            .sort((expenceA, expenceB) => {
+                const dateA = new Date(expenceA.created_at);
+                const dateB = new Date(expenceB.created_at);
+                if (reversed) {
+                    return dateB - dateA; // For descending order
+                } else {
+                    return dateA - dateB; // For ascending order
+                }
+            })
         : null;
 
     const get = () => {
@@ -125,7 +142,7 @@ export default function Expences() {
             if (
                 !expenceLoading
             ) {
-                console.log("fetching...");
+                //console.log("fetching...");
                 get();
             }
         });
@@ -176,6 +193,17 @@ export default function Expences() {
                          Expences | {titleCase(USER_NAME)} : <i>₹{totalExpences}</i>
                     </span>
                 <Divider sx={{flexGrow: 1}}/>
+                <Divider className="!bg-black opacity-35" sx={{width: "1px"}} orientation="vertical"/>
+                <Stack gap={1} direction={"row"} alignContent={"center"} alignItems={"center"}>
+                    <span style={{fontWeight: "bold", color: "black"}}>Reverse&nbsp;Order&nbsp;:&nbsp;</span>
+                    <Switch
+                        checked={reversed}
+                        onChange={(event) => {
+                            storeReversed(event.target.checked);
+                        }}
+                    />
+                </Stack>
+                <Divider className="!bg-black opacity-35" sx={{width: "1px"}} orientation="vertical"/>
                 <Stack gap={1} direction={"row"} alignContent={"center"} alignItems={"center"}>
                     <span style={{fontWeight: "bold", color: "black"}}>Date&nbsp;Start&nbsp;:&nbsp;</span>
                     <Input type="date" sx={{width: "100%"}}
@@ -185,6 +213,7 @@ export default function Expences() {
                            defaultValue={startDate}
                     />
                 </Stack>
+                <Divider className="!bg-black opacity-35" sx={{width: "1px"}} orientation="vertical"/>
                 <Stack gap={1} direction={"row"} alignContent={"center"} alignItems={"center"} mr={2}>
                     <span style={{fontWeight: "bold", color: "black"}}>Date&nbsp;End&nbsp;:&nbsp;</span>
                     <Input type="date" sx={{width: "100%"}}
@@ -205,9 +234,14 @@ export default function Expences() {
                     display: expenceLoading ? 'block' : 'none'
                 }}
             />
-            <Table>
+            <Table
+                sx={{
+                    tableLayout: 'auto',
+                }}
+            >
                 <thead>
                 <tr>
+                    <th></th>
                     <th>Date</th>
                     <th>Type</th>
                     <th>Reason</th>
@@ -218,9 +252,35 @@ export default function Expences() {
                 {onlySelectedDeliveryBoy?.map((expence) => (
                     <tr key={expence.id}
                         style={{
-                            backgroundColor: expence.error ? "#ffe8e8" : "white"
+                            backgroundColor: expence.error ? "#ffe8e8" : "white",
                         }}
                     >
+                        <td
+                            onClick={() => {
+                                const value = confirm(`Mark ${
+                                    expence.error ? "Correct ✔" : "Wrong ❌"
+                                }`);
+                                if (value) {
+                                    dispatch(
+                                        updateExpence({
+                                            id: expence.id,
+                                            error: !expence.error,
+                                            phone: false
+                                        })
+                                    );
+                                }
+                            }}
+                            className=" hover:!bg-blue-500 hover:!text-white"
+                            style={{
+                                fontWeight: "bold",
+                                color: expence.error ? "red" : "white",
+                                maxWidth: "30px",
+                                cursor: "pointer"
+                            }}>
+                            {
+                                expence.error ? "⚠ Correction" : "Mark Wrong"
+                            }
+                        </td>
                         <td style={{
                             fontWeight: "bold",
                             color: expence.error ? "red" : "black"
