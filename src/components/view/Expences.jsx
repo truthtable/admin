@@ -40,7 +40,7 @@ export default function Expences() {
     //
 
     //
-    const storedReversed = localStorage?.storedReversed ?? false;
+    const storedReversed = JSON.parse(localStorage?.storedReversed || 'false');
     const [reversed, setReversed] = React.useState(storedReversed);
     const storeReversed = (value) => {
         localStorage.storedReversed = value

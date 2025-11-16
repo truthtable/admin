@@ -1126,6 +1126,7 @@ function OrderRow({orders, allGas, plants, showBreakdown, setShowBreakdown}) {
             const totalAmt = totalKg * rate
             const returnQty = item.return_cyl_qty
             const totalReturnKg = gas.kg * returnQty
+            const mt = item.mt
 
             orderTotalKg += totalKg
             orderTotalQty += qty
@@ -1148,6 +1149,7 @@ function OrderRow({orders, allGas, plants, showBreakdown, setShowBreakdown}) {
                         <td className="b">{totalKg}</td>
                         <td className="b">{"₹" + decimalFix(rate)}</td>
                         <td className="b">{"₹" + decimalFix(totalAmt)}</td>
+                        <td className="b">{mt}</td>
                         <td className="b">{returnQty}</td>
                         <td className="b">{totalReturnKg}</td>
                     </tr>
@@ -1169,8 +1171,8 @@ function OrderRow({orders, allGas, plants, showBreakdown, setShowBreakdown}) {
                     <tr>
                         <td className="b" colSpan={2}>Total Qty : {orderTotalQty}</td>
                         <td className="b" colSpan={2}>Total Kg : {orderTotalKg}</td>
-                        <td className="b" colSpan={2}>Total MT Qty : {orderTotalReturnQty}</td>
-                        <td className="b" colSpan={2}>Total MT Kg : {orderTotalReturnKg}</td>
+                        <td className="b" colSpan={2}>Total Return Qty : {orderTotalReturnQty}</td>
+                        <td className="b" colSpan={2}>Total Return Kg : {orderTotalReturnKg}</td>
                     </tr>
                     <tr>
                         <td className="b" colSpan={2}>Scheme Rate : ₹{decimalFix(tcs)}</td>
@@ -1190,20 +1192,20 @@ function OrderRow({orders, allGas, plants, showBreakdown, setShowBreakdown}) {
             )
         }
         rows.push(<tr>
-            <td className="b" colSpan={12}></td>
+            <td className="b" colSpan={13}></td>
         </tr>)
     })
 
     rows.push(
         <>
             <tr>
-                <td className="b" colSpan={12}>Grand Total Amount : {decimalFix(grandTotalAmt)}</td>
+                <td className="b" colSpan={13}>Grand Total Amount : {decimalFix(grandTotalAmt)}</td>
             </tr>
             <tr>
-                <td className="b" colSpan={12}>Grand Total Paid : {decimalFix(grandTotalPaid)}</td>
+                <td className="b" colSpan={13}>Grand Total Paid : {decimalFix(grandTotalPaid)}</td>
             </tr>
             <tr>
-                <td className="b" colSpan={12}>Grand Total Balance : {decimalFix(grandTotalAmt - grandTotalPaid)}</td>
+                <td className="b" colSpan={13}>Grand Total Balance : {decimalFix(grandTotalAmt - grandTotalPaid)}</td>
             </tr>
         </>
     )
@@ -1316,7 +1318,8 @@ function OrderRow({orders, allGas, plants, showBreakdown, setShowBreakdown}) {
                         <th>Rate</th>
                         <th>Total</th>
                         <th>MT Qty</th>
-                        <th>Total MT Kg</th>
+                        <th>Return Qty</th>
+                        <th>Total Return Kg</th>
                     </tr>
                     </thead>
                     <tbody>
