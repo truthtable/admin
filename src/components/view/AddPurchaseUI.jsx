@@ -18,6 +18,7 @@ import {
     Select,
     Sheet,
     Stack,
+    Switch,
     Table,
     Tooltip,
     Typography
@@ -27,6 +28,7 @@ import {useDispatch} from "react-redux";
 import {createOrder} from "../../redux/actions/purchaseOrderActions";
 import {FaRegPlusSquare} from "react-icons/fa";
 import {decimalFix, toNumber} from "../../Tools";
+import {FcCancel, FcOk} from "react-icons/fc";
 
 export default function AddPurchaseUI({gaslistData, plants}) {
 
@@ -40,6 +42,10 @@ export default function AddPurchaseUI({gaslistData, plants}) {
     const [addPurchaseModel, setAddPurchaseModel] = useState(false);
     const [orderItems, setOrderItems] = useState([]);
     const [ncOrderItems, setNcOrderItems] = useState([]);
+    const [showTargetOption, setShowTargetOption] = React.useState(false);
+    const [targetAchieved, setTargetAchieved] = React.useState(false);
+    const [targetKg, setTagetKg] = React.useState(0);
+    const [targetRate, setTagetRate] = React.useState(0);
     //console.log(ncOrderItems);
 
     if ((gaslistData != null) && (gaslistData.length === 0) || (plants === undefined || plants === null || plants.length === 0)) {
@@ -371,10 +377,12 @@ export default function AddPurchaseUI({gaslistData, plants}) {
                                 direction="column"
                                 gap={1}
                                 className="w-full rounded-md p-1 mt-1 bg-transparent text-black">
+
                                 <Stack
                                     direction="row"
                                     gap={1}
                                 >
+                                    <Divider orientation="vertical"/>
                                     <FormControl className="w-full flex-grow">
                                         <FormLabel>Date</FormLabel>
                                         <Input
@@ -484,7 +492,139 @@ export default function AddPurchaseUI({gaslistData, plants}) {
                                                }
                                         />
                                     </FormControl>
+                                    <Divider orientation="vertical"/>
                                 </Stack>
+                                <Divider orientation="horizontal"/>
+                                <Stack
+                                    direction="row"
+                                    gap={1}
+                                >
+                                    <Divider orientation="vertical"/>
+                                    <Stack direction="row" alignContent="center" alignItems="center" gap={1}>
+                                        <span className="text-black font-bold break-keep whitespace-nowrap">Target Options</span>
+                                        <Switch
+                                            checked={showTargetOption}
+                                            onChange={(e) => setShowTargetOption(e.target.checked)}
+                                        />
+                                    </Stack>
+                                    <Divider orientation="vertical"/>
+                                    {
+                                        showTargetOption && <>
+                                            <FormControl className="w-full flex-grow">
+                                                <FormLabel>Remark</FormLabel>
+                                                <Input
+                                                    placeholder="Target Remark"
+                                                    type="text"
+                                                    name="target_type"
+                                                    size="sm"
+                                                    required
+                                                    className="w-full flex-grow"
+                                                />
+                                            </FormControl>
+                                            <FormControl className="w-full flex-grow">
+                                                <FormLabel>Target Start</FormLabel>
+                                                <Input
+                                                    placeholder="Target Start"
+                                                    type="date"
+                                                    name="target_start"
+                                                    size="sm"
+                                                    required
+                                                    className="w-full flex-grow"
+                                                />
+                                            </FormControl>
+                                            <FormControl className="w-full flex-grow">
+                                                <FormLabel>Target End</FormLabel>
+                                                <Input
+                                                    placeholder="Target End"
+                                                    type="date"
+                                                    name="target_end"
+                                                    size="sm"
+                                                    required
+                                                    className="w-full flex-grow"
+                                                />
+                                            </FormControl>
+                                            <FormControl className="w-full flex-grow max-w-24">
+                                                <FormLabel>Total KG</FormLabel>
+                                                <Input
+                                                    placeholder="Total KG"
+                                                    type="number"
+                                                    name="total_kg"
+                                                    value={
+                                                        targetKg
+                                                    }
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'e' || e.key === 'E') {
+                                                            e.preventDefault();
+                                                        }
+                                                    }}
+                                                    onInput={(e) => {
+                                                        let value = e.target.value;
+                                                        //remove e if exist
+                                                        value = value.toString().replace(/[eE]/g, '');
+                                                        setTagetKg(value);
+                                                    }}
+                                                    size="sm"
+                                                    required
+                                                    className="w-full flex-grow"
+                                                />
+                                            </FormControl>
+                                            <FormControl className="w-full flex-grow max-w-20">
+                                                <FormLabel>Rate</FormLabel>
+                                                <Input
+                                                    placeholder="Total KG"
+                                                    type="number"
+                                                    name="total_kg"
+                                                    value={
+                                                        targetRate
+                                                    }
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'e' || e.key === 'E') {
+                                                            e.preventDefault();
+                                                        }
+                                                    }}
+                                                    onInput={(e) => {
+                                                        let value = e.target.value;
+                                                        //remove e if exist
+                                                        value = value.toString().replace(/[eE]/g, '');
+                                                        setTagetRate(value);
+                                                    }}
+                                                    size="sm"
+                                                    required
+                                                    className="w-full flex-grow"
+                                                />
+                                            </FormControl>
+                                            <Divider orientation="vertical"/>
+                                            <Stack
+                                                className="items-center justify-center"
+                                            >
+                                                <FormLabel className="text-black">
+                                                    Total
+                                                </FormLabel>
+                                                <Divider orientation="horizontal"/>
+                                                <span className="text-black font-black">{
+                                                    decimalFix(toNumber(targetKg) * toNumber(targetRate), 2)
+                                                }</span>
+                                            </Stack>
+                                            <Divider orientation="vertical"/>
+                                            <Stack direction="row" alignContent="center" alignItems="center" gap={1}>
+                                                <span className="text-black font-bold break-keep whitespace-nowrap">Target Achieved</span>
+                                                <Switch
+                                                    size="lg"
+                                                    color={
+                                                        targetAchieved ? "success" : "danger"
+                                                    }
+                                                    checked={targetAchieved}
+                                                    onChange={(e) => setTargetAchieved(e.target.checked)}
+                                                />
+                                                {
+                                                    targetAchieved ? <FcOk/> : <FcCancel/>
+                                                }
+                                            </Stack>
+                                            <Divider orientation="vertical"/>
+                                        </>
+                                    }
+                                </Stack>
+                                <Divider orientation="horizontal"/>
                                 <Card>
                                     <CardContent
                                         className="flex"
@@ -626,6 +766,7 @@ export default function AddPurchaseUI({gaslistData, plants}) {
                                         </Table>
                                     </CardContent>
                                 </Card>
+                                <Divider orientation="horizontal"/>
                                 <Stack
                                     direction="row"
                                     gap={1}
@@ -641,6 +782,11 @@ export default function AddPurchaseUI({gaslistData, plants}) {
                                         type="number"
                                         name="tcs"
                                         required
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'e' || e.key === 'E') {
+                                                e.preventDefault();
+                                            }
+                                        }}
                                         value={tcs}
                                         onChange={(e) => setTcs(e.target.value)}
                                         endDecorator={
@@ -665,6 +811,11 @@ export default function AddPurchaseUI({gaslistData, plants}) {
                                         type="number"
                                         name="for_charges"
                                         required
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'e' || e.key === 'E') {
+                                                e.preventDefault();
+                                            }
+                                        }}
                                         value={for_charges}
                                         onChange={(e) => setFor_charges(e.target.value)}
                                         endDecorator={
@@ -707,6 +858,11 @@ export default function AddPurchaseUI({gaslistData, plants}) {
                                         placeholder="Amt Pay"
                                         type="number"
                                         name="pay_amt"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'e' || e.key === 'E') {
+                                                e.preventDefault();
+                                            }
+                                        }}
                                         required
                                         value={paid_val}
                                         onChange={(e) => {
@@ -724,6 +880,14 @@ export default function AddPurchaseUI({gaslistData, plants}) {
                                             tableLayout: "auto",
                                             textAlign: "end",
                                             backgroundColor: "white",
+                                            "& td, & tr, & th": {
+                                                padding: 0,
+                                                margin: 0,
+                                                height: "unset",
+                                                verticalAlign: "middle",
+                                                borderColor: "white",
+                                                borderWidth: 0,
+                                            },
                                         }}
                                     >
                                         <tbody
@@ -733,8 +897,52 @@ export default function AddPurchaseUI({gaslistData, plants}) {
                                             }}
                                         >
                                         <tr>
+                                            <th className="!border-0 bg-white  p-0 m-0 w-40"><span
+                                                className="font-bold">Total</span></th>
+                                            <td className="!border-0 bg-white  p-0 m-0  text-left">
+                                                <span
+                                                    className="text-bold text-black font-black">+{totalAmt.toFixed(2)}</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th className="!border-0 bg-white  p-0 m-0 w-40"><span
+                                                className="font-bold">Total TCS</span></th>
+                                            <td className="!border-0 bg-white  p-0 m-0  text-left">
+                                                <span
+                                                    className="text-bold text-black font-black">+{totalTcs.toFixed(2)}</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th className="!border-0 bg-white  p-0 m-0 w-40"><span
+                                                className="font-bold">Total FOR</span></th>
+                                            <td className="!border-0 bg-white  p-0 m-0  text-left">
+                                                <span
+                                                    className="text-bold text-black font-black">+{totalFor.toFixed(2)}</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th className="!border-0 bg-white  p-0 m-0 w-40"><span
+                                                className="font-bold">Total Return</span></th>
+                                            <td className="!border-0 bg-white  p-0 m-0  text-left">
+                                                <span
+                                                    className="text-bold text-black font-black">-{defective_amount.toFixed(2)}</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th className="!border-0 bg-white  p-0 m-0 w-40"><span
+                                                className="font-bold">Total Scheme</span></th>
+                                            <td className="!border-0 bg-white  p-0 m-0  text-left">
+                                                <span
+                                                    className="text-bold text-black font-black">-{totalScheme.toFixed(2)}</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th className="!border-0 bg-white  p-0 m-0 w-40" colSpan={2}>
+                                                <Divider orientation="horizontal" className="!bg-gray-300"/>
+                                            </th>
+                                        </tr>
+                                        <tr>
                                             <th className="border-0 bg-white p-0 m-0">Billing Amt</th>
-                                            <td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
                                             <td className="border-0 bg-white  p-0 m-0  text-left">
                                                 <Stack
                                                     direction="row"
@@ -750,7 +958,7 @@ export default function AddPurchaseUI({gaslistData, plants}) {
                                                         title={`${totalAmt.toFixed(2)} + ${totalTcs.toFixed(2)} + ${totalFor.toFixed(2)} - ${totalScheme.toFixed(2)} - ${defective_amount}`}
                                                     >
                                                                            <span
-                                                                               className="text-green-600 font-bold"
+                                                                               className="text-blue-700 font-bold"
                                                                            >{`₹${billing.toFixed(2)}`}</span>
                                                     </Tooltip>
                                                     {/* <span className="text-gray-500 text-xs">({totalAmt.toFixed(2)} - {totalScheme.toFixed(2)} of Scheme)</span> */}
@@ -758,14 +966,40 @@ export default function AddPurchaseUI({gaslistData, plants}) {
                                             </td>
                                         </tr>
                                         <tr>
-                                            <th className="border-0 bg-white  p-0 m-0 w-40">Balance</th>
-                                            <td className="border-0 bg-white  p-0 m-0 w-1">&nbsp;:&nbsp;</td>
+                                            <th className="!border-0 bg-white  p-0 m-0 w-40" colSpan={2}>
+                                                <Divider orientation="horizontal" className="!bg-gray-300"/>
+                                            </th>
+                                        </tr>
+                                        <tr>
+                                            <th className="border-0 bg-white p-0 m-0">Payment Amt</th>
                                             <td className="border-0 bg-white  p-0 m-0  text-left">
                                                 <Tooltip
                                                     placement="right"
                                                     size="lg"
                                                     arrow
-                                                    variant="outlined"
+                                                    variant="solid"
+                                                    title={`${paid_val}`}
+                                                >
+                                                                      <span className="font-bold text-green-700">
+                                                                           ₹{paid_val}
+                                                                      </span>
+                                                </Tooltip>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th className="!border-0 bg-white  p-0 m-0 w-40" colSpan={2}>
+                                                <Divider orientation="horizontal" className="!bg-gray-300"/>
+                                            </th>
+                                        </tr>
+                                        <tr>
+                                            <th className="!border-0 bg-white  p-0 m-0 w-40"><span
+                                                className="font-bold">Balance</span></th>
+                                            <td className="!border-0 bg-white  p-0 m-0  text-left">
+                                                <Tooltip
+                                                    placement="right"
+                                                    size="lg"
+                                                    arrow
+                                                    variant="solid"
                                                     title={`${billing.toFixed(2)} - ${paid_val}`}
                                                 >
                                                                       <span className="font-bold">
