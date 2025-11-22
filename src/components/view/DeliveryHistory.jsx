@@ -359,7 +359,7 @@ export default function DeliveryHistory() {
                         const deliveryDate = new Date(delivery.created_at);
 
                         if (deliveryDate < mDateStart || deliveryDate > mDateEnd) {
-                            return;
+                            return false;
                         }
                     }
                     return true;

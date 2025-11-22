@@ -64,10 +64,10 @@ export default function Purchase() {
 
     //console.log(orders);
 
-    const currentDate = new Date().toISOString().split('T')[0];
-    const oneMonthAgo = new Date(new Date().setMonth(new Date().getMonth() - 1))
-        .toISOString()
-        .split('T')[0];
+    /* const currentDate = new Date().toISOString().split('T')[0];
+     const oneMonthAgo = new Date(new Date().setMonth(new Date().getMonth() - 1))
+         .toISOString()
+         .split('T')[0];*/
     const [startDate, setStartDate] = useState(() => {
             const now = new Date();
             const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);

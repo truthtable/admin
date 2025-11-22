@@ -23,6 +23,8 @@ export default function DateTimePickerField(
     const minutes = currentDate.getMinutes();
     const amPm = hours >= 12 ? "PM" : "AM";
 
+    //console.log({currentDate})
+
     const setDay = (d: number) => {
         const newDate = new Date(currentDate);
         newDate.setDate(d);

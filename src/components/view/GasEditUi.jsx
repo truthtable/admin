@@ -34,7 +34,7 @@ import {addGasDelivery, deleteGasDelivery, updateGasDelivery} from "../../redux/
 import {updateDelivery} from "../../state/UpdateDelivery.jsx";
 import DateTimePickerField from "../DateTimePickerField.tsx";
 import FormLabel from "@mui/joy/FormLabel";
-import {addNewGasDelivery} from "../../redux/delivery/gasEditDelivery.js";
+import {addNewGasDelivery, updateGasDeliveryNew} from "../../redux/delivery/gasEditDelivery.js";
 import {decimalFix, toNumber} from "../../Tools.jsx";
 
 export const GasEditUi = ({
@@ -409,36 +409,68 @@ export const GasEditUi = ({
                 console.error("API Error:", error);
             }
         } else {
-            dispatch(updateOrCreateCustomerPayments(tempPayment))
-            dispatch(deleteGasDelivery(deleteDeliveryGasIds))
-            const tempNewGasDataNoIds = newGasDataNoIds.map((gas) => ({
-                delivery_id: deleveryId,
-                gas_id: gas.gas_id,
-                quantity: gas.quantity,
-                price: gas.gas_price,
-                is_empty: gas.is_empty,
-                nc: gas.nc,
-            }));
-            dispatch(addGasDelivery(tempNewGasDataNoIds))
-            console.log(timeStamp)
-            dispatch(updateDelivery({
-                id: deleveryId,
-                correction: checked,
-                created_at: timeStamp,
-            }))
-            if (updateGasData.length > 0) {
-                // Handle updateGasData if needed
-                const tempPayload = updateGasData.map((gas) => ({
+            const p = false
+            if (p) {
+                dispatch(updateOrCreateCustomerPayments(tempPayment))
+                dispatch(deleteGasDelivery(deleteDeliveryGasIds))
+                const tempNewGasDataNoIds = newGasDataNoIds.map((gas) => ({
                     delivery_id: deleveryId,
-                    id: gas.id,
                     gas_id: gas.gas_id,
                     quantity: gas.quantity,
                     price: gas.gas_price,
                     is_empty: gas.is_empty,
                     nc: gas.nc,
                 }));
-                dispatch(updateGasDelivery(tempPayload))
+                dispatch(addGasDelivery(tempNewGasDataNoIds))
+                console.log(timeStamp)
+                dispatch(updateDelivery({
+                    id: deleveryId,
+                    correction: checked,
+                    created_at: timeStamp,
+                }))
+                if (updateGasData.length > 0) {
+                    // Handle updateGasData if needed
+                    const tempPayload = updateGasData.map((gas) => ({
+                        delivery_id: deleveryId,
+                        id: gas.id,
+                        gas_id: gas.gas_id,
+                        quantity: gas.quantity,
+                        price: gas.gas_price,
+                        is_empty: gas.is_empty,
+                        nc: gas.nc,
+                    }));
+                    dispatch(updateGasDelivery(tempPayload))
+                }
             }
+            const linuxEpoch = new Date(timeStamp).getTime() / 1000;
+            const payload = {
+                id: deleveryId,
+                created_at: linuxEpoch,
+                courier_boy_id: deliverBoyId,
+                customer_id: customerId,
+                correction: checked,
+                update_gas_list: updateGasData.map((gas) => ({
+                    id: gas.id,
+                    gas_id: gas.gas_id,
+                    quantity: gas.quantity,
+                    price: gas.gas_price,
+                    is_empty: gas.is_empty,
+                    nc: gas.nc,
+                })),
+                add_gas_list: newGasDataNoIds.map((gas) => ({
+                    gas_id: gas.gas_id,
+                    quantity: gas.quantity,
+                    price: gas.gas_price,
+                    is_empty: gas.is_empty,
+                    nc: gas.nc,
+                })),
+                delete_gas_list: [...deletedGasData.values()].map((gas) => {
+                    return {id: gas.id}
+                }),
+                payments: tempPayment,
+            }
+            console.log(payload)
+            dispatch(updateGasDeliveryNew(payload))
         }
         setEdit(false)
     };
@@ -481,6 +513,7 @@ export const GasEditUi = ({
 
                 <Sheet className="mb-3">
                     <DateTimePickerField value={timeStamp} onChange={(date) => {
+                        //console.log({date})
                         setTimeStamp(date)
                     }}/>
                 </Sheet>

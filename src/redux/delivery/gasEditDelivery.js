@@ -61,8 +61,19 @@ export const addNewGasDelivery = (deliveryData) => async (dispatch) => {
         dispatch(gasEditDeliverySlice.actions.deliveryFailed(e.message));
     }
 }
-export const updateGasDelivery = (deliveryId, deliveryData) => async (dispatch) => {
+export const updateGasDeliveryNew = (deliveryData) => async (dispatch) => {
     try {
+        dispatch(gasEditDeliverySlice.actions.deliveryLoading());
+        const api_url = API_URL + "api/update_delivery_admin";
+        const response = await axios().post(api_url, deliveryData);
+        if (response?.data?.isSuccessful) {
+            console.log("Update successful");
+            dispatch(gasEditDeliverySlice.actions.deliverySuccess());
+        } else {
+            console.log("Update failed");
+            dispatch(gasEditDeliverySlice.actions.deliveryFailed(response.message));
+        }
+        console.log(response)
     } catch (error) {
         console.log(error);
         dispatch(gasEditDeliverySlice.actions.deliveryFailed(error.message));
