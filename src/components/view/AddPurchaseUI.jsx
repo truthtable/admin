@@ -1047,7 +1047,7 @@ export default function AddPurchaseUI({gaslistData, plants}) {
                                             </thead>
                                             <tbody>
                                             {
-                                                gasCalculationMap.values().toArray().map((gas, index) => {
+                                                [...gasCalculationMap?.values() || []].map((gas, index) => {
                                                     return (<tr>
                                                         <td className="text-black whitespace-nowrap">Go Gas {gas.kg}KG
                                                         </td>
