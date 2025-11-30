@@ -34,7 +34,7 @@ import AddPurchaseUI from "./AddPurchaseUI.jsx";
 import {getPlants} from "../../redux/actions/plantsActions.js";
 import {BsPrinter} from "react-icons/bs";
 import {Link} from "react-router-dom";
-import {decimalFix, toNumber} from "../../Tools.jsx";
+import {decimalFix, formatDateDDMMYY, toNumber} from "../../Tools.jsx";
 
 let gasList = [];
 let gasListMap = new Map();
@@ -59,6 +59,7 @@ export default function Purchase() {
         console.warn(itemError);
     }
 
+    let grandTotalBillingAmt = 0
     let grandTotalBallance = 0
     let grandTotalPayAmt = 0
 
@@ -111,7 +112,7 @@ export default function Purchase() {
         })
         gasList = allGases.data.data
     }
-    console.log({orders});
+    //console.log({orders});
     if (allGases.data != null && orders != null && orders.length > 0 && plants != null && plants.length > 0) {
         orders.forEach((order, index) => {
 
@@ -137,7 +138,7 @@ export default function Purchase() {
 
             let orderCleared = order.cleared;
 
-            if (order.items.length === 0) {
+            if (order.items.length === 0 && order.target === null) {
                 orderRows.push(
                     <tr key={`order-row-empty-${order.id}`}>
                         <td style={{borderWidth: 0, padding: 6, margin: 0, backgroundColor: "#FFB0B0"}} colSpan={12}>
@@ -201,7 +202,7 @@ export default function Purchase() {
                                     event.preventDefault();
                                     const formData = new FormData(event.currentTarget);
                                     const formJson = Object.fromEntries(formData.entries());
-                                    console.log(formJson);
+                                    //console.log(formJson);
                                     //dispatch(updateOrder(order.id, { [column]: editValue }))
                                 }}
                             >
@@ -255,21 +256,54 @@ export default function Purchase() {
                 )
             })
 
+            let targetAmt = 0
+            if (order?.target) {
+                targetAmt = toNumber(order.target_total_kg) * toNumber(order?.target?.rate)
+            }
+
             orderTotalFOR = (orderFOR * orderTotalKg)
             orderTotalTCS = (orderTCS * orderTotalAmt)
             orderTotalScheme = (orderSchemeRate * orderTotalKg)
 
             orderTotalAmt += (orderTotalFOR + orderTotalTCS) - orderTotalScheme
 
-            if (!orderCleared) {
-                grandTotalBallance += orderTotalAmt
-                grandTotalPayAmt += orderTtotalPayAmt
-            }
-
-            orderTotalAmt = orderTotalAmt - orderTotalDefectiveAmount
+            grandTotalBillingAmt += orderTotalAmt
+            grandTotalBallance += orderTotalAmt
+            grandTotalPayAmt += orderTtotalPayAmt + targetAmt + orderTotalDefectiveAmount
 
             orderTotalRemainingAmt = orderTotalAmt - orderTtotalPayAmt
 
+            if (order?.target) {
+                const target = order.target;
+                console.log(order)
+                orderRows.push(
+                    <tr key={`order-row-target-${order.id}`}>
+                        <td style={{borderWidth: 0, padding: 6, margin: 0, backgroundColor: "#B0E2FF"}} colSpan={13}>
+                            <Stack direction="row" gap={3}>
+                                <span>
+                                    Remark : {target.remark}
+                                </span>
+                                <span>
+                                    {formatDateDDMMYY(target.start_date)} To {formatDateDDMMYY(target.end_date)}
+                                </span>
+                                <span>
+                                    Rate : {target.rate}
+                                </span>
+                                <span>
+                                    KG : {order?.target_total_kg}
+                                </span>
+                                <span>
+                                    AMT : {decimalFix(targetAmt)}
+                                </span>
+                                <span>
+                                    Target {target.achieved ? "achieved" : "not achieved"}
+                                </span>
+                            </Stack>
+                        </td>
+                    </tr>
+                );
+            }
+            //if (order?.target)
             orderRows.push(<tr key={`order-row-total-${order.id}-${index}`}>
                 <td style={{borderWidth: 0, padding: 0, margin: 0,}} colSpan={13}>
                     <React.Fragment>
@@ -374,6 +408,7 @@ export default function Purchase() {
                     </React.Fragment>
                 </td>
             </tr>)
+
         })
     }
     const thStyle = {
@@ -436,7 +471,7 @@ export default function Purchase() {
 
                             alignItems: "center",
                             justifyContent: "center",
-                            backgroundColor: "#a33e23",
+                            backgroundColor: "#094376",
                             display: loading ? "none" : "flex",
                             px: 2
                         }
@@ -448,7 +483,7 @@ export default function Purchase() {
                                  color: "white",
                                  fontWeight: "bold",
                              }}
-                         >{`Pending Payment : ₹${(grandTotalBallance - grandTotalPayAmt).toFixed(2)}`}</span>
+                         >{`Billing Amt : ₹${decimalFix(grandTotalBillingAmt)}`}</span>
                 </Chip>
                 <Chip
                     sx={
@@ -468,7 +503,27 @@ export default function Purchase() {
                                  color: "white",
                                  fontWeight: "bold",
                              }}
-                         >{`Payment Done : ₹${grandTotalPayAmt}`}</span>
+                         >{`Payment Done : ₹${decimalFix(grandTotalPayAmt)}`}</span>
+                </Chip>
+                <Chip
+                    sx={
+                        {
+
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor: "#a33e23",
+                            display: loading ? "none" : "flex",
+                            px: 2
+                        }
+                    }
+                    size="sm"
+                >
+                         <span
+                             style={{
+                                 color: "white",
+                                 fontWeight: "bold",
+                             }}
+                         >{`Pending Payment : ₹${(grandTotalBallance - grandTotalPayAmt).toFixed(2)}`}</span>
                 </Chip>
                 <Divider
                     sx={{

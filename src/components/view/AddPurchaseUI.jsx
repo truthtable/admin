@@ -1,11 +1,12 @@
 /* eslint-disable react/prop-types */
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {
     Box,
     Button,
     Card,
     CardContent,
     Chip,
+    CircularProgress,
     Container,
     Divider,
     FormControl,
@@ -24,11 +25,12 @@ import {
     Typography
 } from "@mui/joy";
 import {CgAdd, CgTrash} from "react-icons/cg";
-import {useDispatch} from "react-redux";
-import {createOrder} from "../../redux/actions/purchaseOrderActions";
+import {useDispatch, useSelector} from "react-redux";
 import {FaRegPlusSquare} from "react-icons/fa";
 import {decimalFix, toNumber} from "../../Tools";
 import {FcCancel, FcOk} from "react-icons/fc";
+import {getPurchaseKg} from "../../redux/purchase/purchaseData.js";
+import {createOrder} from "../../redux/actions/purchaseOrderActions.js";
 
 export default function AddPurchaseUI({gaslistData, plants}) {
 
@@ -44,9 +46,16 @@ export default function AddPurchaseUI({gaslistData, plants}) {
     const [ncOrderItems, setNcOrderItems] = useState([]);
     const [showTargetOption, setShowTargetOption] = React.useState(false);
     const [targetAchieved, setTargetAchieved] = React.useState(false);
-    const [targetKg, setTagetKg] = React.useState(0);
+    const [targetStartDate, setTargetStartDate] = React.useState("");
+    const [targetEndDate, setTargetEndDate] = React.useState("");
     const [targetRate, setTagetRate] = React.useState(0);
-    //console.log(ncOrderItems);
+
+    const purchaseData = useSelector((state) => state.purchaseData);
+    //console.log(purchaseData);
+
+    const targetKg = Number(purchaseData?.kg ?? 0);
+    const totalTargetAmt = showTargetOption ? toNumber(targetKg) * toNumber(targetRate) : 0;
+    //console.log(targetKg);
 
     if ((gaslistData != null) && (gaslistData.length === 0) || (plants === undefined || plants === null || plants.length === 0)) {
         return <></>
@@ -198,7 +207,7 @@ export default function AddPurchaseUI({gaslistData, plants}) {
     const totalTcs = tcs * totalAmt
     const totalFor = for_charges * totalKg
 
-    const billing = totalAmt + totalTcs + totalFor - totalScheme - defective_amount
+    const billing = totalAmt + totalTcs + totalFor - totalScheme - defective_amount - totalTargetAmt
 
     ballance = billing - paid_val
 
@@ -318,6 +327,21 @@ export default function AddPurchaseUI({gaslistData, plants}) {
             return;
         }
     };
+
+    const fetchTargetKg = React.useCallback((startDateParam, endDateParam) => {
+        const s = startDateParam ?? targetStartDate;
+        const e = endDateParam ?? targetEndDate;
+        if (s === "" || e === "") return;
+        dispatch(getPurchaseKg({startDate: s, endDate: e}));
+    }, [targetStartDate, targetEndDate, dispatch]);
+
+    useEffect(() => {
+        if (showTargetOption && targetStartDate !== "" && targetEndDate !== "") {
+            fetchTargetKg(targetStartDate, targetEndDate);
+        }
+    }, [showTargetOption, targetStartDate, targetEndDate, fetchTargetKg]);
+
+
     return (
         <>
             <Button
@@ -337,7 +361,7 @@ export default function AddPurchaseUI({gaslistData, plants}) {
                 className="flex justify-center items-center"
             >
                 <Container
-                    maxWidth="xl"
+                    maxWidth="xxl"
                 >
                     <Sheet
                         variant="outlined"
@@ -367,9 +391,17 @@ export default function AddPurchaseUI({gaslistData, plants}) {
                                 formJson.purchase_order_items = allOrderItems;
                                 formData.tcs = tcs;
                                 formData.for_charges = for_charges;
-                                formData.defective_amount = defective_amount;
+                                //formData.defective_amount = defective_amount;
+                                if (showTargetOption) {
+                                    formJson.achieved = targetAchieved;
+                                }
                                 //console.log(formJson);
+                                if (allOrderItems.length === 0 && !showTargetOption) {
+                                    alert("Add Gas Items to Continue");
+                                    return;
+                                }
                                 dispatch(createOrder(formJson));
+                                setShowTargetOption(false);
                                 setAddPurchaseModel(false);
                             }}
                         >
@@ -389,7 +421,7 @@ export default function AddPurchaseUI({gaslistData, plants}) {
                                             placeholder="Date"
                                             type="date"
                                             name="date"
-                                            required
+                                            required={!showTargetOption}
                                             size="sm"
                                             onKeyDown={(e) => {
                                                 try {
@@ -422,7 +454,7 @@ export default function AddPurchaseUI({gaslistData, plants}) {
                                             type="text"
                                             name="order_no"
                                             size="sm"
-                                            required
+                                            required={!showTargetOption}
                                             className="w-full flex-grow"
                                         />
                                     </FormControl>
@@ -430,7 +462,7 @@ export default function AddPurchaseUI({gaslistData, plants}) {
                                         <FormLabel>Plant</FormLabel>
                                         <Select
                                             placeholder="Plant"
-                                            required
+                                            required={!showTargetOption}
                                             name="plant_id"
                                             size="sm"
                                             className="w-full flex-grow"
@@ -446,7 +478,7 @@ export default function AddPurchaseUI({gaslistData, plants}) {
                                     <FormControl className="w-full flex-grow">
                                         <FormLabel>Scheme</FormLabel>
                                         <Input className="w-full flex-grow" placeholder="Scheme" size="sm" type="text"
-                                               name="scheme_type" required/>
+                                               name="scheme_type" required={!showTargetOption}/>
                                     </FormControl>
                                     <FormControl className="w-full flex-grow">
                                         <FormLabel>Scheme Rate</FormLabel>
@@ -481,7 +513,7 @@ export default function AddPurchaseUI({gaslistData, plants}) {
                                                }}
 
                                                placeholder="Scheme Rate" size="sm" type="number" name="scheme_rate"
-                                               required
+                                               required={!showTargetOption}
                                                endDecorator={
                                                    <Chip
                                                        variant="outlined"
@@ -504,76 +536,71 @@ export default function AddPurchaseUI({gaslistData, plants}) {
                                         <span className="text-black font-bold break-keep whitespace-nowrap">Target Options</span>
                                         <Switch
                                             checked={showTargetOption}
-                                            onChange={(e) => setShowTargetOption(e.target.checked)}
+                                            onChange={(e) => {
+                                                setShowTargetOption(e.target.checked)
+                                            }}
                                         />
                                     </Stack>
                                     <Divider orientation="vertical"/>
                                     {
                                         showTargetOption && <>
-                                            <FormControl className="w-full flex-grow">
+                                            <FormControl className="w-full flex-grow max-w-100">
                                                 <FormLabel>Remark</FormLabel>
                                                 <Input
                                                     placeholder="Target Remark"
                                                     type="text"
-                                                    name="target_type"
+                                                    name="remark"
                                                     size="sm"
                                                     required
                                                     className="w-full flex-grow"
                                                 />
                                             </FormControl>
-                                            <FormControl className="w-full flex-grow">
+                                            <FormControl className="w-full flex-grow max-w-32">
                                                 <FormLabel>Target Start</FormLabel>
                                                 <Input
                                                     placeholder="Target Start"
                                                     type="date"
-                                                    name="target_start"
+                                                    name="start_date"
+                                                    value={targetStartDate}
+                                                    onChange={(e) => {
+                                                        setTargetStartDate(e.target.value)
+                                                    }}
                                                     size="sm"
                                                     required
                                                     className="w-full flex-grow"
                                                 />
                                             </FormControl>
-                                            <FormControl className="w-full flex-grow">
+                                            <FormControl className="w-full flex-grow max-w-32">
                                                 <FormLabel>Target End</FormLabel>
                                                 <Input
                                                     placeholder="Target End"
                                                     type="date"
-                                                    name="target_end"
+                                                    name="end_date"
+                                                    value={targetEndDate}
+                                                    onChange={(e) => {
+                                                        setTargetEndDate(e.target.value)
+                                                    }}
                                                     size="sm"
                                                     required
                                                     className="w-full flex-grow"
                                                 />
                                             </FormControl>
-                                            <FormControl className="w-full flex-grow max-w-24">
+                                            <FormControl className="w-full flex-grow max-w-32">
                                                 <FormLabel>Total KG</FormLabel>
-                                                <Input
-                                                    placeholder="Total KG"
-                                                    type="number"
-                                                    name="total_kg"
-                                                    value={
-                                                        targetKg
-                                                    }
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === 'e' || e.key === 'E') {
-                                                            e.preventDefault();
-                                                        }
-                                                    }}
-                                                    onInput={(e) => {
-                                                        let value = e.target.value;
-                                                        //remove e if exist
-                                                        value = value.toString().replace(/[eE]/g, '');
-                                                        setTagetKg(value);
-                                                    }}
-                                                    size="sm"
-                                                    required
-                                                    className="w-full flex-grow"
-                                                />
+                                                {
+                                                    purchaseData.isLoading ? <CircularProgress size="sm"/> : null
+                                                }
+                                                <span className="text-black font-black whitespace-nowrap">{
+                                                    (targetStartDate === "" || targetEndDate === "") ? "(Select Dates)" : decimalFix(toNumber(targetKg), 2)
+                                                }
+                                                </span>
                                             </FormControl>
                                             <FormControl className="w-full flex-grow max-w-20">
                                                 <FormLabel>Rate</FormLabel>
                                                 <Input
                                                     placeholder="Total KG"
                                                     type="number"
-                                                    name="total_kg"
+                                                    name="rate"
                                                     value={
                                                         targetRate
                                                     }
@@ -590,7 +617,7 @@ export default function AddPurchaseUI({gaslistData, plants}) {
                                                     }}
                                                     size="sm"
                                                     required
-                                                    className="w-full flex-grow"
+                                                    className="w-full flex-grow max-w-20"
                                                 />
                                             </FormControl>
                                             <Divider orientation="vertical"/>
@@ -601,8 +628,8 @@ export default function AddPurchaseUI({gaslistData, plants}) {
                                                     Total
                                                 </FormLabel>
                                                 <Divider orientation="horizontal"/>
-                                                <span className="text-black font-black">{
-                                                    decimalFix(toNumber(targetKg) * toNumber(targetRate), 2)
+                                                <span className="text-black font-black text-center ">{
+                                                    totalTargetAmt
                                                 }</span>
                                             </Stack>
                                             <Divider orientation="vertical"/>
@@ -614,7 +641,9 @@ export default function AddPurchaseUI({gaslistData, plants}) {
                                                         targetAchieved ? "success" : "danger"
                                                     }
                                                     checked={targetAchieved}
-                                                    onChange={(e) => setTargetAchieved(e.target.checked)}
+                                                    onChange={(e) => {
+                                                        setTargetAchieved(e.target.checked)
+                                                    }}
                                                 />
                                                 {
                                                     targetAchieved ? <FcOk/> : <FcCancel/>
@@ -699,13 +728,13 @@ export default function AddPurchaseUI({gaslistData, plants}) {
                                             ))}
                                             {
                                                 ncOrderItems.length > 0 && <tr>
-                                                    <td style={{...noOutline}} colSpan={3}>
+                                                    <td style={{...noOutline}} colSpan={4}>
                                                         <Divider className="my-1"/>
                                                     </td>
-                                                    <td style={{...noOutline, textAlign: "center"}} colSpan={2}>
+                                                    <td style={{...noOutline, textAlign: "center"}} colSpan={1}>
                                                         New Connection
                                                     </td>
-                                                    <td style={{...noOutline}} colSpan={3}>
+                                                    <td style={{...noOutline}} colSpan={4}>
                                                         <Divider className="my-1"/>
                                                     </td>
                                                 </tr>
@@ -937,6 +966,14 @@ export default function AddPurchaseUI({gaslistData, plants}) {
                                             </td>
                                         </tr>
                                         <tr>
+                                            <th className="!border-0 bg-white  p-0 m-0 w-40"><span
+                                                className="font-bold">Total Target</span></th>
+                                            <td className="!border-0 bg-white  p-0 m-0  text-left">
+                                                <span
+                                                    className="text-bold text-black font-black">-{totalTargetAmt.toFixed(2)}</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
                                             <th className="!border-0 bg-white  p-0 m-0 w-40" colSpan={2}>
                                                 <Divider orientation="horizontal" className="!bg-gray-300"/>
                                             </th>
@@ -955,7 +992,7 @@ export default function AddPurchaseUI({gaslistData, plants}) {
                                                         color="success"
                                                         arrow
                                                         variant="outlined"
-                                                        title={`${totalAmt.toFixed(2)} + ${totalTcs.toFixed(2)} + ${totalFor.toFixed(2)} - ${totalScheme.toFixed(2)} - ${defective_amount}`}
+                                                        title={`₹${billing.toFixed(2)}`}
                                                     >
                                                                            <span
                                                                                className="text-blue-700 font-bold"
