@@ -271,7 +271,7 @@ export default function Purchase() {
             grandTotalBallance += orderTotalAmt
             grandTotalPayAmt += orderTtotalPayAmt + targetAmt + orderTotalDefectiveAmount
 
-            orderTotalRemainingAmt = orderTotalAmt - orderTtotalPayAmt
+            orderTotalRemainingAmt = orderTotalAmt - orderTtotalPayAmt - targetAmt - orderTotalDefectiveAmount
 
             if (order?.target) {
                 const target = order.target;
@@ -338,10 +338,6 @@ export default function Purchase() {
                                         {label: "Total Qty", value: orderTotalQty},
                                         {label: "Total Return Kg", value: orderTotalReturnKg},
                                         {label: "Total Return Qty", value: orderTotalReturnQty},
-                                        {
-                                            label: "Defective Amount",
-                                            value: decimalFix(orderTotalDefectiveAmount, true)
-                                        },
                                         //TODO FIX THIS td in span
                                         {
                                             label: "Scheme", value: <React.Fragment> <Cell
@@ -383,6 +379,10 @@ export default function Purchase() {
                                                 data={orderTtotalPayAmt}
                                                 tableName="purchase_orders"
                                             /></React.Fragment>
+                                        },
+                                        {
+                                            label: "Defective Amount",
+                                            value: decimalFix(orderTotalDefectiveAmount, true)
                                         },
                                         {label: "Pending Amt", value: orderTotalRemainingAmt.toFixed(2)},
                                     ].map((data, index) => (

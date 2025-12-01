@@ -394,6 +394,7 @@ export default function AddPurchaseUI({gaslistData, plants}) {
                                 //formData.defective_amount = defective_amount;
                                 if (showTargetOption) {
                                     formJson.achieved = targetAchieved;
+                                    formJson.hasTarget = true;
                                 }
                                 //console.log(formJson);
                                 if (allOrderItems.length === 0 && !showTargetOption) {
