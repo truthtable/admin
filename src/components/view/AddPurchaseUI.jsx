@@ -204,6 +204,7 @@ export default function AddPurchaseUI({gaslistData, plants}) {
 
     const totalScheme = (totalKg * scheme_rate)
 
+    console.log({tcs, totalAmt})
     const totalTcs = tcs * totalAmt
     const totalFor = for_charges * totalKg
 

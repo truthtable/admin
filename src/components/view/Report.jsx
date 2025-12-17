@@ -218,7 +218,7 @@ export const Report = ({isLogged}) => {
                         if (gas.nc) {
                             entry.nc = toNumber(gas.quantity);
                             entry.ncRate = toNumber(gas.price);
-                            KGS_COUNT[`sent${gas.gas_cylinder.kg}`] = (KGS_COUNT[`sent${gas.gas_cylinder.kg}`] || 0) + toNumber(gas.quantity);
+                            KGS_COUNT[`nc${gas.gas_cylinder.kg}`] = toNumber(gas.quantity) + (KGS_COUNT[`nc${gas.gas_cylinder.kg}`] || 0);
                             grandQtyTotal += toNumber(gas.quantity);
                             grandQtyKgTotal += toNumber(gas.quantity) * toNumber(gas.gas_cylinder.kg);
                         } else if (gas.is_empty) {
@@ -704,6 +704,10 @@ export const Report = ({isLogged}) => {
                                                 return (<><Stack direction="column">
                                                 <span
                                                     className="font-bold text-black">{`${kg}KG`} : {toNumber(KGS_COUNT[`sent${kg}`])}</span>
+                                                        <Divider className="w-full" orientation={"horizontal"}
+                                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                                        <span
+                                                            className="font-bold text-black">{`NC`} : {toNumber(KGS_COUNT[`nc${kg}`])}</span>
                                                         <Divider className="w-full" orientation={"horizontal"}
                                                                  sx={{backgroundColor: "#979797", opacity: 0.5}}/>
                                                         <span

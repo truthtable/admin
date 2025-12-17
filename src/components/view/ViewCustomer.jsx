@@ -32,7 +32,7 @@ import {UPDATE_CUSTOMER, UPDATE_USER, URL} from "../../services/Api.jsx";
 import {TbHomePlus} from "react-icons/tb";
 import {fetchGas} from "../../redux/actions/gasAction.js";
 import {CgClose} from "react-icons/cg";
-import {decimalFix, getFromLocalStorage, setSessionVal, storeInLocalStorage} from "../../Tools.jsx";
+import {decimalFix, setSessionVal, storeInLocalStorage} from "../../Tools.jsx";
 import {FaInfoCircle} from "react-icons/fa";
 import {adjustBalance, customerPaymentsUpdateOrCreateReset} from "../../redux/customerPaymentsUpdateOrCreate.js";
 import gasServices from "../../services/gas-services.jsx";
@@ -60,7 +60,8 @@ const ViewCustomer = () => {
     const c = useSelector((state) => state.localCustomers);
     const localCustomers = c.customers || [];
     //console.log({c, localCustomers})
-    const [searchText, setSearchCustomerText] = useState(getFromLocalStorage(CUSTOMER_SEARCH_TEXT) || "");
+    //getFromLocalStorage(CUSTOMER_SEARCH_TEXT) || ""
+    const [searchText, setSearchCustomerText] = useState("");
     const setSearchText = (text) => {
         storeInLocalStorage(CUSTOMER_SEARCH_TEXT, text);
         setSearchCustomerText(text);

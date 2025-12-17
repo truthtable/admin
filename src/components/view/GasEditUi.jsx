@@ -226,7 +226,7 @@ export const GasEditUi = ({
             id: "new_" + gasData.size + 1,
             is_empty: availableCombination.is_empty,
             quantity: "",
-            gas_price: "",
+            gas_price: 0,
             gas_id: gasId,
             nc: availableCombination.nc
         });
@@ -234,9 +234,14 @@ export const GasEditUi = ({
         setGasData(tempGas);
     }
     const handleDeleteGasData = (gasId) => {
-        let tempDeletedGas = new Map(deletedGasData); // Clone the current deletedGasData Map
-        tempDeletedGas.set(gasId, gasData.get(gasId)); // Add deleted gas to the map
-        setDeletedGasData(tempDeletedGas); // Update the deletedGasData state
+        console.log("Deleting gas with id:", gasId);
+        const isNewGas = `${gasId}`.startsWith("new_");
+        if (!isNewGas) {
+            let tempDeletedGas = new Map(deletedGasData); // Clone the current deletedGasData Map
+            tempDeletedGas.set(gasId, gasData.get(gasId)); // Add deleted gas to the map
+            setDeletedGasData(tempDeletedGas); // Update the deletedGasData state
+        }
+
         let tempGas = new Map(gasData); // Clone current gasData
         tempGas.delete(gasId); // Remove the gas by id
         setGasData(tempGas); // Update the gasData state
@@ -291,7 +296,7 @@ export const GasEditUi = ({
             mtGasList.push({
                 gas_id: Number(value.gas_id),
                 quantity: Number(value.quantity),
-                price: Number(value.gas_price),
+                price: 0,
                 is_empty: value.is_empty,
                 nc: value.nc ? true : false,
             })
@@ -323,6 +328,14 @@ export const GasEditUi = ({
         setEditName(value);
     };
     const handleSubmit = async () => {
+
+        for (const [_, gas] of gasData) {
+            if (!gas.is_empty && gas.gas_price < 1) {
+                alert("Please enter a valid price for delivered gas.");
+                return;
+            }
+        }
+
         let tempGasData = new Map(gasData);
         let newGasAdded = [...tempGasData.values()].filter(
             (gas) => {
@@ -683,13 +696,21 @@ export const GasEditUi = ({
                                                                handleSetGasData(data.id, "quantity", event.target.value);
                                                            }}
                                                     />
-                                                    <Input required={(!data.is_empty)} sx={{
-                                                        width: "168px",
-                                                        visibility: (!data.is_empty) ? "visible" : "hidden"
-                                                    }} type="number" value={data.gas_price}
-                                                           startDecorator={<span>Amt : </span>} onChange={(event) => {
-                                                        handleSetGasData(data.id, "gas_price", event.target.value);
-                                                    }}/>
+                                                    {/* {
+                                                        data.is_empty ? <></> : <></>
+                                                    }*/}
+                                                    <Input
+                                                        required={(!data.is_empty)}
+                                                        sx={{
+                                                            width: "168px",
+                                                            visibility: (!data.is_empty) ? "visible" : "hidden"
+                                                        }}
+                                                        type="number"
+                                                        value={data.gas_price}
+                                                        startDecorator={<span>Amt : </span>}
+                                                        onChange={(event) => {
+                                                            handleSetGasData(data.id, "gas_price", event.target.value);
+                                                        }}/>
                                                     <Box
                                                         onClick={() => {
                                                             handleDeleteGasData(data.id)

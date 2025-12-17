@@ -400,7 +400,7 @@ export default function DeliveryHistory() {
                 if (gas.nc) {
                     entry.nc = toNumber(gas.quantity);
                     entry.ncRate = toNumber(gas.gas_price);
-                    KGS_COUNT[`qty_${gas.kg}`] = (KGS_COUNT[`qty_${gas.kg}`] || 0) + toNumber(gas.quantity);
+                    KGS_COUNT[`nc_${gas.kg}`] = toNumber(gas.quantity) + (KGS_COUNT[`nc_${gas.kg}`] || 0);
                 } else if (gas.is_empty) {
                     entry.mt = toNumber(gas.quantity);
                     KGS_COUNT[`mt_${gas.kg}`] = (KGS_COUNT[`mt_${gas.kg}`] || 0) + toNumber(gas.quantity);
@@ -988,6 +988,7 @@ export default function DeliveryHistory() {
                                         >
                                             <span>{kg}kg</span>
                                             <Divider className="!bg-black" orientation="vertical"/>
+                                            <span>[ NC : {kgsCount?.[`nc_${kg}`] || 0} ]</span>
                                             <MdCallMade/>
                                             <span>{kgsCount?.[`qty_${kg}`] || 0}</span>
                                             <span>-</span>
