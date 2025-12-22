@@ -34,7 +34,7 @@ import {
 } from "../../Tools.jsx";
 import {GasEditUi} from "./GasEditUi.jsx";
 import MapObjectManager from "../class/MapArrayManager.jsx";
-import {MdCallMade, MdCallReceived, MdEdit} from "react-icons/md";
+import {MdCallMade, MdCallMissedOutgoing, MdCallReceived, MdEdit} from "react-icons/md";
 import ExportODS from "../ExportODS.jsx";
 import {FaArrowDown} from "react-icons/fa";
 import {addNewGasDeliveryReset} from "../../redux/delivery/gasEditDelivery.js";
@@ -357,8 +357,10 @@ export default function DeliveryHistory() {
                         mDateEnd.setHours(23, 59, 59, 999);
 
                         const deliveryDate = new Date(delivery.created_at);
+                        // Reset time to compare only dates
+                        const deliveryDateOnly = new Date(deliveryDate.getFullYear(), deliveryDate.getMonth(), deliveryDate.getDate());
 
-                        if (deliveryDate < mDateStart || deliveryDate > mDateEnd) {
+                        if (deliveryDateOnly < mDateStart || deliveryDateOnly > mDateEnd) {
                             return false;
                         }
                     }
@@ -988,13 +990,13 @@ export default function DeliveryHistory() {
                                         >
                                             <span>{kg}kg</span>
                                             <Divider className="!bg-black" orientation="vertical"/>
-                                            <span>[ NC : {kgsCount?.[`nc_${kg}`] || 0} ]</span>
                                             <MdCallMade/>
-                                            <span>{kgsCount?.[`qty_${kg}`] || 0}</span>
-                                            <span>-</span>
+                                            <span>{(kgsCount?.[`qty_${kg}`] || 0) + (kgsCount?.[`nc_${kg}`] || 0)}</span>
+                                            <Divider className="!bg-black" orientation="vertical"/>
                                             <MdCallReceived/>
                                             <span>{kgsCount?.[`mt_${kg}`] || 0}</span>
-                                            <span>=</span>
+                                            <Divider className="!bg-black" orientation="vertical"/>
+                                            <MdCallMissedOutgoing/>
                                             <span>{(kgsCount?.[`qty_${kg}`] || 0) - (kgsCount?.[`mt_${kg}`] || 0)}</span>
                                         </Stack>
                                     ))
