@@ -38,8 +38,10 @@ import {adjustBalance, customerPaymentsUpdateOrCreateReset} from "../../redux/cu
 import gasServices from "../../services/gas-services.jsx";
 import {RiDeleteBin2Fill} from "react-icons/ri";
 import {deleteCustomer} from "../../state/CustomerUpdate.jsx";
+import {GasEditUi} from "./GasEditUi.jsx";
 
 let CUSTOMERS = [];
+let localCustomers = [];
 const CUSTOMER_SEARCH_TEXT = "customerSearchText";
 const BALANCE_SORT = "balance";
 const CUSTOMER_NAME_SORT = "customer_name";
@@ -56,12 +58,14 @@ const ViewCustomer = () => {
         customerPaymentsUpdateOrCreateErrorMessage,
         isCustomerPaymentsUpdateOrCreateSuccess
     } = useSelector((state) => state.customerPaymentsUpdateOrCreate);
-    console.log(isCustomerPaymentsUpdateOrCreateSuccess)
+    //console.log(isCustomerPaymentsUpdateOrCreateSuccess)
     const c = useSelector((state) => state.localCustomers);
-    const localCustomers = c.customers || [];
+    localCustomers = c.customers || [];
     //console.log({c, localCustomers})
     //getFromLocalStorage(CUSTOMER_SEARCH_TEXT) || ""
     const [searchText, setSearchCustomerText] = useState("");
+    const [debouncedSearchText, setDebouncedSearchText] = useState("");
+
     const setSearchText = (text) => {
         storeInLocalStorage(CUSTOMER_SEARCH_TEXT, text);
         setSearchCustomerText(text);
@@ -94,9 +98,14 @@ const ViewCustomer = () => {
                 return a.diaryNumber - b.diaryNumber;
             });
         }
-        if (searchText.length > 0) {
+        /* if (searchText.length > 0) {
+             filtered = filtered.filter((item) => {
+                 return item.name.toLowerCase().includes(searchText.toLowerCase());
+             });
+         }*/
+        if (debouncedSearchText.length > 0) {
             filtered = filtered.filter((item) => {
-                return item.name.toLowerCase().includes(searchText.toLowerCase());
+                return item.name.toLowerCase().includes(debouncedSearchText.toLowerCase());
             });
         }
         xcombineData = filtered;
@@ -107,7 +116,7 @@ const ViewCustomer = () => {
                 dispatch(deleteCustomer(userId))
             }
         ));
-    }, [localCustomers, sortBy, searchText]);
+    }, [localCustomers, sortBy, debouncedSearchText]);
     useEffect(() => {
         if (c.customers === null && !customerData.isLoading) {
             dispatch(fetchCustomerData());
@@ -141,6 +150,13 @@ const ViewCustomer = () => {
             setShouldReload(false);
         }
     }, [shouldReload]);
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearchText(searchText);
+        }, 300); // 300ms delay
+
+        return () => clearTimeout(timer);
+    }, [searchText]);
     const [openNewConnection, setOpenNewConnection] = useState(false);
     const NewConnectionForm = () => {
         const [gasIdList, setGasIdList] = useState(new Array());
@@ -192,6 +208,7 @@ const ViewCustomer = () => {
                 return temp;
             })
         };
+
         return <Modal
             open={openNewConnection}
             onClose={() => setOpenNewConnection(false)}
@@ -482,6 +499,7 @@ const ViewCustomer = () => {
         }
     } catch (e) {
     }
+    //console.log(localCustomers)
     return (
         <div className="w-full h-full overflow-auto p-2.5 bg-[#f5f5f5] rounded-2xl">
             <NewConnectionForm/>
@@ -683,7 +701,32 @@ function makeRow(data, onAllDataClick, onDelete) {
             value={data.phone_no}
             table={UPDATE_USER}
         />,
-        <Balance data={data}/>,
+        /*<Balance data={data}/>,*/
+        <GasEditUi
+            key={`balance-${data.id}-edit`}
+            selectedGasList={[]}
+            customer={data.name}
+            custId={data.id}
+            deliveryBoy={-1}
+            deliveryBoyId={-1}
+            deleveryId={-1}
+            payments={[]}
+            correction={false}
+            openEdit={false}
+            isOutstanding={true}
+            gasList={null}
+            CUSTOMER_LIST={localCustomers}
+            isFromCustomerSection={true}
+            isAddNewDeliveryModal={true}
+            oldBalance={data.totalBalance ? data.totalBalance : 0}
+            DELIVERY_BOY_LIST={[]}
+            deleveryGasEditUiGasList={[]}
+            onSuccess={() => {
+            }}
+            createdAt={null}
+            onClose={() => {
+            }}
+        />,
         <Box
             key="chb"
             className="p-0 m-0 bg-transparent mx-0.5 transition-colors hover:bg-[rgba(75,112,245,0.25)] pl-1"
@@ -800,6 +843,36 @@ function Balance({data}) {
                             onChange={(e) => {
                                 const num = e.target.value.replace(/[^\d\-\.]/g, "");
                                 setAmount(num);
+                            }}
+                        />
+                        <Divider className="mb-10"/>
+                        <span className="text-black font-bold">Full Cylinder</span>
+                        <Input
+                            size="sm"
+                            type="text"
+                            inputMode="numeric"
+                            pattern="\d*"
+                            placeholder="Enter Amount"
+                            className="text-black font-bold"
+                            value={amount}
+                            onChange={(e) => {
+                                const num = e.target.value.replace(/[^\d\-\.]/g, "");
+                                //setAmount(num);
+                            }}
+                        />
+                        <Divider className="mb-10"/>
+                        <span className="text-black font-bold">MT Cylinder</span>
+                        <Input
+                            size="sm"
+                            type="text"
+                            inputMode="numeric"
+                            pattern="\d*"
+                            placeholder="Enter Amount"
+                            className="text-black font-bold"
+                            value={amount}
+                            onChange={(e) => {
+                                const num = e.target.value.replace(/[^\d\-\.]/g, "");
+                                //setAmount(num);
                             }}
                         />
                         <Divider className="mb-10"/>

@@ -36,7 +36,7 @@ export const fetchCustomerData = createAsyncThunk(
                             customer.diaryNumber,
                             user.address,
                             user.phone_no,
-                            (Number(customer.totalPrice) - Number(customer.totalPaid))
+                            (Number(customer.totalPrice) - Number(customer.totalPaid)) + Number(customer.deliveryBalance)
                         )
                     });
                     dispatch(fetchLocalCustomers())

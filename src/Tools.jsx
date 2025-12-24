@@ -1,3 +1,5 @@
+import {Option} from "@mui/joy";
+
 export const extractNumber = (str) => {
     let num = str.replace(/[^0-9]/g, '');
     return parseInt(num);
@@ -204,4 +206,23 @@ export const dashIfZero = (value) => {
         return "-";
     }
     return num;
+}
+
+const gasOptionsCache = [];
+
+export function createGasOptions(gasData) {
+    try {
+        if (!gasData?.data) return [];
+        if (gasOptionsCache.length > 0) return gasOptionsCache;
+        gasOptionsCache.push(
+            ...gasData.data.map((value) => (
+                <Option key={value.id} value={value.id}>
+                    {value.company_name} - {value.kg}KG
+                </Option>
+            ))
+        );
+        return gasOptionsCache;
+    } catch (error) {
+        return [];
+    }
 }

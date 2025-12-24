@@ -166,6 +166,7 @@ export const validateOtp = (otp) => async (dispatch) => {
         //dispatch(otpVerified(response.data));
         if (response.data.success) {
             sessionStorage.setItem("authToken", response.data.token);
+            sessionStorage.id = response.data.id;
             sessionStorage.removeItem("otpToken");
             //reload window
             window.location.reload();

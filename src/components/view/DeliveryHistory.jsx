@@ -21,6 +21,7 @@ import {fetchUser} from "../../redux/actions/userActions.js";
 import {UPDATE_GAS_DELIVERY_SUCCESS_RESET} from "../../redux/actions/gasDeliveryActions.js";
 import gasServices from "../../services/gas-services.jsx";
 import {
+    createGasOptions,
     dashIfZero,
     decimalFix,
     formatDateToDDMMYY_HHMM,
@@ -114,14 +115,10 @@ export default function DeliveryHistory() {
     }, [allGasData.data]);
 
     // Memoize gas options for UI
-    const deleveryGasEditUiGasList = useMemo(() => {
-        if (!allGasData.data?.data) return [];
-        return allGasData.data.data.map((value) => (
-            <Option key={value.id} value={value.id}>
-                {value.company_name} - {value.kg}KG
-            </Option>
-        ));
-    }, [allGasData.data]);
+    const deleveryGasEditUiGasList = useMemo(() =>
+            createGasOptions(allGasData.data),
+        [allGasData.data]
+    );
 
     // Memoize customer and delivery boy lists
     const {CUSTOMER_LIST, ADMIN_LIST, DELIVERY_BOY_LIST} = useMemo(() => {
@@ -418,6 +415,7 @@ export default function DeliveryHistory() {
             const tempCsvList = [];
             const tempNcCsvList = [];
             const gasObjs = gasDataMap.toObject();
+            const deliveryBalance = toNumber(delivery.balance);
             let normalSubTotal = 0;
             let nCSubTotal = 0;
             let subTotal = 0;
@@ -508,7 +506,7 @@ export default function DeliveryHistory() {
             });
 
             totalPaid += received;
-            totalAmount += subTotal;
+            totalAmount += subTotal + deliveryBalance;
             let balance = 0
             balance = subTotal - received;
             const displaySubTotal = subTotal === 0 ? "-" : subTotal;
@@ -559,19 +557,23 @@ export default function DeliveryHistory() {
                                     }
                                 </DataCell>
                                 <DataCell correction={correction} key={`delivery-${i}-date`}>{date}</DataCell>
-                                <DataCell colspan={temptKgsList.length + 1} correction={correction}
-                                          key={`delivery-${i}-name`}>{customerName} &nbsp;|&nbsp;
-                                    Old Balance {toNumber(oldBal)} &nbsp;|&nbsp;New
-                                    Balance {-1 * toNumber(newBal)}
-                                </DataCell>
-                                <DataCell correction={correction} colspan={3} key={`delivery-${i}-sub`}></DataCell>
+                                <DataCell correction={correction}
+                                          key={`delivery-${i}-name`}>{customerName}[OUTSTANDING]</DataCell>
+                                {temptKgsList}
+                                <DataCell correction={correction} key={`delivery-${i}-sub`}>{deliveryBalance}</DataCell>
+                                <DataCell correction={correction}
+                                          key={`delivery-${i}-online`}>{dashIfZero(online)}</DataCell>
+                                <DataCell correction={correction}
+                                          key={`delivery-${i}-cash`}>{dashIfZero(cash)}</DataCell>
                                 <DataCell correction={correction}
                                           key={`delivery-${i}-received`}>{displayReceived}</DataCell>
-                                <DataCell correction={correction} key={`delivery-${i}-balance`}>{balance}</DataCell>
+                                <DataCell correction={correction} key={`delivery-${i}-balance`}>{
+                                    deliveryBalance
+                                }</DataCell>
                             </tr>
                         }
                     />
-                )
+                );
             } else {
                 deliveriesMapList.push(
                     <DeliveryRow
@@ -633,13 +635,13 @@ export default function DeliveryHistory() {
                 csvData.push([
                     date,
                     customerName,
-                    "Balance Adjustment",
+                    "Balance",
                     ...tempCsvList,
+                    deliveryBalance,
                     "",
                     "",
                     "",
-                    displayReceived,
-                    (toNumber(normalSubTotal) - toNumber(received))
+                    deliveryBalance
                 ]);
             } else {
                 if (!isAllNcGasEmpty) {

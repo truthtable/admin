@@ -169,6 +169,7 @@ export const Report = ({isLogged}) => {
         let grandMtTotal = 0;
         let grandMtKgTotal = 0;
         let grandOrderTotal = 0;
+        let grandTotalBalance = 0;
         let grandTotalOnline = 0;
         let grandTotalCash = 0;
 
@@ -179,7 +180,8 @@ export const Report = ({isLogged}) => {
 
         const apiTotalPaid = report?.totalPaid || 0;
         const apiTotalBill = report?.totalPrice || 0;
-        let apiOutstanding = apiTotalBill - apiTotalPaid
+
+        let apiOutstanding = apiTotalBill - apiTotalPaid + (report?.deliveryBalance || 0)
 
         //console.log(report?.deliveries)
         document.title = `${titleCase(report?.customer?.user?.name)} - ${startDate} to ${endDate}`
@@ -208,6 +210,10 @@ export const Report = ({isLogged}) => {
             }
 
             sortedDeliveries.forEach((delivery, i) => {
+
+                //console.log(delivery.balance);
+                grandTotalBalance += toNumber(delivery.balance);
+
                 const correction = delivery.correction;
                 const gasDataMap = new MapObjectManager();
                 try {
@@ -306,7 +312,7 @@ export const Report = ({isLogged}) => {
                         }
                     })
                     grandOrderTotal += subTotal;
-                    let balance = subTotal - received;
+                    let balance = subTotal - received + delivery.balance;
                     //}
 
                     const displaySubTotal = subTotal === 0 ? "-" : subTotal;

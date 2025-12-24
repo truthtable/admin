@@ -48,7 +48,10 @@ export const addNewGasDelivery = (deliveryData) => async (dispatch) => {
             received_gas_list: deliveryData.received_gas_list,
             payments: deliveryData.payments,
             created_at: linuxEpoch,
+            is_balance: deliveryData?.isOutstanding || false,
+            balance_amount: deliveryData?.balanceAmount || 0,
         }
+        console.log(mPayload)
         const response = await axios().post(api_url, mPayload);
         if (response?.data?.isSuccessfull) {
             dispatch(gasEditDeliverySlice.actions.deliverySuccess());
