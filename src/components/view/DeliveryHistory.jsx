@@ -546,6 +546,7 @@ export default function DeliveryHistory() {
                                             correction={correction}
                                             openEdit={editRow === delivery.id}
                                             isOutstanding={true}
+                                            deliveryBalance={deliveryBalance}
                                             gasList={gasList}
                                             CUSTOMER_LIST={CUSTOMER_LIST}
                                             DELIVERY_BOY_LIST={DELIVERY_BOY_LIST}

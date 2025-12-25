@@ -56,6 +56,7 @@ export const GasEditUi = ({
                               DELIVERY_BOY_LIST,
                               isAddNewDeliveryModal = false,
                               oldBalance = 0,
+                              deliveryBalance = 1,
                               deleveryGasEditUiGasList,
                               onSuccess,
                               onClose = () => {
@@ -125,7 +126,7 @@ export const GasEditUi = ({
     })
     const [cashAmount, setCashAmountState] = useState(cashPayment);
     const [onlineAmount, setOnlineAmountState] = useState(onlinePayment);
-    const [balance, setBalance] = useState(0);
+    const [balance, setBalance] = useState(deliveryBalance);
     let online = 0
     let cash = 0
     let grandTotal = 0;
@@ -463,14 +464,14 @@ export const GasEditUi = ({
                     id: gas.id,
                     gas_id: gas.gas_id,
                     quantity: gas.quantity,
-                    price: gas.gas_price,
+                    price: isOutstanding ? 1 : gas.gas_price,
                     is_empty: gas.is_empty,
                     nc: gas.nc,
                 })),
                 add_gas_list: newGasDataNoIds.map((gas) => ({
                     gas_id: gas.gas_id,
                     quantity: gas.quantity,
-                    price: gas.gas_price,
+                    price: isOutstanding ? 1 : gas.gas_price,
                     is_empty: gas.is_empty,
                     nc: gas.nc,
                 })),
@@ -478,6 +479,8 @@ export const GasEditUi = ({
                     return {id: gas.id}
                 }),
                 payments: tempPayment,
+                is_balance: isOutstanding,
+                balance_amount: isOutstanding ? balance : 0,
             }
             console.log(payload)
             dispatch(updateGasDeliveryNew(payload))
@@ -507,7 +510,7 @@ export const GasEditUi = ({
             }}
             className="hover:shadow-lg hover:bg-blue-400 transition-all duration-200"
         >
-            <span>{oldBalance}</span>
+            <span>{decimalFix(oldBalance)}</span>
         </div>
     }
     if (!edit && isAddNewDeliveryModal) {
