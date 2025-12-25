@@ -3,6 +3,8 @@ import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {
     Autocomplete,
     Box,
+    Button,
+    Checkbox,
     Chip,
     Divider,
     Input,
@@ -15,7 +17,11 @@ import {
     Table
 } from "@mui/joy";
 import {useDispatch, useSelector} from "react-redux";
-import {fetchDeliveries, UPDATE_DELIVERY_SUCCESS_RESET} from "../../redux/actions/deliveryActions.js";
+import {
+    deleteDeliveryByIdList,
+    fetchDeliveries,
+    UPDATE_DELIVERY_SUCCESS_RESET
+} from "../../redux/actions/deliveryActions.js";
 import {fetchGasData} from "../../state/GasList.jsx";
 import {fetchUser} from "../../redux/actions/userActions.js";
 import {UPDATE_GAS_DELIVERY_SUCCESS_RESET} from "../../redux/actions/gasDeliveryActions.js";
@@ -35,11 +41,12 @@ import {
 } from "../../Tools.jsx";
 import {GasEditUi} from "./GasEditUi.jsx";
 import MapObjectManager from "../class/MapArrayManager.jsx";
-import {MdCallMade, MdCallMissedOutgoing, MdCallReceived, MdEdit} from "react-icons/md";
+import {MdCallMade, MdCallMissedOutgoing, MdCallReceived, MdDeleteForever, MdEdit} from "react-icons/md";
 import ExportODS from "../ExportODS.jsx";
 import {FaArrowDown} from "react-icons/fa";
 import {addNewGasDeliveryReset} from "../../redux/delivery/gasEditDelivery.js";
 import {resetCustomerPaymentsUpdateOrCreateSuccess} from "../../redux/customerPaymentsUpdateOrCreate.js";
+import {IoClose} from "react-icons/io5";
 
 const DeliveryRow = React.memo(function DeliveryRow({row}) {
     return row;
@@ -59,7 +66,37 @@ export default function DeliveryHistory() {
 
     const [isAddNewDeliveryModal, setIsAddNewDeliveryModal] = useState(false);
     const [shouldReload, setShouldReload] = useState(false);
-
+    const [deleteMode, setDeleteMode] = useState(false);
+    const [deleteIds, setDeleteIds] = useState([]);
+    const handleAddDeleteIds = (id) => {
+        setDeleteIds((prevIds) => {
+            if (prevIds.includes(id)) {
+                return prevIds.filter((prevId) => prevId !== id);
+            } else {
+                return [...prevIds, id];
+            }
+        });
+    };
+    const handleRemoveDeleteIds = (id) => {
+        setDeleteIds((prevIds) => prevIds.filter((prevId) => prevId !== id));
+    };
+    //DANGER ZONE
+    const handleDeleteSubmit = () => {
+        if (deleteIds.length === 0) {
+            alert("No deliveries selected for deletion.");
+            return;
+        }
+        const confirmDelete = window.prompt(`Are you sure you want to delete? type : yes to confirm.`, "");
+        if (confirmDelete.toLowerCase() !== "yes") {
+            alert("Deletion cancelled. you did not type 'yes'.");
+            return;
+        }
+        //console.log(confirmDelete);
+        dispatch(deleteDeliveryByIdList(deleteIds));
+        setDeleteMode(false);
+        setDeleteIds([]);
+    };
+    //DANGER ZONE
     // Parse URL parameters once
     const urlParams = useMemo(() => {
         const currentUrl = window.location.href;
@@ -310,6 +347,26 @@ export default function DeliveryHistory() {
         loadData({force: true});
     }, [loadData]);
 
+    const DeleteCheckBox = ({id}) => {
+        return (<>
+            <Stack>
+                <Checkbox
+                    variant="solid"
+                    size="lg"
+                    color={deleteIds.includes(id) ? "danger" : "neutral"}
+                    checked={deleteIds.includes(id)}
+                    onChange={(e) => {
+                        if (e.target.checked) {
+                            handleAddDeleteIds(id);
+                        } else {
+                            handleRemoveDeleteIds(id);
+                        }
+                    }}
+                />
+            </Stack>
+        </>)
+    }
+
     // Memoize table data processing
     const {
         columns,
@@ -525,38 +582,45 @@ export default function DeliveryHistory() {
                         key={`dRow${i}-${delivery.id}`}
                         row={
                             <tr key={`dRow${i}-${delivery.id}`}>
-                                <DataCell key={`delivery-${i}-remark`} correction={correction}>
-                                    <Chip
-                                        color="primary"
-                                        onClick={() => handleEditClick(delivery, date)}
-                                        size="sm"
-                                    >
-                                        <MdEdit/>
-                                    </Chip>
-                                    {
-                                        (editRow === delivery.id) && <GasEditUi
-                                            key={`delivery-${i}-edit`}
-                                            selectedGasList={delivery.gas_deliveries}
-                                            customer={delivery.customer.name}
-                                            custId={delivery.customer.id}
-                                            deliveryBoy={delivery.courier_boy.name}
-                                            deliveryBoyId={delivery.courier_boy.id}
-                                            deleveryId={delivery.id}
-                                            payments={delivery.payments}
-                                            correction={correction}
-                                            openEdit={editRow === delivery.id}
-                                            isOutstanding={true}
-                                            deliveryBalance={deliveryBalance}
-                                            gasList={gasList}
-                                            CUSTOMER_LIST={CUSTOMER_LIST}
-                                            DELIVERY_BOY_LIST={DELIVERY_BOY_LIST}
-                                            deleveryGasEditUiGasList={deleveryGasEditUiGasList}
-                                            onSuccess={handleSuccess}
-                                            createdAt={date}
-                                            onClose={() => setEditRow(null)}
-                                        />
-                                    }
-                                </DataCell>
+                                {deleteMode ? <>
+                                        <td>
+                                            <DeleteCheckBox id={delivery.id}/>
+                                        </td>
+                                    </> :
+                                    <>
+                                        <DataCell key={`delivery-${i}-remark`} correction={correction}>
+                                            <Chip
+                                                color="primary"
+                                                onClick={() => handleEditClick(delivery, date)}
+                                                size="sm"
+                                            >
+                                                <MdEdit/>
+                                            </Chip>
+                                            {
+                                                (editRow === delivery.id) && <GasEditUi
+                                                    key={`delivery-${i}-edit`}
+                                                    selectedGasList={delivery.gas_deliveries}
+                                                    customer={delivery.customer.name}
+                                                    custId={delivery.customer.id}
+                                                    deliveryBoy={delivery.courier_boy.name}
+                                                    deliveryBoyId={delivery.courier_boy.id}
+                                                    deleveryId={delivery.id}
+                                                    payments={delivery.payments}
+                                                    correction={correction}
+                                                    openEdit={editRow === delivery.id}
+                                                    isOutstanding={true}
+                                                    deliveryBalance={deliveryBalance}
+                                                    gasList={gasList}
+                                                    CUSTOMER_LIST={CUSTOMER_LIST}
+                                                    DELIVERY_BOY_LIST={DELIVERY_BOY_LIST}
+                                                    deleveryGasEditUiGasList={deleveryGasEditUiGasList}
+                                                    onSuccess={handleSuccess}
+                                                    createdAt={date}
+                                                    onClose={() => setEditRow(null)}
+                                                />
+                                            }
+                                        </DataCell>
+                                    </>}
                                 <DataCell correction={correction} key={`delivery-${i}-date`}>{date}</DataCell>
                                 <DataCell correction={correction}
                                           key={`delivery-${i}-name`}>{customerName}[OUTSTANDING]</DataCell>
@@ -580,38 +644,49 @@ export default function DeliveryHistory() {
                     <DeliveryRow
                         key={`dRow${i}-${delivery.id}`}
                         row={
-                            <tr key={`dRow${i}-${delivery.id}`}>
-                                <DataCell key={`delivery-${i}-remark`} correction={correction}>
-                                    <Chip
-                                        color="primary"
-                                        onClick={() => handleEditClick(delivery, date)}
-                                        size="sm"
-                                    >
-                                        <MdEdit/>
-                                    </Chip>
-                                    {
-                                        (editRow === delivery.id) && <GasEditUi
-                                            key={`delivery-${i}-edit`}
-                                            selectedGasList={delivery.gas_deliveries}
-                                            customer={delivery.customer.name}
-                                            custId={delivery.customer.id}
-                                            deliveryBoy={delivery.courier_boy.name}
-                                            deliveryBoyId={delivery.courier_boy.id}
-                                            deleveryId={delivery.id}
-                                            payments={delivery.payments}
-                                            correction={correction}
-                                            openEdit={editRow === delivery.id}
-                                            isOutstanding={false}
-                                            gasList={gasList}
-                                            CUSTOMER_LIST={CUSTOMER_LIST}
-                                            DELIVERY_BOY_LIST={DELIVERY_BOY_LIST}
-                                            deleveryGasEditUiGasList={deleveryGasEditUiGasList}
-                                            onSuccess={handleSuccess}
-                                            createdAt={date}
-                                            onClose={() => setEditRow(null)}
-                                        />
-                                    }
-                                </DataCell>
+                            <tr key={`dRow${i}-${delivery.id}`}
+                                className=""
+                            >
+                                {
+                                    deleteMode ? <>
+                                            <td>
+                                                <DeleteCheckBox id={delivery.id}/>
+                                            </td>
+                                        </> :
+                                        <>
+                                            <DataCell key={`delivery-${i}-remark`} correction={correction}>
+                                                <Chip
+                                                    color="primary"
+                                                    onClick={() => handleEditClick(delivery, date)}
+                                                    size="sm"
+                                                >
+                                                    <MdEdit/>
+                                                </Chip>
+                                                {
+                                                    (editRow === delivery.id) && <GasEditUi
+                                                        key={`delivery-${i}-edit`}
+                                                        selectedGasList={delivery.gas_deliveries}
+                                                        customer={delivery.customer.name}
+                                                        custId={delivery.customer.id}
+                                                        deliveryBoy={delivery.courier_boy.name}
+                                                        deliveryBoyId={delivery.courier_boy.id}
+                                                        deleveryId={delivery.id}
+                                                        payments={delivery.payments}
+                                                        correction={correction}
+                                                        openEdit={editRow === delivery.id}
+                                                        isOutstanding={false}
+                                                        gasList={gasList}
+                                                        CUSTOMER_LIST={CUSTOMER_LIST}
+                                                        DELIVERY_BOY_LIST={DELIVERY_BOY_LIST}
+                                                        deleveryGasEditUiGasList={deleveryGasEditUiGasList}
+                                                        onSuccess={handleSuccess}
+                                                        createdAt={date}
+                                                        onClose={() => setEditRow(null)}
+                                                    />
+                                                }
+                                            </DataCell>
+                                        </>
+                                }
                                 <DataCell correction={correction} key={`delivery-${i}-date`}>{date}</DataCell>
                                 <DataCell correction={correction} key={`delivery-${i}-name`}>{customerName}</DataCell>
                                 {temptKgsList}
@@ -707,7 +782,7 @@ export default function DeliveryHistory() {
             grandTotalAmount: totalAmount,
             grandTotalPaid: totalPaid
         };
-    }, [deliveries, descending, deliverBoyId, customerId, urlParams, gasList, CUSTOMER_LIST, DELIVERY_BOY_LIST, deleveryGasEditUiGasList, handleSuccess, editRow]);
+    }, [deliveries, deleteMode, deleteIds, descending, deliverBoyId, customerId, urlParams, gasList, CUSTOMER_LIST, DELIVERY_BOY_LIST, deleveryGasEditUiGasList, handleSuccess, editRow]);
 
     const headers = useMemo(() => {
         const h = columns.map((col) => col.column);
@@ -824,117 +899,168 @@ export default function DeliveryHistory() {
                                     alignContent={"end"}
                                     justifyContent={"flex-start"}
                                 >
-                                    {/*<ExportCSV*/}
-                                    {/*    headers={headers}*/}
-                                    {/*    data={csvData}*/}
-                                    {/*    filename={`deliveries_${formatDateToDDMMYY(dateStart)}_TO_${formatDateToDDMMYY(dateEnd)}.csv`}*/}
-                                    {/*>*/}
-                                    {/*    Download File*/}
-                                    {/*</ExportCSV>*/}
-                                    <ExportODS
-                                        headers={headers}
-                                        data={csvData}
-                                        filename={`${customerName}Deliveries_${formatDateToDDMMYY(dateStart)}_TO_${formatDateToDDMMYY(dateEnd)}`}
-                                        sumColumns={['kg', 'mt', 'sub total', 'total payment', 'balance']}
+                                    {
+                                        !deleteMode && (<>
+                                            {/*<ExportCSV*/}
+                                            {/*    headers={headers}*/}
+                                            {/*    data={csvData}*/}
+                                            {/*    filename={`deliveries_${formatDateToDDMMYY(dateStart)}_TO_${formatDateToDDMMYY(dateEnd)}.csv`}*/}
+                                            {/*>*/}
+                                            {/*    Download File*/}
+                                            {/*</ExportCSV>*/}
+                                            <ExportODS
+                                                headers={headers}
+                                                data={csvData}
+                                                filename={`${customerName}Deliveries_${formatDateToDDMMYY(dateStart)}_TO_${formatDateToDDMMYY(dateEnd)}`}
+                                                sumColumns={['kg', 'mt', 'sub total', 'total payment', 'balance']}
+                                            >
+                                                <Stack
+                                                    direction="row"
+                                                    gap={0.5}
+                                                    alignItems="center"
+                                                >
+                                                    <FaArrowDown/>
+                                                    <span>Download</span>
+                                                </Stack>
+                                            </ExportODS>
+                                            <Divider sx={{backgroundColor: "grey"}} orientation="vertical"/>
+                                            <GasEditUi
+                                                selectedGasList={[]}
+                                                customer={0}
+                                                deliveryBoy={null}
+                                                deleveryId={0}
+                                                payments={[]}
+                                                correction={false}
+                                                openEdit={isAddNewDeliveryModal}
+                                                isOutstanding={false}
+                                                isAddNewDeliveryModal={true}
+                                                gasList={gasList}
+                                                CUSTOMER_LIST={CUSTOMER_LIST}
+                                                DELIVERY_BOY_LIST={DELIVERY_BOY_LIST}
+                                                deleveryGasEditUiGasList={deleveryGasEditUiGasList}
+                                                onSuccess={handleSuccess}
+                                                createdAt={null}
+                                            />
+
+                                        </>)
+                                    }
+                                    <Divider sx={{flexGrow: 1, opacity: 0}}/>
+                                    <Button
+                                        color={deleteMode ? "primary" : "danger"}
+                                        variant={deleteMode ? "solid" : "outlined"}
+                                        size="sm"
+                                        onClick={() => {
+                                            if (deleteMode) {
+                                                setDeleteIds([]);
+                                            }
+                                            setDeleteMode(!deleteMode);
+                                        }}
                                     >
                                         <Stack
                                             direction="row"
                                             gap={0.5}
                                             alignItems="center"
                                         >
-                                            <FaArrowDown/>
-                                            <span>Download</span>
+                                            {deleteMode ? <IoClose/> : <MdDeleteForever/>}
+                                            <span className="font-black transition-all duration-300">
+                                                {
+                                                    deleteMode ? "Cancel" : "Delete"
+                                                }
+                                            </span>
                                         </Stack>
-                                    </ExportODS>
-                                    <Divider sx={{backgroundColor: "grey"}} orientation="vertical"/>
-                                    <GasEditUi
-                                        selectedGasList={[]}
-                                        customer={0}
-                                        deliveryBoy={null}
-                                        deleveryId={0}
-                                        payments={[]}
-                                        correction={false}
-                                        openEdit={isAddNewDeliveryModal}
-                                        isOutstanding={false}
-                                        isAddNewDeliveryModal={true}
-                                        gasList={gasList}
-                                        CUSTOMER_LIST={CUSTOMER_LIST}
-                                        DELIVERY_BOY_LIST={DELIVERY_BOY_LIST}
-                                        deleveryGasEditUiGasList={deleveryGasEditUiGasList}
-                                        onSuccess={handleSuccess}
-                                        createdAt={null}
-                                    />
+                                    </Button>
+                                    {
+                                        deleteMode && (<Button
+                                            color="danger"
+                                            variant="solid"
+                                            size="sm"
+                                            onClick={() => {
+                                                handleDeleteSubmit();
+                                            }}
+                                        >
+                                            <Stack
+                                                direction="row"
+                                                gap={0.5}
+                                                alignItems="center"
+                                            >
+                                                <MdDeleteForever/>
+                                                <span className="font-black transition-all duration-300">Delete</span>
+                                            </Stack>
+                                        </Button>)
+                                    }
                                     <Divider sx={{flexGrow: 1, opacity: 0}}/>
-                                    <span style={{fontWeight: "bold", color: "black", whiteSpace: "nowrap"}}>
-                         Reverse Order
-                    </span>
-                                    <Switch
-                                        checked={descending}
-                                        onChange={(event) => {
-                                            setDescending(event.target.checked);
-                                        }}
-                                    />
-                                    <Divider sx={{backgroundColor: "grey"}} orientation="vertical"/>
-                                    <span style={{fontWeight: "bold", color: "black", whiteSpace: "nowrap"}}>
+                                    {
+                                        !deleteMode && (<>
+                                            <span style={{fontWeight: "bold", color: "black", whiteSpace: "nowrap"}}>Reverse Order</span>
+                                            <Switch
+                                                checked={descending}
+                                                onChange={(event) => {
+                                                    setDescending(event.target.checked);
+                                                }}
+                                            />
+                                            <Divider sx={{backgroundColor: "grey"}} orientation="vertical"/>
+                                            <span style={{fontWeight: "bold", color: "black", whiteSpace: "nowrap"}}>
                          Customer :
                     </span>
-                                    <Autocomplete
-                                        placeholder="Select Customer"
-                                        options={[{id: null, label: "Show All"}, ...CUSTOMER_LIST]}
-                                        value={[{
-                                            id: null,
-                                            label: "Show All"
-                                        }, ...CUSTOMER_LIST].find(option => option.id === customerId) || null}
-                                        getOptionLabel={(option) => option.label}
-                                        isOptionEqualToValue={(option, value) => option?.id === value?.id}
-                                        onChange={(_, value) => {
-                                            //setCustomerId(value?.id ?? null);
-                                            const id = value?.id ?? null;
-                                            setSessionVal("customerId", id); // immediate session update if desired
-                                            setTheCustomerId(id);             // immediate UI update
-                                            debouncedLoadForCustomer(id);     // debounced network/load
-                                        }}
-                                        sx={{fontWeight: 'bold', minWidth: 150}}
-                                    />
-                                    <Divider sx={{backgroundColor: "grey"}} orientation="vertical"/>
-                                    <span style={{fontWeight: "bold", color: "black", whiteSpace: "nowrap"}}>
+                                            <Autocomplete
+                                                placeholder="Select Customer"
+                                                options={[{id: null, label: "Show All"}, ...CUSTOMER_LIST]}
+                                                value={[{
+                                                    id: null,
+                                                    label: "Show All"
+                                                }, ...CUSTOMER_LIST].find(option => option.id === customerId) || null}
+                                                getOptionLabel={(option) => option.label}
+                                                isOptionEqualToValue={(option, value) => option?.id === value?.id}
+                                                onChange={(_, value) => {
+                                                    //setCustomerId(value?.id ?? null);
+                                                    const id = value?.id ?? null;
+                                                    setSessionVal("customerId", id); // immediate session update if desired
+                                                    setTheCustomerId(id);             // immediate UI update
+                                                    debouncedLoadForCustomer(id);     // debounced network/load
+                                                }}
+                                                sx={{fontWeight: 'bold', minWidth: 150}}
+                                            />
+                                            <Divider sx={{backgroundColor: "grey"}} orientation="vertical"/>
+                                            <span style={{fontWeight: "bold", color: "black", whiteSpace: "nowrap"}}>
                          Delivery Boy :
                     </span>
-                                    <Select
-                                        defaultValue={deliverBoyId || null}
-                                        placeholder="Select Delivery Boy"
-                                        onChange={(event, value) => {
-                                            setDeliverBoyId(value === "" ? null : value);
-                                        }}
-                                        sx={{minWidth: 150}}
-                                    >
-                                        <Option value="">Show All</Option>
-                                        {[...DELIVERY_BOY_LIST.entries()].map(([courierId, user]) => (
-                                            <Option key={courierId} value={courierId}>
-                                                {titleCase(user.name)}
-                                            </Option>
-                                        ))}
-                                    </Select>
-                                    <Divider sx={{backgroundColor: "grey"}} orientation="vertical"/>
-                                    <span style={{fontWeight: "bold", color: "black", whiteSpace: "nowrap"}}>
+                                            <Select
+                                                defaultValue={deliverBoyId || null}
+                                                placeholder="Select Delivery Boy"
+                                                onChange={(event, value) => {
+                                                    setDeliverBoyId(value === "" ? null : value);
+                                                }}
+                                                sx={{minWidth: 150}}
+                                            >
+                                                <Option value="">Show All</Option>
+                                                {[...DELIVERY_BOY_LIST.entries()].map(([courierId, user]) => (
+                                                    <Option key={courierId} value={courierId}>
+                                                        {titleCase(user.name)}
+                                                    </Option>
+                                                ))}
+                                            </Select>
+                                            <Divider sx={{backgroundColor: "grey"}} orientation="vertical"/>
+                                            <span style={{fontWeight: "bold", color: "black", whiteSpace: "nowrap"}}>
                          Date :
                     </span>
-                                    <Input
-                                        type="date"
-                                        defaultValue={dateStart}
-                                        onChange={(event) => {
-                                            setDateStart(event.target.value);
-                                        }}
-                                        sx={{minWidth: 150}}
-                                    />
-                                    <Input
-                                        type="date"
-                                        defaultValue={dateEnd}
-                                        onChange={(event) => {
-                                            setDateEnd(event.target.value);
-                                        }}
-                                        sx={{minWidth: 150}}
-                                    />
+                                            <Input
+                                                type="date"
+                                                defaultValue={dateStart}
+                                                onChange={(event) => {
+                                                    setDateStart(event.target.value);
+                                                }}
+                                                sx={{minWidth: 150}}
+                                            />
+                                            <Input
+                                                type="date"
+                                                defaultValue={dateEnd}
+                                                onChange={(event) => {
+                                                    setDateEnd(event.target.value);
+                                                }}
+                                                sx={{minWidth: 150}}
+                                            />
+                                        </>)
+                                    }
                                 </Stack>
                                 <Divider className="bg-white h-1"/>
                             </Stack>
