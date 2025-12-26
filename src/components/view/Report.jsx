@@ -708,8 +708,16 @@ export const Report = ({isLogged}) => {
                                         {
                                             [...KGS].sort((a, b) => a - b).map((kg, index) => {
                                                 return (<><Stack direction="column">
-                                                <span
-                                                    className="font-bold text-black">{`${kg}KG`} : {toNumber(KGS_COUNT[`sent${kg}`]) + toNumber(KGS_COUNT[`nc${kg}`])}</span>
+                                                        <span
+                                                            className="font-bold text-black">{`${kg}KG`} : {toNumber(KGS_COUNT[`sent${kg}`])}</span>
+                                                        <Divider className="w-full" orientation={"horizontal"}
+                                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                                        <span
+                                                            className="font-bold text-black">{`NC`} : {toNumber(KGS_COUNT[`nc${kg}`])}</span>
+                                                        <Divider className="w-full" orientation={"horizontal"}
+                                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                                        <span
+                                                            className="font-bold text-black">{`Total`} : {toNumber(KGS_COUNT[`sent${kg}`]) + toNumber(KGS_COUNT[`nc${kg}`])}</span>
                                                         <Divider className="w-full" orientation={"horizontal"}
                                                                  sx={{backgroundColor: "#979797", opacity: 0.5}}/>
                                                         <span

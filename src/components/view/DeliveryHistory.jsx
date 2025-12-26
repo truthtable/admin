@@ -375,7 +375,9 @@ export default function DeliveryHistory() {
         kgSet,
         kgsCount,
         grandTotalAmount,
-        grandTotalPaid
+        grandTotalPaid,
+        grandTotalCash,
+        grandTotalOnline
     } = useMemo(() => {
         const cols = [];
         const deliveriesMapList = [];
@@ -383,6 +385,8 @@ export default function DeliveryHistory() {
 
         let totalAmount = 0;
         let totalPaid = 0;
+        let totalCash = 0;
+        let totalOnline = 0;
         const KGS = new Set();
         let KGS_COUNT = {}
 
@@ -394,7 +398,9 @@ export default function DeliveryHistory() {
                 kgSet: KGS,
                 kgsCount: KGS_COUNT,
                 grandTotalAmount: 0,
-                grandTotalPaid: 0
+                grandTotalPaid: 0,
+                grandTotalCash: 0,
+                grandTotalOnline: 0
             };
         }
 
@@ -1119,13 +1125,20 @@ export default function DeliveryHistory() {
                                         >
                                             <span>{kg}kg</span>
                                             <Divider className="!bg-black" orientation="vertical"/>
-                                            <MdCallMade/>
-                                            <span>{(kgsCount?.[`qty_${kg}`] || 0) + (kgsCount?.[`nc_${kg}`] || 0)}</span>
+                                            <MdCallMade size={"0.8em"}/>
+                                            <span>
+                                                {`nc: ${(kgsCount?.[`nc_${kg}`] || 0)} + ${(kgsCount?.[`qty_${kg}`] || 0)} = ${(kgsCount?.[`qty_${kg}`] || 0) + (kgsCount?.[`nc_${kg}`] || 0)}`}
+                                            </span>
                                             <Divider className="!bg-black" orientation="vertical"/>
-                                            <MdCallReceived/>
+                                            <MdCallReceived
+                                                size={"0.8em"}
+                                                /* style={{
+                                                     fontSize: "0.5em",
+                                                 }}*/
+                                            />
                                             <span>{kgsCount?.[`mt_${kg}`] || 0}</span>
                                             <Divider className="!bg-black" orientation="vertical"/>
-                                            <MdCallMissedOutgoing/>
+                                            <MdCallMissedOutgoing size={"0.8em"}/>
                                             <span>{(kgsCount?.[`qty_${kg}`] || 0) - (kgsCount?.[`mt_${kg}`] || 0)}</span>
                                         </Stack>
                                     ))
@@ -1140,7 +1153,7 @@ export default function DeliveryHistory() {
                                         backgroundColor: "#BBDCE5",
                                     }}
                                 >
-                                    <span className="text-black">Total Amount : ₹{decimalFix(grandTotalAmount)}</span>
+                                    <span className="text-black">Amt : ₹{decimalFix(grandTotalAmount)}</span>
                                 </Stack>
                                 <Stack
                                     className="rounded-md  py-0.5 px-2.5 border border-transparent text-sm text-black transition-all shadow-sm"
@@ -1151,7 +1164,9 @@ export default function DeliveryHistory() {
                                         backgroundColor: "#D3ECCD",
                                     }}
                                 >
-                                    <span className="text-black">Total Paid : ₹{decimalFix(grandTotalPaid)}</span>
+                                    {/* Cash : ₹{decimalFix(grandTotalPaid)} + Online : ₹{decimalFix(grandTotalPaid)} =*/}
+                                    <span
+                                        className="text-black">Paid ₹{decimalFix(grandTotalPaid)}</span>
                                 </Stack>
                                 <Stack
                                     className="rounded-md  py-0.5 px-2.5 border border-transparent text-sm text-black transition-all shadow-sm"
@@ -1163,7 +1178,7 @@ export default function DeliveryHistory() {
                                     }}
                                 >
                                     <span
-                                        className="text-black">Total Balance : ₹{decimalFix(grandTotalAmount - grandTotalPaid)}</span>
+                                        className="text-black">Bal : ₹{decimalFix(grandTotalAmount - grandTotalPaid)}</span>
                                 </Stack>
                             </Stack>
                         </td>
