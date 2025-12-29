@@ -494,9 +494,11 @@ export default function DeliveryHistory() {
                 if (payment.method === 0) {
                     oldBal = payment.amount;
                     cash += amount;
+                    totalCash += amount;
                 } else if (payment.method === 1) {
                     newBal = payment.amount;
                     online += amount;
+                    totalOnline += amount;
                 }
                 received += amount;
             });
@@ -786,7 +788,9 @@ export default function DeliveryHistory() {
             kgSet: new Set(KGS),
             kgsCount: {...KGS_COUNT},
             grandTotalAmount: totalAmount,
-            grandTotalPaid: totalPaid
+            grandTotalPaid: totalPaid,
+            grandTotalCash: totalCash,
+            grandTotalOnline: totalOnline
         };
     }, [deliveries, deleteMode, deleteIds, descending, deliverBoyId, customerId, urlParams, gasList, CUSTOMER_LIST, DELIVERY_BOY_LIST, deleveryGasEditUiGasList, handleSuccess, editRow]);
 
@@ -1094,7 +1098,7 @@ export default function DeliveryHistory() {
                             <td colSpan={columns.length + 1}
                                 style={{textAlign: "center", fontWeight: "bold", fontSize: "1.8em"}}>
                                 {
-                                    !loading ? "No Deliveries Found" : "Please Wait..."
+                                    (!loading) ? "No Deliveries Found" : "Please Wait..."
                                 }
                             </td>
                         </tr>
@@ -1164,9 +1168,14 @@ export default function DeliveryHistory() {
                                         backgroundColor: "#D3ECCD",
                                     }}
                                 >
-                                    {/* Cash : ₹{decimalFix(grandTotalPaid)} + Online : ₹{decimalFix(grandTotalPaid)} =*/}
                                     <span
-                                        className="text-black">Paid ₹{decimalFix(grandTotalPaid)}</span>
+                                        className="text-black">Cash : ₹{decimalFix(grandTotalCash)} + Online : ₹{decimalFix(grandTotalOnline)} = ₹{decimalFix(grandTotalPaid)}</span>
+                                    {/* <span
+                                        className="text-black">Online ₹{decimalFix(grandTotalPaid)}</span>
+                                    <span
+                                        className="text-black">Cash ₹{decimalFix(grandTotalPaid)}</span>
+                                    <span
+                                        className="text-black">Total ₹{decimalFix(grandTotalPaid)}</span>*/}
                                 </Stack>
                                 <Stack
                                     className="rounded-md  py-0.5 px-2.5 border border-transparent text-sm text-black transition-all shadow-sm"

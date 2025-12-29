@@ -62,6 +62,7 @@ export const deliveriesIniState = () => {
 // Async Action to Fetch Deliveries
 export const fetchDeliveries = (params) => {
     return async (dispatch) => {
+        dispatch(initialState());
         dispatch(fetchDeliveriesRequest());
         try {
             const response = await axios().get(API, {

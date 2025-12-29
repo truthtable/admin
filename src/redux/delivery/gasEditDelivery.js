@@ -1,5 +1,6 @@
 import {createSlice} from "@reduxjs/toolkit";
 import {axiosInstance as axios, URL as API_URL} from "../../services/Api.jsx";
+import {customerPaymentsUpdateOrCreateSuccess} from "../customerPaymentsUpdateOrCreate.js";
 
 const gasEditDeliverySlice = createSlice({
     name: "gasEditDelivery",
@@ -54,6 +55,9 @@ export const addNewGasDelivery = (deliveryData) => async (dispatch) => {
         console.log(mPayload)
         const response = await axios().post(api_url, mPayload);
         if (response?.data?.isSuccessfull) {
+            if (mPayload.is_balance) {
+                dispatch(customerPaymentsUpdateOrCreateSuccess());
+            }
             dispatch(gasEditDeliverySlice.actions.deliverySuccess());
         } else {
             dispatch(gasEditDeliverySlice.actions.deliveryFailed(response.message));
