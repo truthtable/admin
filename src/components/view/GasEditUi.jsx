@@ -510,7 +510,7 @@ export const GasEditUi = ({
             }}
             className="hover:shadow-lg hover:bg-blue-400 transition-all duration-200"
         >
-            <span>{decimalFix(oldBalance)}</span>
+            <span className="!font-mono">{decimalFix(oldBalance)}</span>
         </div>
     }
     if (!edit && isAddNewDeliveryModal) {

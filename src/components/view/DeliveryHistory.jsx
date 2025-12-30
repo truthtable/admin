@@ -1119,7 +1119,7 @@ export default function DeliveryHistory() {
                                     [...(kgSet || [])].sort((a, b) => a - b).map((kg, index) => (
                                         <Stack
                                             key={`kgCountList${index}`}
-                                            className="rounded-md  py-0.5 px-2.5 border border-transparent text-sm text-black transition-all shadow-sm"
+                                            className="rounded-md py-0.5 px-2.5 border border-transparent text-xs !font-mono text-black transition-all shadow-sm"
                                             direction="row"
                                             gap={.5}
                                             alignItems="center"
@@ -1157,7 +1157,8 @@ export default function DeliveryHistory() {
                                         backgroundColor: "#BBDCE5",
                                     }}
                                 >
-                                    <span className="text-black">Amt : ₹{decimalFix(grandTotalAmount)}</span>
+                                    <span
+                                        className="text-black !font-mono text-xs">Amt: ₹{decimalFix(grandTotalAmount)}</span>
                                 </Stack>
                                 <Stack
                                     className="rounded-md  py-0.5 px-2.5 border border-transparent text-sm text-black transition-all shadow-sm"
@@ -1169,7 +1170,7 @@ export default function DeliveryHistory() {
                                     }}
                                 >
                                     <span
-                                        className="text-black">Cash : ₹{decimalFix(grandTotalCash)} + Online : ₹{decimalFix(grandTotalOnline)} = ₹{decimalFix(grandTotalPaid)}</span>
+                                        className="text-black !font-mono text-xs">Cash: ₹{decimalFix(grandTotalCash)} + Online : ₹{decimalFix(grandTotalOnline)} = ₹{decimalFix(grandTotalPaid)}</span>
                                     {/* <span
                                         className="text-black">Online ₹{decimalFix(grandTotalPaid)}</span>
                                     <span
@@ -1178,7 +1179,7 @@ export default function DeliveryHistory() {
                                         className="text-black">Total ₹{decimalFix(grandTotalPaid)}</span>*/}
                                 </Stack>
                                 <Stack
-                                    className="rounded-md  py-0.5 px-2.5 border border-transparent text-sm text-black transition-all shadow-sm"
+                                    className="rounded-md  py-0.5 px-2.5 border border-transparent text-xs text-black transition-all shadow-sm"
                                     direction="row"
                                     gap={1}
                                     alignItems="center"
@@ -1187,7 +1188,7 @@ export default function DeliveryHistory() {
                                     }}
                                 >
                                     <span
-                                        className="text-black">Bal : ₹{decimalFix(grandTotalAmount - grandTotalPaid)}</span>
+                                        className="text-black !font-mono text-xs ">Bal: ₹{decimalFix(grandTotalAmount - grandTotalPaid)}</span>
                                 </Stack>
                             </Stack>
                         </td>

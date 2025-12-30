@@ -6,6 +6,7 @@ import {
     Box,
     Button,
     Checkbox,
+    Chip,
     Container,
     Divider,
     FormControl,
@@ -500,18 +501,41 @@ const ViewCustomer = () => {
     } catch (e) {
     }
     //console.log(localCustomers)
+    let grandTotalBalance = 0
+    for (let customer of localCustomers) {
+        grandTotalBalance += Number(customer.totalBalance)
+    }
     return (
         <div className="w-full h-full overflow-auto p-2.5 bg-[#f5f5f5] rounded-2xl">
             <NewConnectionForm/>
-            <Stack direction="row" mb={1} spacing={1} justifyContent="flex-end"
-                   className="flex flex-row mb-1 space-x-2 justify-end">
+            <Stack
+                direction="row"
+                mb={1}
+                spacing={1}
+                justifyContent="flex-end"
+                alignItems="center"
+                className="flex flex-row mb-1 space-x-2 justify-end"
+            >
                 <Button
                     onClick={() => setOpenNewConnection(true)}
                     startDecorator={<TbHomePlus/>}
                     className="flex items-center"
+                    color="success"
                 >
                     New Customer
                 </Button>
+                <div className="flex-grow"/>
+                <Chip
+                    size="md"
+                    color="warning"
+                    variant="solid"
+                >
+                    <Stack direction={"row"} justify="space-between" gap={.75}>
+                        <span className="text-md antialiased">Total Balance :</span>
+                        <span
+                            className="text-md font-semibold antialiased !font-mono">₹{decimalFix(grandTotalBalance)}</span>
+                    </Stack>
+                </Chip>
                 <div className="flex-grow"/>
                 <Typography
                     variant="h4"
@@ -592,7 +616,7 @@ const ViewCustomer = () => {
                                             <ListItemContent>
                                                 <Stack direction={"row"} spacing={1} alignItems="center"
                                                        justifyContent="flex-start">
-                                                    <pre>Aadhar Card Number</pre>
+                                                    <pre>Aadhaar Card Number</pre>
                                                     <UpdateCustomerCell
                                                         userId={(selectedCustomer != null) ? selectedCustomer.user_id : null}
                                                         custId={(selectedCustomer != null) ? selectedCustomer.user_id : null}

@@ -8,7 +8,6 @@
     display: flex;
     justify-content: space-between;
     font-size: 3em;
-    font-family: auto;
     color: black;
 }
 
@@ -68,7 +67,6 @@
     align-items: center;
     justify-content: space-between;
     font-size: 2em;
-    font-family: auto;
 }
 
 .card-inner > .card_icon {
