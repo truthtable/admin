@@ -593,7 +593,7 @@ export default function AddPurchaseUI({gaslistData, plants}) {
                                                     purchaseData.isLoading ? <CircularProgress size="sm"/> : null
                                                 }
                                                 <span className="text-black font-black whitespace-nowrap">{
-                                                    (targetStartDate === "" || targetEndDate === "") ? "(Select Dates)" : decimalFix(toNumber(targetKg), 2)
+                                                    (targetStartDate === "" || targetEndDate === "") ? "(Select Dates)" : decimalFix(toNumber(targetKg))
                                                 }
                                                 </span>
                                             </FormControl>
@@ -631,7 +631,7 @@ export default function AddPurchaseUI({gaslistData, plants}) {
                                                 </FormLabel>
                                                 <Divider orientation="horizontal"/>
                                                 <span className="text-black font-black text-center ">{
-                                                    totalTargetAmt
+                                                    decimalFix(totalTargetAmt)
                                                 }</span>
                                             </Stack>
                                             <Divider orientation="vertical"/>

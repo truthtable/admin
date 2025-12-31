@@ -775,7 +775,7 @@ export const Report = ({isLogged}) => {
                                                  sx={{backgroundColor: "#979797", opacity: 0.5}}/>
                                         <span style={{fontWeight: "bold", color: "#0A6847"}}>
                                                   {
-                                                      `Total Paid : ₹${decimalFix(grandTotalOnline + grandTotalCash)}`
+                                                      `Total Received : ₹${decimalFix(grandTotalOnline + grandTotalCash)}`
                                                   }
                                              </span>
                                         <Divider className="w-full" orientation={"vertical"}
