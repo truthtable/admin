@@ -34,7 +34,6 @@ export const getUserDataFromCookie = () => {
     try {
         const cookie = document.cookie;
         const cookieArray = cookie.split(";");
-        //console.log(cookieArray );
         cookieArray.forEach((element) => {
             let temp = element.trim().split("=");
             const key = temp[0];
