@@ -126,18 +126,31 @@ export default function DeliveryHistory() {
         if (urlParams.date_start) {
             return formatDate(new Date(urlParams.date_start));
         }
-        const date = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-        date.setHours(0, 0, 0, 0);
-        return formatDate(date);
+        const today = new Date();
+        const dayOfWeek = today.getDay(); // 0 = Sunday, 6 = Saturday
+        const startOfWeek = new Date(today);
+        startOfWeek.setDate(today.getDate() - dayOfWeek); // Go back to Sunday
+        startOfWeek.setHours(0, 0, 0, 0);
+        return formatDate(startOfWeek);
     });
 
     const [dateEnd, setDateEndState] = useState(() => {
         if (urlParams.date_end) {
             return formatDate(new Date(urlParams.date_end));
         }
-        const date = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
-        date.setHours(23, 59, 59, 999);
-        return formatDate(date);
+        const today = new Date();
+        const dayOfWeek = today.getDay();
+        const endOfWeek = new Date(today);
+        endOfWeek.setDate(today.getDate() + (6 - dayOfWeek));
+
+        // Get last day of current month
+        const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+        // Use the earlier date between end of week and end of month
+        const actualEndDate = endOfWeek > lastDayOfMonth ? lastDayOfMonth : endOfWeek;
+        actualEndDate.setHours(23, 59, 59, 999);
+
+        return formatDate(actualEndDate);
     });
 
     // Memoize gas list
@@ -300,10 +313,12 @@ export default function DeliveryHistory() {
 
     useEffect(() => {
         if (shouldReload) {
-            loadData({force: true});
+            if(!loading) {
+                loadData({force: true});
+            }
             setShouldReload(false);
         }
-    }, [shouldReload]);
+    }, [shouldReload,loading]);
 
     useEffect(() => {
         updateUrlParams(dateStart, dateEnd);

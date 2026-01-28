@@ -61,6 +61,7 @@ export const deliveriesIniState = () => {
 
 // Async Action to Fetch Deliveries
 export const fetchDeliveries = (params) => {
+    console.log("fetchDeliveries");
     return async (dispatch) => {
         dispatch(initialState());
         dispatch(fetchDeliveriesRequest());
