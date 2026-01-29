@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-export const URL = "https://api.srdgas.online/";
-//export const URL = "https://shree-ram-distributor.indiegrow.in/";
+//export const URL = "https://api.srdgas.online/";
+export const URL = "https://shree-ram-distributor.indiegrow.in/";
 export const LOGIN = URL + "api/token";
 export const CHECK_LOGIN = URL + "api/check";
 
