@@ -187,17 +187,16 @@ export const Report = ({isLogged}) => {
         document.title = `${titleCase(report?.customer?.user?.name)} - ${startDate} to ${endDate}`
 
         try {
+            if (report && report.deliveries) {
             const sortedDeliveries = [...report.deliveries].sort((a, b) => {
                 const dateA = new Date(a.created_at);
                 const dateB = new Date(b.created_at);
-
                 a.gas_deliveries.forEach(gas => {
                     KGS.add(gas.gas_cylinder.kg);
                 });
                 b.gas_deliveries.forEach(gas => {
                     KGS.add(gas.gas_cylinder.kg);
                 });
-
                 return dateA - dateB;
             });
             // const sortedDeliveries = [...report.deliveries].map((d) = {
@@ -339,6 +338,7 @@ export const Report = ({isLogged}) => {
                     console.warn(err);
                 }
             })
+        }
         } catch (e) {
             console.log(e);
         }
@@ -408,7 +408,9 @@ export const Report = ({isLogged}) => {
                                    </span>
                             <Autocomplete
                                 options={customers}
-                                getOptionLabel={(c) => c ? titleCase(`${c.user.name} : ${c.user.address}`) : 'Select User'}
+                                //getOptionLabel={(c) => c ? titleCase(`${c.user.name} : ${c.user.address}`) : 'Select User'}
+                                getOptionLabel={(c) => c?.user?.name ? titleCase(`${c.user.name} : ${c.user.address}`) : 'Select User'}
+
                                 value={selectedCustomerObj}
                                 onChange={(event, value) => setSelectedCustomer(value ? value.id : null)}
                                 isOptionEqualToValue={(option, value) => option?.id === value?.id}
@@ -421,6 +423,7 @@ export const Report = ({isLogged}) => {
                                 }}
                                 renderOption={(props, option) => {
                                     const {key, ownerState, ...otherProps} = props;
+                                    if (!option?.user) return null;
                                     return (
                                         <li {...otherProps} key={option.id}>
                                             <Stack className="group bg-white p-2 ps-2 shadow-md hover:!bg-blue-100"
@@ -434,8 +437,7 @@ export const Report = ({isLogged}) => {
                                                     <GrLocation/>
                                                     <span
                                                         className="!text-black">{titleCase(option.user.address)}</span>
-                                                </Stack>
-                                            </Stack>
+                                                </Stack></Stack>
                                             <Divider orientation="horizontal"/>
                                         </li>
                                     );

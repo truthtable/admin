@@ -19,29 +19,30 @@ export const fetchCustomerData = createAsyncThunk(
                 }),
             });
             data = await response.json();
-            //check if data.data and data.userdata is not null, undefined or not an array
-            if ((data.data != null || data.userdata == null || data.data.length != 0 || data.userdata.length != 0)) {
-                //console.log(data);
+            // Fixed: use && instead of || and check if arrays have length
+            if (data?.data && data?.userdata && data.data.length > 0 && data.userdata.length > 0) {
                 try {
                     const customers = data.data;
                     const users = data.userdata;
                     customers.forEach((customer) => {
                         const user = users.find((user) => user.id == customer.user_id);
-                        //console.log("store customer");
-                        storeCustomer(
-                            customer.id,
-                            customer.user_id,
-                            user.name,
-                            customer.aadhar_card_no,
-                            customer.diaryNumber,
-                            user.address,
-                            user.phone_no,
-                            (Number(customer.totalPrice) - Number(customer.totalPaid)) + Number(customer.deliveryBalance)
-                        )
+                        if (user) { // Check if user exists before accessing properties
+                            //console.log(user, customer);
+                            storeCustomer(
+                                customer.id,
+                                customer.user_id,
+                                user.name,
+                                customer.aadhar_card_no,
+                                customer.diaryNumber,
+                                user.address,
+                                user.phone_no,
+                                (Number(customer.totalPrice) - Number(customer.totalPaid)) + Number(customer.deliveryBalance)
+                            );
+                        }
                     });
-                    dispatch(fetchLocalCustomers())
+                    dispatch(fetchLocalCustomers());
                 } catch (e) {
-                    console.log(e)
+                    console.log(e);
                 }
             }
             error = false;
@@ -63,7 +64,7 @@ const customerSlice = createSlice({
         errorMessage: "",
     },
     extraReducers: (builder) => {
-        builder.addCase(fetchCustomerData.pending, (state, action) => {
+        builder.addCase(fetchCustomerData.pending, (state) => {
             state.isLoading = true;
         });
         builder.addCase(fetchCustomerData.fulfilled, (state, action) => {
@@ -72,7 +73,7 @@ const customerSlice = createSlice({
             state.isError = action.payload.error;
             state.errorMessage = action.payload.errorMessage;
         });
-        builder.addCase(fetchCustomerData.rejected, (state, action) => {
+        builder.addCase(fetchCustomerData.rejected, (state) => {
             state.isLoading = false;
             state.isError = true;
         });
