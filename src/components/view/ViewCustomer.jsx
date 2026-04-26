@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from "react";
+import React, {useDeferredValue, useEffect, useMemo, useState} from "react";
 import "../../crud/crud-css/read.css";
 import {BsSearch} from "react-icons/bs";
 import DataTable from "../table/DataTable.jsx";
@@ -48,6 +48,32 @@ const BALANCE_SORT = "balance";
 const CUSTOMER_NAME_SORT = "customer_name";
 const ADDRESS_SORT = "address";
 const DIARY_SORT = "diary_no";
+const SEARCH_BY_NAME = "name";
+const SEARCH_BY_DIARY = "diary";
+const SEARCH_BY_ADDRESS = "address";
+
+const matchesTokens = (text, query) => {
+    const sourceTokens = (text || "").toLowerCase().trim().split(/\s+/).filter(Boolean);
+    const queryTokens = (query || "").toLowerCase().trim().split(/\s+/).filter(Boolean);
+
+    if (!queryTokens.length) return true;
+
+    const usedIndexes = new Set();
+    for (const queryToken of queryTokens) {
+        const matchedIndex = sourceTokens.findIndex((sourceToken, index) => {
+            return !usedIndexes.has(index) && sourceToken.startsWith(queryToken);
+        });
+
+        if (matchedIndex === -1) {
+            return false;
+        }
+
+        usedIndexes.add(matchedIndex);
+    }
+
+    return true;
+};
+
 const ViewCustomer = () => {
     const dispatch = useDispatch();
     const customerData = useSelector((state) => state.customers);
@@ -66,6 +92,9 @@ const ViewCustomer = () => {
     //getFromLocalStorage(CUSTOMER_SEARCH_TEXT) || ""
     const [searchText, setSearchCustomerText] = useState("");
     const [debouncedSearchText, setDebouncedSearchText] = useState("");
+    const [searchBy, setSearchBy] = useState(SEARCH_BY_NAME);
+    const deferredSearchText = useDeferredValue(debouncedSearchText.toLowerCase().trim());
+    const deferredSearchBy = useDeferredValue(searchBy);
 
     const setSearchText = (text) => {
         storeInLocalStorage(CUSTOMER_SEARCH_TEXT, text);
@@ -82,8 +111,16 @@ const ViewCustomer = () => {
         setSelectedCustomer(customer)
         setCustomerDetailsModel(true);
     };
-    const data = useMemo(() => {
-        let filtered = [...localCustomers];
+    const searchableCustomers = useMemo(() => {
+        return localCustomers.map((customer) => ({
+            ...customer,
+            searchName: customer.name?.toLowerCase() || "",
+            searchAddress: customer.address?.toLowerCase() || "",
+            searchDiaryNumber: customer.diaryNumber?.toString() || "",
+        }));
+    }, [localCustomers]);
+    const filteredCustomers = useMemo(() => {
+        let filtered = [...searchableCustomers];
         if (sortBy == CUSTOMER_NAME_SORT) {
             filtered.sort((a, b) => a.name.localeCompare(b.name));
         } else if (sortBy == BALANCE_SORT) {
@@ -103,21 +140,21 @@ const ViewCustomer = () => {
              filtered = filtered.filter((item) => {
                  return item.name.toLowerCase().includes(searchText.toLowerCase());
              });
-         }*/
-        if (debouncedSearchText.length > 0) {
+        }*/
+        if (deferredSearchText.length > 0) {
             filtered = filtered.filter((item) => {
-                return item.name.toLowerCase().includes(debouncedSearchText.toLowerCase());
+                if (deferredSearchBy === SEARCH_BY_DIARY) {
+                    return item.searchDiaryNumber.includes(deferredSearchText);
+                }
+                if (deferredSearchBy === SEARCH_BY_ADDRESS) {
+                    return matchesTokens(item.searchAddress, deferredSearchText);
+                }
+                return matchesTokens(item.searchName, deferredSearchText);
             });
         }
-        xcombineData = filtered;
-        return filtered.map((item) => makeRow(
-            item,
-            loadConnection,
-            (userId) => {
-                dispatch(deleteCustomer(userId))
-            }
-        ));
-    }, [localCustomers, sortBy, debouncedSearchText]);
+        return filtered;
+    }, [searchableCustomers, sortBy, deferredSearchText, deferredSearchBy]);
+    xcombineData = filteredCustomers;
     useEffect(() => {
         if (c.customers === null && !customerData.isLoading) {
             dispatch(fetchCustomerData());
@@ -506,7 +543,7 @@ const ViewCustomer = () => {
         grandTotalBalance += Number(customer.totalBalance)
     }
     return (
-        <div className="w-full h-full overflow-auto p-2.5 bg-[#f5f5f5] rounded-2xl">
+        <div className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-2xl bg-[#f5f5f5] p-2.5">
             <NewConnectionForm/>
             <Stack
                 direction="row"
@@ -514,7 +551,7 @@ const ViewCustomer = () => {
                 spacing={1}
                 justifyContent="flex-end"
                 alignItems="center"
-                className="flex flex-row mb-1 space-x-2 justify-end"
+                className="mb-1 flex shrink-0 flex-row justify-end space-x-2"
             >
                 <Button
                     onClick={() => setOpenNewConnection(true)}
@@ -556,8 +593,27 @@ const ViewCustomer = () => {
                 >
                     Search Customer
                 </Typography>
+                <Select
+                    value={searchBy}
+                    onChange={(_, value) => {
+                        if (value) {
+                            setSearchBy(value);
+                        }
+                    }}
+                    className="min-w-[140px]"
+                >
+                    <Option value={SEARCH_BY_NAME}>Name</Option>
+                    <Option value={SEARCH_BY_DIARY}>Diary No.</Option>
+                    <Option value={SEARCH_BY_ADDRESS}>Address</Option>
+                </Select>
                 <Input
-                    placeholder="Name"
+                    placeholder={
+                        searchBy === SEARCH_BY_DIARY
+                            ? "Diary No."
+                            : searchBy === SEARCH_BY_ADDRESS
+                                ? "Address"
+                                : "Name"
+                    }
                     value={searchText}
                     onChange={(e) => setSearchText(e.target.value)}
                     className="min-w-[180px]"
@@ -653,20 +709,35 @@ const ViewCustomer = () => {
             {
                 isCustomerPaymentsUpdateOrCreateLoading ? <LinearProgress/> : <></>
             }
-            <DataTable
-                thead={[
-                    <TableHead key={"all_data"}><FaInfoCircle/></TableHead>,
-                    <TableHead key={"diary_no"}>Diary No.</TableHead>,
-                    <TableHead key={"name"}>Name</TableHead>,
-                    <TableHead key={"address"}>Address</TableHead>,
-                    <TableHead key={"phone_no"}>Phone No.</TableHead>,
-                    <TableHead key={"balance"}>Balance</TableHead>,
-                    <TableHead key={"history"}>History</TableHead>,
-                    <TableHead key={"delete"}>Delete</TableHead>
-                ]}
-                tbody={data}
-                loading={customerData.isLoading || updateCustomer.isSuccessful}
-            />
+            <div className="min-h-0 flex-1 overflow-hidden">
+                <DataTable
+                    thead={[
+                        <TableHead key={"all_data"}><FaInfoCircle/></TableHead>,
+                        <TableHead key={"diary_no"}>Diary No.</TableHead>,
+                        <TableHead key={"name"}>Name</TableHead>,
+                        <TableHead key={"address"}>Address</TableHead>,
+                        <TableHead key={"phone_no"}>Phone No.</TableHead>,
+                        <TableHead key={"balance"}>Balance</TableHead>,
+                        <TableHead key={"history"}>History</TableHead>,
+                        <TableHead key={"delete"}>Delete</TableHead>
+                    ]}
+                    tbody={filteredCustomers}
+                    renderRow={(item) => makeRow(
+                        item,
+                        loadConnection,
+                        (userId) => {
+                            dispatch(deleteCustomer(userId))
+                        }
+                    )}
+                    rowKey={(item) => item.id}
+                    virtualized={filteredCustomers.length > 150}
+                    rowHeight={44}
+                    overscan={24}
+                    maxBodyHeight={720}
+                    fillAvailableHeight={true}
+                    loading={customerData.isLoading || updateCustomer.isSuccessful}
+                />
+            </div>
         </div>
     );
 };
