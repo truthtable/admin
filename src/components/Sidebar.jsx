@@ -1,7 +1,7 @@
 import React, {useState} from "react";
 
 import {
-    FcContacts,
+    FcContacts, FcDataSheet,
     FcDocument,
     FcFactory,
     FcHome,
@@ -48,6 +48,7 @@ function Sidebar({openSidebarToggle, OpenSidebar}) {
                         {label: "Warehouse", path: "/admin/readWherehouse", icon: <FcHome className="icon"/>},
                         {label: "Deliveries", path: "/admin/deliveryHistory", icon: <FcViewDetails className="icon"/>},
                         {label: "Customers", path: "/admin/ViewCustomer", icon: <FcContacts className="icon"/>},
+                        {label: "Attendance", path: "/admin/attendance", icon: <FcDataSheet className="icon"/>},
                         {label: "Delivery Boys", path: "/admin/readDeliveryBoy", icon: <FcManager className="icon"/>},
                         {label: "Expense", path: "/admin/expense", icon: <FcMoneyTransfer className="icon"/>},
                         // { label: "Gas Cylinders", path: "/admin/read", icon: <FcFullBattery className="icon" /> },
@@ -55,7 +56,10 @@ function Sidebar({openSidebarToggle, OpenSidebar}) {
                         // { label: "Setting", path: "/admin/", icon: <FcRating className="icon" /> },
                     ].map((data, index) => {
                         if (!(process.env.NODE_ENV === 'development')) {
-                            if (data.label === 'Expense') {
+                            if (
+                                data.label === 'Expense'
+                                || data.label === 'Attendance'
+                            ) {
                                 return null;
                             }
                         }

@@ -8,6 +8,7 @@ import {useDispatch, useSelector} from "react-redux";
 import {fetchCount} from "../state/Count";
 import {MdOutlineGasMeter} from "react-icons/md";
 import {RiMoneyRupeeCircleFill} from "react-icons/ri";
+import {FaCalendarAlt} from "react-icons/fa";
 
 const DashboardCard = ({
                            title,
@@ -60,6 +61,12 @@ const dashboardCards = [
         getCount: (counts) => counts?.customer_count || 0
     },
     {
+        title: 'Attendance',
+        icon: FaCalendarAlt,
+        link: '/admin/attendance',
+        getCount: (counts) => counts?.courier_boy_count || 0
+    },
+    {
         title: 'Delivery Boy',
         icon: BsPeopleFill,
         link: '/admin/readDeliveryBoy',
@@ -110,7 +117,10 @@ export const Home = () => {
                 {dashboardCards.map(({title, icon, link, getCount}) => {
                     if (!(process.env.NODE_ENV === 'development')) {
                         console.log("Running in production mode");
-                        if (title === 'Expense') {
+                        if (
+                            title === 'Expense'
+                            || title === 'Attendance'
+                        ) {
                             return null;
                         }
                     }

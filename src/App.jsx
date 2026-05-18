@@ -37,6 +37,7 @@ import {FaArrowRightToBracket} from "react-icons/fa6";
 import {FaUserCircle} from "react-icons/fa";
 import {IoCloseSharp} from "react-icons/io5";
 import GasUi from "./components/view/GasUi.jsx";
+import Attendance from "./components/attendance/Attendance.jsx";
 
 function App() {
 
@@ -439,6 +440,10 @@ function App() {
                                     <Route
                                         path="/admin/purchase"
                                         Component={Purchase}
+                                    />
+                                    <Route
+                                        path="/admin/attendance"
+                                        Component={Attendance}
                                     />
                                     <Route
                                         path="/admin/report"
