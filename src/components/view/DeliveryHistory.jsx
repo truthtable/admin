@@ -190,9 +190,14 @@ export default function DeliveryHistory() {
                     const cId = user.customers[0]?.id;
                     const customerName = titleCase(user.name);
                     const address = titleCase(user.address);
+                    const diaryNumber = user.customers[0]?.diaryNumber;
+                    let diaryNumberText = `- : `;
+                    if(diaryNumber!=null){
+                        diaryNumberText = `${diaryNumber} : `
+                    }
                     customerList.push({
                         id: cId,
-                        label: `${customerName} (${address})`,
+                        label: `${diaryNumberText}${customerName} (${address})`,
                     });
                 }
             });
