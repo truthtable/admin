@@ -598,6 +598,12 @@ export default function DeliveryHistory() {
             const displayReceived = received === 0 ? "-" : received;
             const date = formatDateToDDMMYY_HHMM(delivery.created_at);
             const customerName = titleCase(delivery.customer.name);
+            let diaryNo = delivery.customer.diaryNumber
+            if(diaryNo!=null){
+                diaryNo = `[${diaryNo}] `;
+            }else{
+                diaryNo = ``;
+            }
 
             let isAdmin = false;
             if (ADMIN_LIST.get(delivery?.courier_boy.id)) {
@@ -716,7 +722,7 @@ export default function DeliveryHistory() {
                                         </>
                                 }
                                 <DataCell correction={correction} key={`delivery-${i}-date`}>{date}</DataCell>
-                                <DataCell correction={correction} key={`delivery-${i}-name`}>{customerName}</DataCell>
+                                <DataCell correction={correction} key={`delivery-${i}-name`}>{diaryNo}{customerName}</DataCell>
                                 {temptKgsList}
                                 <DataCell correction={correction} key={`delivery-${i}-sub`}>{displaySubTotal}</DataCell>
                                 <DataCell correction={correction}
