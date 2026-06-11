@@ -141,7 +141,7 @@ export default function Purchase() {
             if (order.items.length === 0 && order.target === null) {
                 orderRows.push(
                     <tr key={`order-row-empty-${order.id}`}>
-                        <td style={{borderWidth: 0, padding: 6, margin: 0, backgroundColor: "#FFB0B0"}} colSpan={12}>
+                        <td style={{borderWidth: 0, padding: 6, margin: 0, backgroundColor: "#ffffff"}} colSpan={12}>
                             <Stack
                                 direction="row"
                                 gap={1}
@@ -151,17 +151,17 @@ export default function Purchase() {
                                 <span style={{fontWeight: "bold"}}>|{` Scheme ${orderSchemeType}`}</span>
                                 <span style={{fontWeight: "bold"}}>|{` Scheme Rate ${orderSchemeRate}`}</span>
                             </Stack>
-                            <Stack
-                                direction="row"
-                                gap={1}
-                            >
-                                <FaArrowTurnDown style={{
-                                    fontSize: "20px",
-                                    transform: "scaleX(-1)",
-                                }}/>
-                                <span
-                                    style={{fontWeight: "bold"}}>No Gas Added Please Add Gas from the edit option</span>
-                            </Stack>
+                            {/*<Stack*/}
+                            {/*    direction="row"*/}
+                            {/*    gap={1}*/}
+                            {/*>*/}
+                            {/*    <FaArrowTurnDown style={{*/}
+                            {/*        fontSize: "20px",*/}
+                            {/*        transform: "scaleX(-1)",*/}
+                            {/*    }}/>*/}
+                            {/*    <span*/}
+                            {/*        style={{fontWeight: "bold"}}>No Gas Added Please Add Gas from the edit option</span>*/}
+                            {/*</Stack>*/}
 
                         </td>
                     </tr>

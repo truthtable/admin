@@ -398,10 +398,10 @@ export default function AddPurchaseUI({gaslistData, plants}) {
                                     formJson.hasTarget = true;
                                 }
                                 //console.log(formJson);
-                                if (allOrderItems.length === 0 && !showTargetOption) {
-                                    alert("Add Gas Items to Continue");
-                                    return;
-                                }
+                                // if (allOrderItems.length === 0 && !showTargetOption) {
+                                //     alert("Add Gas Items to Continue");
+                                //     return;
+                                // }
                                 dispatch(createOrder(formJson));
                                 setShowTargetOption(false);
                                 setAddPurchaseModel(false);
