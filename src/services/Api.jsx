@@ -1,7 +1,14 @@
 import axios from 'axios';
 
 //export const URL = "https://api.srdgas.online/";
-export const URL = "https://shree-ram-distributor.indiegrow.in/";
+let devmode = false;
+if (process.env.NODE_ENV === 'development') {
+     devmode = true;
+}
+const liveurl = "https://shree-ram-distributor.indiegrow.in/";
+const devurl = "http://localhost:8000/";
+
+export const URL = devmode ? devurl : liveurl;
 export const LOGIN = URL + "api/token";
 export const CHECK_LOGIN = URL + "api/check";
 
@@ -30,85 +37,85 @@ export const UPDATE_CUSTOMER_PAYMENTS = URL + "api/customer_payments_update_or_c
 export const ADJUST_BALANCE = URL + "api/adjustBalance";
 
 export const getUserDataFromCookie = () => {
-    let data = null;
-    try {
-        const cookie = document.cookie;
-        const cookieArray = cookie.split(";");
-        cookieArray.forEach((element) => {
-            let temp = element.trim().split("=");
-            const key = temp[0];
-            const value = temp[1];
-            data = {...data, [key]: value};
-        });
-        if (data.token === undefined || data.token === "") {
-            data = null;
-        }
-    } catch (e) {
-        console.warn(e);
-    }
-    return data;
+     let data = null;
+     try {
+          const cookie = document.cookie;
+          const cookieArray = cookie.split(";");
+          cookieArray.forEach((element) => {
+               let temp = element.trim().split("=");
+               const key = temp[0];
+               const value = temp[1];
+               data = { ...data, [key]: value };
+          });
+          if (data.token === undefined || data.token === "") {
+               data = null;
+          }
+     } catch (e) {
+          console.warn(e);
+     }
+     return data;
 };
 
 export const getLoginData = () => {
-    const userData = localStorage.getItem("userData");
-    let localData = null;
-    if (userData) {
-        const data = JSON.parse(userData);
-        const timeStamps = new Date(data.timeStamps);
-        const currentTime = new Date();
-        if (currentTime.getDate() !== timeStamps.getDate()) {
-            localStorage.removeItem("userData");
-        } else {
-            localData = data.data;
-        }
-    }
-    return localData;
+     const userData = localStorage.getItem("userData");
+     let localData = null;
+     if (userData) {
+          const data = JSON.parse(userData);
+          const timeStamps = new Date(data.timeStamps);
+          const currentTime = new Date();
+          if (currentTime.getDate() !== timeStamps.getDate()) {
+               localStorage.removeItem("userData");
+          } else {
+               localData = data.data;
+          }
+     }
+     return localData;
 }
 
 const axiosInstance_ = axios.create({
-    baseURL: URL + 'api/',
+     baseURL: URL + 'api/',
 });
 
 export const axiosInstance = () => {
-    // Add a request interceptor to attach the token
-    axiosInstance_.interceptors.request.use(
-        (config) => {
-            const optToken = sessionStorage.getItem("otpToken");
-            const authToken = sessionStorage.getItem("authToken");
-            let token = null
-            if (optToken) {
-                token = optToken
-            }
-            if (authToken) {
-                token = authToken
-            }
-            //console.log({ optToken, authToken, token });
-            if (token) {
-                config.headers['Authorization'] = `Bearer ${token}`;
-            }
-            return config;
-        },
-        (error) => {
-            return Promise.reject(error);
-        }
-    );
-    // Add a response interceptor to handle 401 errors
-    axiosInstance_.interceptors.response.use(
-        (response) => {
-            return response;
-        },
-        (error) => {
-            //check for all unauthorized
-            if (error.response && error.response.status === 401) {
-                sessionStorage.removeItem("authToken");
-                sessionStorage.removeItem("otpToken");
-                window.location.reload();
-            }
-            return Promise.reject(error);
-        }
-    );
+     // Add a request interceptor to attach the token
+     axiosInstance_.interceptors.request.use(
+          (config) => {
+               const optToken = sessionStorage.getItem("otpToken");
+               const authToken = sessionStorage.getItem("authToken");
+               let token = null
+               if (optToken) {
+                    token = optToken
+               }
+               if (authToken) {
+                    token = authToken
+               }
+               //console.log({ optToken, authToken, token });
+               if (token) {
+                    config.headers['Authorization'] = `Bearer ${token}`;
+               }
+               return config;
+          },
+          (error) => {
+               return Promise.reject(error);
+          }
+     );
+     // Add a response interceptor to handle 401 errors
+     axiosInstance_.interceptors.response.use(
+          (response) => {
+               return response;
+          },
+          (error) => {
+               //check for all unauthorized
+               if (error.response && error.response.status === 401) {
+                    sessionStorage.removeItem("authToken");
+                    sessionStorage.removeItem("otpToken");
+                    window.location.reload();
+               }
+               return Promise.reject(error);
+          }
+     );
 
-    return axiosInstance_;
+     return axiosInstance_;
 }
 
 export default axiosInstance();
