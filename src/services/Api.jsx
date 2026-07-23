@@ -36,6 +36,9 @@ export const UPDATE_CUSTOMER_PAYMENTS = URL + "api/customer_payments_update_or_c
 //adjustBalance
 export const ADJUST_BALANCE = URL + "api/adjustBalance";
 
+// attendance
+export const ATTENDANCE_URL = URL + "api/attendance";
+
 export const getUserDataFromCookie = () => {
      let data = null;
      try {

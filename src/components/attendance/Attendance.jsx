@@ -2,8 +2,9 @@ import React from "react";
 import {
     Alert,
     Box,
+    Button,
     Checkbox,
-    Chip,
+    CircularProgress,
     Divider,
     FormControl,
     FormLabel,
@@ -12,55 +13,47 @@ import {
     Sheet,
     Stack,
     Table,
+    Tooltip,
     Typography,
 } from "@mui/joy";
-import {useDispatch, useSelector} from "react-redux";
-import {FaCheck, FaTimes} from "react-icons/fa";
-import {fetchCustomerData} from "../../state/Customers.jsx";
+import { useDispatch, useSelector } from "react-redux";
+import { FaCheck, FaTimes } from "react-icons/fa";
+import { TbSortAscending, TbSortDescending } from "react-icons/tb";
+import {
+    fetchAttendance,
+    optimisticToggle,
+    rollbackToggle,
+    toggleAttendance,
+} from "../../redux/reducers/attendanceSlice.js";
 
-const STORAGE_KEY = "attendanceState";
-const TEMP_STAFF = [
-    {id: "temp-1", name: "Ramesh Patel"},
-    {id: "temp-2", name: "Mahesh Sharma"},
-    {id: "temp-3", name: "Suresh Yadav"},
-    {id: "temp-4", name: "Amit Kumar"},
-    {id: "temp-5", name: "Vijay Singh"},
-];
-
+/* ─── date helpers ─── */
 const toDateInputValue = (date) => {
-    const value = new Date(date);
-    const year = value.getFullYear();
-    const month = String(value.getMonth() + 1).padStart(2, "0");
-    const day = String(value.getDate()).padStart(2, "0");
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
 };
 
-const getMonthStart = () => toDateInputValue(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+const getMonthStart = () =>
+    toDateInputValue(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+
+const getMonthEnd = () =>
+    toDateInputValue(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0));
 
 const getToday = () => toDateInputValue(new Date());
 
-const getDateKey = (date) => toDateInputValue(date);
-
-const getAttendanceKey = (staffId, dateKey) => `${staffId}:${dateKey}`;
-
 const buildDateRange = (startDate, endDate) => {
-    if (!startDate || !endDate) {
-        return [];
-    }
-
+    if (!startDate || !endDate) return [];
     const start = new Date(`${startDate}T00:00:00`);
     const end = new Date(`${endDate}T00:00:00`);
-
-    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start > end) {
-        return [];
-    }
-
+    if (isNaN(start) || isNaN(end) || start > end) return [];
     const dates = [];
     const cursor = new Date(start);
-
     while (cursor <= end) {
+        const key = toDateInputValue(cursor);
         dates.push({
-            key: getDateKey(cursor),
+            key,
             label: cursor.toLocaleDateString("en-GB", {
                 day: "2-digit",
                 month: "2-digit",
@@ -69,90 +62,91 @@ const buildDateRange = (startDate, endDate) => {
         });
         cursor.setDate(cursor.getDate() + 1);
     }
-
     return dates;
 };
 
-const getSavedAttendance = () => {
-    try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-    } catch {
-        return {};
-    }
-};
-
-const extractDeliveryStaff = (users = []) => {
-    return users
-        .filter((user) => user?.courier_boys?.[0]?.login?.role === 2)
-        .map((user) => ({
-            id: user.courier_boys[0].id,
-            name: user.name || user.courier_boys[0].name || `Staff ${user.courier_boys[0].id}`,
+/* ─── staff extraction ─── */
+/**
+ * API returns logins[] with role=2. Each login has:
+ *   .id                              — login id (used as delivery_boy_login_id in POST)
+ *   .courier_boy.user.name           — Laravel serialises camelCase relation as snake_case
+ */
+const extractStaff = (records = []) =>
+    records
+        .map((rec) => ({
+            loginId: rec.id,
+            name:
+                rec.courier_boy?.user?.name ||
+                rec.courier_boy?.name ||
+                rec.username ||
+                `Staff #${rec.id}`,
         }))
         .sort((a, b) => a.name.localeCompare(b.name));
-};
 
+/* ─── component ─── */
 export default function Attendance() {
     const dispatch = useDispatch();
-    const customerState = useSelector((state) => state.customers);
-    const staff = React.useMemo(
-        () => {
-            const deliveryStaff = extractDeliveryStaff(customerState?.data?.userdata);
-            return deliveryStaff.length > 0 ? deliveryStaff : TEMP_STAFF;
-        },
-        [customerState?.data?.userdata],
-    );
+    const attendanceState = useSelector((state) => state.attendance);
 
     const [startDate, setStartDate] = React.useState(getMonthStart);
-    const [endDate, setEndDate] = React.useState(getToday);
+    const [endDate, setEndDate] = React.useState(getMonthEnd);
     const [search, setSearch] = React.useState("");
-    const [attendance, setAttendance] = React.useState(getSavedAttendance);
+    const [sortDir, setSortDir] = React.useState(
+        () => localStorage.getItem("attendance_sortDir") || "desc"
+    ); // "asc" | "desc"
 
+
+    /* Fetch whenever date range changes */
     React.useEffect(() => {
-        if (!customerState?.data && !customerState?.isLoading) {
-            dispatch(fetchCustomerData());
-        }
-    }, [customerState?.data, customerState?.isLoading, dispatch]);
+        if (!startDate || !endDate) return;
+        if (new Date(startDate) > new Date(endDate)) return;
+        dispatch(fetchAttendance({ startDate, endDate }));
+    }, [startDate, endDate, dispatch]);
 
-    React.useEffect(() => {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(attendance));
-    }, [attendance]);
+    const dates = React.useMemo(
+        () => buildDateRange(startDate, endDate),
+        [startDate, endDate],
+    );
+    const visibleDates = React.useMemo(
+        () => sortDir === "desc" ? [...dates].reverse() : [...dates],
+        [dates, sortDir],
+    );
+    const validRange =
+        startDate && endDate && new Date(startDate) <= new Date(endDate);
 
-    const dates = React.useMemo(() => buildDateRange(startDate, endDate), [startDate, endDate]);
-    const validRange = startDate && endDate && new Date(startDate) <= new Date(endDate);
+    const staff = React.useMemo(
+        () => extractStaff(attendanceState.records),
+        [attendanceState.records],
+    );
 
-    const visibleDates = React.useMemo(() => [...dates].reverse(), [dates]);
     const filteredStaff = React.useMemo(() => {
-        const query = search.trim().toLowerCase();
-        if (!query) {
-            return staff;
-        }
-        return staff.filter((person) => person.name.toLowerCase().includes(query));
+        const q = search.trim().toLowerCase();
+        return q ? staff.filter((p) => p.name.toLowerCase().includes(q)) : staff;
     }, [search, staff]);
 
-    const visibleKeys = React.useMemo(() => {
-        return filteredStaff.flatMap((person) =>
-            visibleDates.map((date) => getAttendanceKey(person.id, date.key)),
-        );
-    }, [filteredStaff, visibleDates]);
+    const map = attendanceState.map;
+    const toggling = attendanceState.toggling;
 
-    const presentCount = visibleKeys.reduce((count, key) => count + (attendance[key] ? 1 : 0), 0);
-    const totalCount = visibleKeys.length;
-    const absentCount = totalCount - presentCount;
+    const getChecked = (loginId, dateKey) => Boolean(map[`${loginId}:${dateKey}`]);
 
-    const setAttendanceValue = (staffId, dateKey, checked) => {
-        setAttendance((current) => ({
-            ...current,
-            [getAttendanceKey(staffId, dateKey)]: checked,
-        }));
+    /* Toggle handler: optimistic update + API call with rollback on error */
+    const handleToggle = (loginId, dateKey, currentChecked) => {
+        const key = `${loginId}:${dateKey}`;
+        if (toggling[key]) return;
+        dispatch(optimisticToggle({ key, currentChecked }));
+        dispatch(toggleAttendance({ delivery_boy_login_id: loginId, created_at: dateKey }))
+            .unwrap()
+            .catch(() => {
+                dispatch(rollbackToggle({ key, currentChecked }));
+            });
     };
 
     const handleTableWheel = (event) => {
         const container = event.currentTarget;
-
-        if (Math.abs(event.deltaY) <= Math.abs(event.deltaX) || container.scrollWidth <= container.clientWidth) {
-            return;
-        }
-
+        if (
+            Math.abs(event.deltaY) <= Math.abs(event.deltaX) ||
+            container.scrollWidth <= container.clientWidth
+        ) return;
         event.preventDefault();
         container.scrollLeft += event.deltaY;
     };
@@ -165,15 +159,15 @@ export default function Attendance() {
                 height: "100%",
                 overflow: "hidden",
                 paddingTop: 1,
-                paddingX:1
-                // p: 2,
+                paddingX: 1,
             }}
         >
-            <Stack gap={1.5} sx={{height: "100%"}}>
+            <Stack gap={1.5} sx={{ height: "100%" }}>
+                {/* Header row */}
                 <Stack
-                    direction={{xs: "column", md: "row"}}
+                    direction={{ xs: "column", md: "row" }}
                     gap={1.5}
-                    alignItems={{xs: "stretch", md: "flex-end"}}
+                    alignItems={{ xs: "stretch", md: "flex-end" }}
                     justifyContent="space-between"
                 >
                     <Stack gap={0.5}>
@@ -183,15 +177,37 @@ export default function Attendance() {
                         </Typography>
                     </Stack>
 
-                    <Stack direction={{xs: "column", sm: "row"}} gap={1} alignItems={{sm: "flex-end"}}>
+                    <Stack direction={{ xs: "column", sm: "row" }} gap={1} alignItems={{ sm: "flex-end" }}>
+                        <FormControl size="sm">
+                            <FormLabel>Sort order</FormLabel>
+                            <Tooltip
+                                title={sortDir === "desc" ? "Newest first" : "Oldest first"}
+                                placement="top"
+                            >
+                                <Button
+                                    size="sm"
+                                    variant="outlined"
+                                    color="neutral"
+                                    startDecorator={sortDir === "desc" ? <TbSortDescending /> : <TbSortAscending />}
+                                    onClick={() => {
+                                        setSortDir((d) => {
+                                            const next = d === "desc" ? "asc" : "desc";
+                                            localStorage.setItem("attendance_sortDir", next);
+                                            return next;
+                                        });
+                                    }}
+                                    aria-label="Toggle date sort order"
+                                >
+                                    Sort
+                                </Button>
+                            </Tooltip>
+                        </FormControl>
                         <FormControl size="sm">
                             <FormLabel>Start Date</FormLabel>
                             <Input
                                 type="date"
                                 value={startDate}
-                                onChange={(event) => {
-                                    setStartDate(event.target.value);
-                                }}
+                                onChange={(e) => setStartDate(e.target.value)}
                             />
                         </FormControl>
                         <FormControl size="sm">
@@ -199,9 +215,7 @@ export default function Attendance() {
                             <Input
                                 type="date"
                                 value={endDate}
-                                onChange={(event) => {
-                                    setEndDate(event.target.value);
-                                }}
+                                onChange={(e) => setEndDate(e.target.value)}
                             />
                         </FormControl>
                         <FormControl size="sm">
@@ -209,38 +223,34 @@ export default function Attendance() {
                             <Input
                                 placeholder="Name"
                                 value={search}
-                                onChange={(event) => setSearch(event.target.value)}
+                                onChange={(e) => setSearch(e.target.value)}
                             />
                         </FormControl>
                     </Stack>
                 </Stack>
 
-                <Stack
-                    direction={{xs: "column", lg: "row"}}
-                    gap={1}
-                    alignItems={{xs: "stretch", lg: "center"}}
-                    justifyContent="space-between"
-                >
-                    <Stack direction="row" gap={1} flexWrap="wrap">
-                        <Chip color="success" variant="soft">Present: {presentCount}</Chip>
-                        <Chip color="danger" variant="soft">Absent: {absentCount}</Chip>
-                    </Stack>
-                </Stack>
 
-                {!validRange ? (
-                    <Alert color="warning" variant="soft">
-                        Select a valid date range.
+
+                {/* Alerts */}
+                {!validRange && (
+                    <Alert color="warning" variant="soft">Select a valid date range.</Alert>
+                )}
+                {attendanceState.isError && (
+                    <Alert color="danger" variant="soft">
+                        {attendanceState.errorMessage || "Failed to load attendance."}
                     </Alert>
-                ) : null}
+                )}
 
-                {customerState?.isLoading ? <Box
-                    sx={{
-                        height: "10px",
-                    }}
-                ><LinearProgress /></Box> : null}
+                {/* Loading bar */}
+                {attendanceState.isLoading && (
+                    <Box sx={{ height: "10px" }}>
+                        <LinearProgress />
+                    </Box>
+                )}
 
                 <Divider />
 
+                {/* Table */}
                 <Sheet
                     variant="outlined"
                     onWheel={handleTableWheel}
@@ -280,60 +290,98 @@ export default function Attendance() {
                         }}
                     >
                         <thead>
-                        <tr>
-                            <th>Name</th>
-                            {visibleDates.map((date) => (
-                                <th key={date.key} style={{width: 96, textAlign: "center"}}>
-                                    <Typography level="body-xs" fontWeight="lg">{date.label}</Typography>
-                                </th>
-                            ))}
-                        </tr>
+                            <tr>
+                                <th>Name</th>
+                                {visibleDates.map((date) => (
+                                    <th key={date.key} style={{ width: 96, textAlign: "center" }}>
+                                        <Typography level="body-xs" fontWeight="lg">
+                                            {date.label}
+                                        </Typography>
+                                    </th>
+                                ))}
+                            </tr>
                         </thead>
                         <tbody>
-                        {validRange && filteredStaff.map((person) => (
-                            <tr key={person.id}>
-                                <td>
-                                    <Typography level="body-sm" fontWeight="lg">{person.name}</Typography>
-                                </td>
-                                {visibleDates.map((date) => {
-                                    const key = getAttendanceKey(person.id, date.key);
-                                    const checked = Boolean(attendance[key]);
-                                    return (
-                                        <td
-                                            key={key}
-                                            onClick={() => setAttendanceValue(person.id, date.key, !checked)}
-                                            style={{
-                                                backgroundColor: checked ? "#dcfce7" : "#fee2e2",
-                                                cursor: "pointer",
-                                                textAlign: "center",
-                                                transition: "background-color 120ms ease",
-                                            }}
-                                        >
-                                            <Checkbox
-                                                size="sm"
-                                                color={checked ? "success" : "danger"}
-                                                checked={checked}
-                                                checkedIcon={<FaCheck />}
-                                                uncheckedIcon={<FaTimes />}
-                                                slotProps={{input: {"aria-label": `${person.name} ${date.key}`}}}
-                                                onClick={(event) => event.stopPropagation()}
-                                                onChange={(event) => setAttendanceValue(person.id, date.key, event.target.checked)}
-                                            />
+                            {validRange &&
+                                filteredStaff.map((person) => (
+                                    <tr key={person.loginId}>
+                                        <td>
+                                            <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
+                                                <Typography level="body-sm" fontWeight="lg">
+                                                    {person.name}
+                                                </Typography>
+                                                <Typography
+                                                    level="body-xs"
+                                                    sx={{ fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}
+                                                >
+                                                    {(() => {
+                                                        const p = visibleDates.filter((d) => getChecked(person.loginId, d.key)).length;
+                                                        const a = visibleDates.length - p;
+                                                        return (
+                                                            <>
+                                                                <span style={{ color: "#16a34a" }}>P:{p}</span>
+                                                                <span style={{ color: "#9ca3af" }}> | </span>
+                                                                <span style={{ color: "#dc2626" }}>A:{a}</span>
+                                                            </>
+                                                        );
+                                                    })()}
+                                                </Typography>
+                                            </Stack>
                                         </td>
-                                    );
-                                })}
-                            </tr>
-                        ))}
+                                        {visibleDates.map((date) => {
+                                            const key = `${person.loginId}:${date.key}`;
+                                            const checked = getChecked(person.loginId, date.key);
+                                            const inFlight = Boolean(toggling[key]);
+                                            return (
+                                                <td
+                                                    key={key}
+                                                    onClick={() =>
+                                                        handleToggle(person.loginId, date.key, checked)
+                                                    }
+                                                    style={{
+                                                        backgroundColor: inFlight
+                                                            ? "#f3f4f6"
+                                                            : checked
+                                                                ? "#dcfce7"
+                                                                : "#fee2e2",
+                                                        cursor: inFlight ? "wait" : "pointer",
+                                                        textAlign: "center",
+                                                        transition: "background-color 120ms ease",
+                                                    }}
+                                                >
+                                                    {inFlight ? (
+                                                        <CircularProgress size="sm" sx={{ "--CircularProgress-size": "16px" }} />
+                                                    ) : (
+                                                        <Checkbox
+                                                            size="sm"
+                                                            color={checked ? "success" : "danger"}
+                                                            checked={checked}
+                                                            checkedIcon={<FaCheck />}
+                                                            uncheckedIcon={<FaTimes />}
+                                                            slotProps={{
+                                                                input: {
+                                                                    "aria-label": `${person.name} ${date.key}`,
+                                                                },
+                                                            }}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            onChange={() =>
+                                                                handleToggle(person.loginId, date.key, checked)
+                                                            }
+                                                        />
+                                                    )}
+                                                </td>
+                                            );
+                                        })}
+                                    </tr>
+                                ))}
                         </tbody>
                     </Table>
 
-                    {validRange && filteredStaff.length === 0 ? (
-                        <Stack alignItems="center" justifyContent="center" sx={{height: 180}}>
-                            <Typography textColor="neutral.600">
-                                No delivery staff found.
-                            </Typography>
+                    {validRange && !attendanceState.isLoading && filteredStaff.length === 0 && (
+                        <Stack alignItems="center" justifyContent="center" sx={{ height: 180 }}>
+                            <Typography textColor="neutral.600">No delivery staff found.</Typography>
                         </Stack>
-                    ) : null}
+                    )}
                 </Sheet>
             </Stack>
         </Box>

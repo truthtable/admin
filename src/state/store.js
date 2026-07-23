@@ -29,6 +29,7 @@ import localCustomersReducer from "../redux/localData/localCustomers.js";
 import customerPaymentsUpdateOrCreateSliceReducer from "../redux/customerPaymentsUpdateOrCreate.js";
 import addNewGasDeliveryReducer from "../redux/delivery/gasEditDelivery.js";
 import purchaseDataReducer from "../redux/purchase/purchaseData.js";
+import attendanceReducer from "../redux/reducers/attendanceSlice.js";
 
 export const store = configureStore({
     reducer: {
@@ -92,6 +93,8 @@ export const store = configureStore({
         modifyGasDelivery: addNewGasDeliveryReducer,
 
         purchaseData: purchaseDataReducer,
+
+        attendance: attendanceReducer,
     },
     devTools: process.env.NODE_ENV !== "production",
 });
