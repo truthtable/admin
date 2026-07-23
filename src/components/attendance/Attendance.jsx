@@ -92,7 +92,7 @@ export default function Attendance() {
     const [endDate, setEndDate] = React.useState(getMonthEnd);
     const [search, setSearch] = React.useState("");
     const [sortDir, setSortDir] = React.useState(
-        () => localStorage.getItem("attendance_sortDir") || "desc"
+        () => localStorage.getItem("attendance_sortDir") || "asc"
     ); // "asc" | "desc"
 
 
