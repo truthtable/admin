@@ -293,7 +293,7 @@ export default function Attendance() {
                             <tr>
                                 <th>Name</th>
                                 {visibleDates.map((date) => (
-                                    <th key={date.key} style={{ width: 96, textAlign: "center" }}>
+                                    <th key={date.key} style={{ width: 70, textAlign: "center" }}>
                                         <Typography level="body-xs" fontWeight="lg">
                                             {date.label}
                                         </Typography>
@@ -307,7 +307,12 @@ export default function Attendance() {
                                     <tr key={person.loginId}>
                                         <td>
                                             <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
-                                                <Typography level="body-sm" fontWeight="lg">
+                                                <Typography
+                                                    level="body-sm"
+                                                    fontWeight="lg"
+                                                    //dont break text
+                                                    noWrap
+                                                >
                                                     {person.name}
                                                 </Typography>
                                                 <Typography
@@ -320,7 +325,7 @@ export default function Attendance() {
                                                         return (
                                                             <>
                                                                 <span style={{ color: "#16a34a" }}>P:{p}</span>
-                                                                <span style={{ color: "#9ca3af" }}> | </span>
+                                                                <span style={{ color: "#a2a8b2ff" }}> | </span>
                                                                 <span style={{ color: "#dc2626" }}>A:{a}</span>
                                                             </>
                                                         );
