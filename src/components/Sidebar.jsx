@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 
 import {
     FcContacts, FcDataSheet,
@@ -12,11 +12,11 @@ import {
     FcViewDetails,
 } from "react-icons/fc";
 
-import {Link} from "react-router-dom";
+import { Link } from "react-router-dom";
 import "../css/siderbar.css";
-import {Box} from "@mui/joy";
+import { Box } from "@mui/joy";
 
-function Sidebar({openSidebarToggle, OpenSidebar}) {
+function Sidebar({ openSidebarToggle, OpenSidebar }) {
 
     const [hideLabels, setHideLabels] = useState(true);
 
@@ -42,23 +42,23 @@ function Sidebar({openSidebarToggle, OpenSidebar}) {
             <ul className="sidebar-list">
                 {
                     [
-                        {label: "Dashboard", path: "/admin/", icon: <FcPieChart className="icon"/>},
-                        {label: "Gas Cylinder", path: "/admin/gasUi", icon: <FcPackage className="icon"/>},
-                        {label: "Purchase", path: "/admin/purchase", icon: <FcFactory className="icon"/>},
-                        {label: "Warehouse", path: "/admin/readWherehouse", icon: <FcHome className="icon"/>},
-                        {label: "Deliveries", path: "/admin/deliveryHistory", icon: <FcViewDetails className="icon"/>},
-                        {label: "Customers", path: "/admin/ViewCustomer", icon: <FcContacts className="icon"/>},
-                        {label: "Attendance", path: "/admin/attendance", icon: <FcDataSheet className="icon"/>},
-                        {label: "Delivery Boys", path: "/admin/readDeliveryBoy", icon: <FcManager className="icon"/>},
-                        {label: "Expense", path: "/admin/expense", icon: <FcMoneyTransfer className="icon"/>},
+                        { label: "Dashboard", path: "/admin/", icon: <FcPieChart className="icon" /> },
+                        { label: "Gas Cylinder", path: "/admin/gasUi", icon: <FcPackage className="icon" /> },
+                        { label: "Purchase", path: "/admin/purchase", icon: <FcFactory className="icon" /> },
+                        { label: "Warehouse", path: "/admin/readWherehouse", icon: <FcHome className="icon" /> },
+                        { label: "Deliveries", path: "/admin/deliveryHistory", icon: <FcViewDetails className="icon" /> },
+                        { label: "Customers", path: "/admin/ViewCustomer", icon: <FcContacts className="icon" /> },
+                        { label: "Attendance", path: "/admin/attendance", icon: <FcDataSheet className="icon" /> },
+                        { label: "Delivery Boys", path: "/admin/readDeliveryBoy", icon: <FcManager className="icon" /> },
+                        { label: "Expense", path: "/admin/expense", icon: <FcMoneyTransfer className="icon" /> },
                         // { label: "Gas Cylinders", path: "/admin/read", icon: <FcFullBattery className="icon" /> },
-                        {label: "Bills & Reports", path: "/admin/report", icon: <FcDocument className="icon"/>},
+                        { label: "Bills & Reports", path: "/admin/report", icon: <FcDocument className="icon" /> },
                         // { label: "Setting", path: "/admin/", icon: <FcRating className="icon" /> },
                     ].map((data, index) => {
                         if (!(process.env.NODE_ENV === 'development')) {
                             if (
                                 data.label === 'Expense'
-                                || data.label === 'Attendance'
+                                // || data.label === 'Attendance'
                             ) {
                                 return null;
                             }

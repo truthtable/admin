@@ -1,36 +1,36 @@
-import React, {useEffect} from "react";
-import {BsBook, BsFillGrid3X3GapFill, BsHouseCheck, BsMenuButtonWideFill, BsPeopleFill,} from "react-icons/bs";
+import React, { useEffect } from "react";
+import { BsBook, BsFillGrid3X3GapFill, BsHouseCheck, BsMenuButtonWideFill, BsPeopleFill, } from "react-icons/bs";
 
 import "../css/home.css";
-import {Link} from "react-router-dom";
-import {Box, CircularProgress} from "@mui/joy";
-import {useDispatch, useSelector} from "react-redux";
-import {fetchCount} from "../state/Count";
-import {MdOutlineGasMeter} from "react-icons/md";
-import {RiMoneyRupeeCircleFill} from "react-icons/ri";
-import {FaCalendarAlt} from "react-icons/fa";
+import { Link } from "react-router-dom";
+import { Box, CircularProgress } from "@mui/joy";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchCount } from "../state/Count";
+import { MdOutlineGasMeter } from "react-icons/md";
+import { RiMoneyRupeeCircleFill } from "react-icons/ri";
+import { FaCalendarAlt } from "react-icons/fa";
 
 const DashboardCard = ({
-                           title,
-                           icon: Icon,
-                           link,
-                           count,
-                           loading
-                       }) => (
+    title,
+    icon: Icon,
+    link,
+    count,
+    loading
+}) => (
     <Link to={link} className="link shadow-lg mask-radial-closest-corner">
         <div className="card-inner">
             <h3 className="font-bold">{title}</h3>
-            <Icon className="card_icon"/>
+            <Icon className="card_icon" />
         </div>
         <div>
             <CircularProgress
-                sx={{display: loading ? 'block' : 'none'}}
+                sx={{ display: loading ? 'block' : 'none' }}
                 color="primary"
                 variant="soft"
             />
-            <span style={{display: loading ? 'none' : 'block'}}>
-        {count}
-      </span>
+            <span style={{ display: loading ? 'none' : 'block' }}>
+                {count}
+            </span>
         </div>
     </Link>
 );
@@ -94,8 +94,8 @@ const dashboardCards = [
 
 export const Home = () => {
     const dispatch = useDispatch();
-    const {data: counts, isLoading} = useSelector((state) => state.count);
-    const {token} = useSelector((state) => state.login);
+    const { data: counts, isLoading } = useSelector((state) => state.count);
+    const { token } = useSelector((state) => state.login);
 
     useEffect(() => {
         if (token) {
@@ -111,15 +111,15 @@ export const Home = () => {
             pr: 2,
         }}>
             <div className="main-title">
-                <h3 style={{color: 'white'}}>Admin Dashboard</h3>
+                <h3 style={{ color: 'white' }}>Admin Dashboard</h3>
             </div>
             <div className="main-cards">
-                {dashboardCards.map(({title, icon, link, getCount}) => {
+                {dashboardCards.map(({ title, icon, link, getCount }) => {
                     if (!(process.env.NODE_ENV === 'development')) {
                         console.log("Running in production mode");
                         if (
                             title === 'Expense'
-                            || title === 'Attendance'
+                            // || title === 'Attendance'
                         ) {
                             return null;
                         }
