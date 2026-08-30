@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
     Autocomplete,
     Box,
@@ -13,26 +13,26 @@ import {
     Switch,
     Table
 } from "@mui/joy";
-import {useDispatch, useSelector} from 'react-redux';
-import {fetchCustomers} from "../../redux/actions/customerActions";
-import {fetchReport} from "../../redux/actions/reportActions";
-import {useReactToPrint} from "react-to-print";
-import {fetchOrders} from "../../redux/actions/purchaseOrderActions.js";
-import {getPlants} from "../../redux/actions/plantsActions.js";
-import {fetchGasData} from "../../state/GasList.jsx";
-import {FaArrowLeft, FaRegUserCircle} from "react-icons/fa";
-import {useLocation} from "react-router";
-import {dashIfZero, decimalFix, formatDateToDDMMYY_HHMM, randomLightColor, titleCase, toNumber} from "../../Tools.jsx";
-import {sendBillToCustomer} from "../../redux/billSlice.js";
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchCustomers } from "../../redux/actions/customerActions";
+import { fetchReport } from "../../redux/actions/reportActions";
+import { useReactToPrint } from "react-to-print";
+import { fetchOrders } from "../../redux/actions/purchaseOrderActions.js";
+import { getPlants } from "../../redux/actions/plantsActions.js";
+import { fetchGasData } from "../../state/GasList.jsx";
+import { FaArrowLeft, FaRegUserCircle } from "react-icons/fa";
+import { useLocation } from "react-router";
+import { dashIfZero, decimalFix, formatDateToDDMMYY_HHMM, randomLightColor, titleCase, toNumber } from "../../Tools.jsx";
+import { sendBillToCustomer } from "../../redux/billSlice.js";
 import MapObjectManager from "../class/MapArrayManager.jsx";
-import {DataCell} from "./DeliveryHistory.jsx";
-import {GrLocation} from "react-icons/gr";
+import { DataCell } from "./DeliveryHistory.jsx";
+import { GrLocation } from "react-icons/gr";
 
 const CUSTOMER = "customer";
 const DELIVERY = "delivery";
 const PURCHASE = "purchase";
 
-export const Report = ({isLogged}) => {
+export const Report = ({ isLogged }) => {
 
     const currentUrl = window.location.href;
     const hashIndex = currentUrl.indexOf('#');
@@ -46,7 +46,7 @@ export const Report = ({isLogged}) => {
     const orderData = location.state;
 
     const contentRef = useRef();
-    const reactToPrintFn = useReactToPrint({contentRef})
+    const reactToPrintFn = useReactToPrint({ contentRef })
     const reactToPrintDwnFn = useReactToPrint({
         contentRef,
         documentTitle: 'Report',
@@ -120,7 +120,7 @@ export const Report = ({isLogged}) => {
 
         const [addOutstanding, setAddOutstanding] = useState(false);
 
-        console.log({addOutstanding});
+        console.log({ addOutstanding });
 
         //console.log('selectedCustomer', selectedCustomer);
 
@@ -145,7 +145,7 @@ export const Report = ({isLogged}) => {
             window.location.href = url;
 
             // Fetch report data
-            dispatch(fetchReport({customer: selectedCustomer, startDate: startDate, endDate: endDate}));
+            dispatch(fetchReport({ customer: selectedCustomer, startDate: startDate, endDate: endDate }));
         };
 
         useEffect(() => {
@@ -188,157 +188,157 @@ export const Report = ({isLogged}) => {
 
         try {
             if (report && report.deliveries) {
-            const sortedDeliveries = [...report.deliveries].sort((a, b) => {
-                const dateA = new Date(a.created_at);
-                const dateB = new Date(b.created_at);
-                a.gas_deliveries.forEach(gas => {
-                    KGS.add(gas.gas_cylinder.kg);
-                });
-                b.gas_deliveries.forEach(gas => {
-                    KGS.add(gas.gas_cylinder.kg);
-                });
-                return dateA - dateB;
-            });
-            // const sortedDeliveries = [...report.deliveries].map((d) = {
-            //     return
-            // })
-            if (sortedDeliveries.length === 1) {
-                sortedDeliveries[0].gas_deliveries.forEach(gas => {
-                    KGS.add(gas.gas_cylinder.kg);
-                });
-            }
-
-            sortedDeliveries.forEach((delivery, i) => {
-
-                //console.log(delivery.balance);
-                grandTotalBalance += toNumber(delivery.balance);
-
-                const correction = delivery.correction;
-                const gasDataMap = new MapObjectManager();
-                try {
-                    delivery.gas_deliveries.forEach((gas, index) => {
-                        //console.log(gas);
-                        const k = `kg${gas.gas_cylinder.kg}`;
-                        const entry = {};
-                        if (gas.nc) {
-                            entry.nc = toNumber(gas.quantity);
-                            entry.ncRate = toNumber(gas.price);
-                            KGS_COUNT[`nc${gas.gas_cylinder.kg}`] = toNumber(gas.quantity) + (KGS_COUNT[`nc${gas.gas_cylinder.kg}`] || 0);
-                            grandQtyTotal += toNumber(gas.quantity);
-                            grandQtyKgTotal += toNumber(gas.quantity) * toNumber(gas.gas_cylinder.kg);
-                        } else if (gas.is_empty) {
-                            entry.mt = toNumber(gas.quantity);
-                            KGS_COUNT[`mt${gas.gas_cylinder.kg}`] = (KGS_COUNT[`mt${gas.gas_cylinder.kg}`] || 0) + toNumber(gas.quantity);
-                            grandMtTotal += toNumber(gas.quantity);
-                            grandMtKgTotal += toNumber(gas.quantity) * toNumber(gas.gas_cylinder.kg);
-                        } else {
-                            entry.qty = toNumber(gas.quantity);
-                            entry.rate = toNumber(gas.price);
-                            KGS_COUNT[`sent${gas.gas_cylinder.kg}`] = (KGS_COUNT[`sent${gas.gas_cylinder.kg}`] || 0) + toNumber(gas.quantity);
-                            grandQtyTotal += toNumber(gas.quantity);
-                            grandQtyKgTotal += toNumber(gas.quantity) * toNumber(gas.gas_cylinder.kg);
-                        }
-                        gasDataMap.merge(k, entry);
-                    })
-                    const temptKgsList = [];
-                    const gasObjs = gasDataMap.toObject();
-                    let normalSubTotal = 0;
-                    let nCSubTotal = 0;
-                    let subTotal = 0;
-                    let received = 0;
-                    let cash = 0;
-                    let online = 0;
-                    delivery?.payments?.forEach(payment => {
-                        const amount = toNumber(payment.amount);
-                        if (payment.method === 0) {
-                            cash += amount;
-                        } else if (payment.method === 1) {
-                            online += amount;
-                        }
-                        received += amount;
+                const sortedDeliveries = [...report.deliveries].sort((a, b) => {
+                    const dateA = new Date(a.created_at);
+                    const dateB = new Date(b.created_at);
+                    a.gas_deliveries.forEach(gas => {
+                        KGS.add(gas.gas_cylinder.kg);
                     });
-                    grandTotalCash += cash;
-                    grandTotalOnline += online;
-                    const sortedKGS = [...KGS].sort((a, b) => a - b);
-                    sortedKGS.forEach(kg => {
-                        const temp = gasObjs[`kg${kg}`];
-                        if (temp) {
-                            const total = temp.rate ? (toNumber(temp.qty) * toNumber(temp.rate)) : "-";
-                            normalSubTotal += temp.rate ? total : 0;
-                            const ncTotal = temp.ncRate ? (toNumber(temp.nc) * toNumber(temp.ncRate)) : "-";
-                            nCSubTotal += temp.ncRate ? ncTotal : 0;
-                            subTotal += (temp.rate ? total : 0) + (temp.ncRate ? ncTotal : 0);
-
-                            temptKgsList.push(
-                                <DataCell correction={correction} key={`1delivery-${delivery.id}-kg${kg}`}
-                                          bgColor={randomLightColor(kg)}>
-                                    <span>{temp.qty || "-"}</span>
-                                    {temp.nc && (<>
-                                        <hr className="border-black opacity-30 h-0.5 w-full"/>
-                                        <span className="text-blue-700">{temp.nc}</span>
-                                    </>)}
-                                </DataCell>,
-                                <DataCell correction={correction} key={`2delivery-${delivery.id}-kg${kg}`}
-                                          bgColor={randomLightColor(kg)}>{temp.mt || "-"}</DataCell>,
-                                <DataCell correction={correction} key={`3delivery-${delivery.id}-kg${kg}`}
-                                          bgColor={randomLightColor(kg)}>
-                                    <span>{temp.rate || "-"}</span>
-                                    {temp.nc && (<>
-                                        <hr className="border-black opacity-30 h-0.5 w-full"/>
-                                        <span className="text-blue-700">{temp.ncRate}</span>
-                                    </>)}
-                                </DataCell>,
-                                <DataCell correction={correction} key={`4delivery-${delivery.id}-kg${kg}`}
-                                          bgColor={randomLightColor(kg)}>
-                                    <span>{total}</span>
-                                    {temp.nc && (<>
-                                        <hr className="border-black opacity-30 h-0.5 w-full"/>
-                                        <span className="text-blue-700">{ncTotal}</span>
-                                    </>)}
-                                </DataCell>
-                            );
-                        } else {
-                            temptKgsList.push(
-                                <DataCell correction={correction} key={`1delivery-${delivery.id}-kg${kg}`}
-                                          bgColor={randomLightColor(kg)}>{"-"}</DataCell>,
-                                <DataCell correction={correction} key={`2delivery-${delivery.id}-kg${kg}`}
-                                          bgColor={randomLightColor(kg)}>{"-"}</DataCell>,
-                                <DataCell correction={correction} key={`3delivery-${delivery.id}-kg${kg}`}
-                                          bgColor={randomLightColor(kg)}>{"-"}</DataCell>,
-                                <DataCell correction={correction} key={`4delivery-${delivery.id}-kg${kg}`}
-                                          bgColor={randomLightColor(kg)}>{"-"}</DataCell>
-                            );
-                        }
-                    })
-                    grandOrderTotal += subTotal;
-                    let balance = subTotal - received + delivery.balance;
-                    //}
-
-                    const displaySubTotal = subTotal === 0 ? "-" : subTotal;
-                    const displayReceived = received === 0 ? "-" : received;
-                    const date = formatDateToDDMMYY_HHMM(delivery.created_at);
-                    const note = "note"
-                    rows.push([
-                        <tr key={`dRow${i}`}>
-                            <DataCell textNoWrap={""} correction={correction}
-                                      key={`delivery-${i}-date`}>{date}</DataCell>
-                            {/*<DataCell correction={correction} key={`delivery-${i}-note`}>{note}</DataCell>*/}
-                            {temptKgsList}
-                            <DataCell correction={correction} key={`delivery-${i}-sub`}>{displaySubTotal}</DataCell>
-                            <DataCell correction={correction}
-                                      key={`delivery-${i}-online`}>{dashIfZero(online)}</DataCell>
-                            <DataCell correction={correction} key={`delivery-${i}-cash`}>{dashIfZero(cash)}</DataCell>
-                            <DataCell correction={correction}
-                                      key={`delivery-${i}-received`}>{displayReceived}</DataCell>
-                            <DataCell correction={correction}
-                                      key={`delivery-${i}-balance`}>{(balance < 1) ? "-" : balance}</DataCell>
-                        </tr>
-                    ]);
-                } catch (err) {
-                    console.warn(err);
+                    b.gas_deliveries.forEach(gas => {
+                        KGS.add(gas.gas_cylinder.kg);
+                    });
+                    return dateA - dateB;
+                });
+                // const sortedDeliveries = [...report.deliveries].map((d) = {
+                //     return
+                // })
+                if (sortedDeliveries.length === 1) {
+                    sortedDeliveries[0].gas_deliveries.forEach(gas => {
+                        KGS.add(gas.gas_cylinder.kg);
+                    });
                 }
-            })
-        }
+
+                sortedDeliveries.forEach((delivery, i) => {
+
+                    //console.log(delivery.balance);
+                    grandTotalBalance += toNumber(delivery.balance);
+
+                    const correction = delivery.correction;
+                    const gasDataMap = new MapObjectManager();
+                    try {
+                        delivery.gas_deliveries.forEach((gas, index) => {
+                            //console.log(gas);
+                            const k = `kg${gas.gas_cylinder.kg}`;
+                            const entry = {};
+                            if (gas.nc) {
+                                entry.nc = toNumber(gas.quantity);
+                                entry.ncRate = toNumber(gas.price);
+                                KGS_COUNT[`nc${gas.gas_cylinder.kg}`] = toNumber(gas.quantity) + (KGS_COUNT[`nc${gas.gas_cylinder.kg}`] || 0);
+                                grandQtyTotal += toNumber(gas.quantity);
+                                grandQtyKgTotal += toNumber(gas.quantity) * toNumber(gas.gas_cylinder.kg);
+                            } else if (gas.is_empty) {
+                                entry.mt = toNumber(gas.quantity);
+                                KGS_COUNT[`mt${gas.gas_cylinder.kg}`] = (KGS_COUNT[`mt${gas.gas_cylinder.kg}`] || 0) + toNumber(gas.quantity);
+                                grandMtTotal += toNumber(gas.quantity);
+                                grandMtKgTotal += toNumber(gas.quantity) * toNumber(gas.gas_cylinder.kg);
+                            } else {
+                                entry.qty = toNumber(gas.quantity);
+                                entry.rate = toNumber(gas.price);
+                                KGS_COUNT[`sent${gas.gas_cylinder.kg}`] = (KGS_COUNT[`sent${gas.gas_cylinder.kg}`] || 0) + toNumber(gas.quantity);
+                                grandQtyTotal += toNumber(gas.quantity);
+                                grandQtyKgTotal += toNumber(gas.quantity) * toNumber(gas.gas_cylinder.kg);
+                            }
+                            gasDataMap.merge(k, entry);
+                        })
+                        const temptKgsList = [];
+                        const gasObjs = gasDataMap.toObject();
+                        let normalSubTotal = 0;
+                        let nCSubTotal = 0;
+                        let subTotal = 0;
+                        let received = 0;
+                        let cash = 0;
+                        let online = 0;
+                        delivery?.payments?.forEach(payment => {
+                            const amount = toNumber(payment.amount);
+                            if (payment.method === 0) {
+                                cash += amount;
+                            } else if (payment.method === 1) {
+                                online += amount;
+                            }
+                            received += amount;
+                        });
+                        grandTotalCash += cash;
+                        grandTotalOnline += online;
+                        const sortedKGS = [...KGS].sort((a, b) => a - b);
+                        sortedKGS.forEach(kg => {
+                            const temp = gasObjs[`kg${kg}`];
+                            if (temp) {
+                                const total = temp.rate ? (toNumber(temp.qty) * toNumber(temp.rate)) : "-";
+                                normalSubTotal += temp.rate ? total : 0;
+                                const ncTotal = temp.ncRate ? (toNumber(temp.nc) * toNumber(temp.ncRate)) : "-";
+                                nCSubTotal += temp.ncRate ? ncTotal : 0;
+                                subTotal += (temp.rate ? total : 0) + (temp.ncRate ? ncTotal : 0);
+
+                                temptKgsList.push(
+                                    <DataCell correction={correction} key={`1delivery-${delivery.id}-kg${kg}`}
+                                        bgColor={randomLightColor(kg)}>
+                                        <span>{temp.qty || "-"}</span>
+                                        {temp.nc && (<>
+                                            <hr className="border-black opacity-30 h-0.5 w-full" />
+                                            <span className="text-blue-700">{temp.nc}</span>
+                                        </>)}
+                                    </DataCell>,
+                                    <DataCell correction={correction} key={`2delivery-${delivery.id}-kg${kg}`}
+                                        bgColor={randomLightColor(kg)}>{temp.mt || "-"}</DataCell>,
+                                    <DataCell correction={correction} key={`3delivery-${delivery.id}-kg${kg}`}
+                                        bgColor={randomLightColor(kg)}>
+                                        <span>{temp.rate || "-"}</span>
+                                        {temp.nc && (<>
+                                            <hr className="border-black opacity-30 h-0.5 w-full" />
+                                            <span className="text-blue-700">{temp.ncRate}</span>
+                                        </>)}
+                                    </DataCell>,
+                                    <DataCell correction={correction} key={`4delivery-${delivery.id}-kg${kg}`}
+                                        bgColor={randomLightColor(kg)}>
+                                        <span>{total}</span>
+                                        {temp.nc && (<>
+                                            <hr className="border-black opacity-30 h-0.5 w-full" />
+                                            <span className="text-blue-700">{ncTotal}</span>
+                                        </>)}
+                                    </DataCell>
+                                );
+                            } else {
+                                temptKgsList.push(
+                                    <DataCell correction={correction} key={`1delivery-${delivery.id}-kg${kg}`}
+                                        bgColor={randomLightColor(kg)}>{"-"}</DataCell>,
+                                    <DataCell correction={correction} key={`2delivery-${delivery.id}-kg${kg}`}
+                                        bgColor={randomLightColor(kg)}>{"-"}</DataCell>,
+                                    <DataCell correction={correction} key={`3delivery-${delivery.id}-kg${kg}`}
+                                        bgColor={randomLightColor(kg)}>{"-"}</DataCell>,
+                                    <DataCell correction={correction} key={`4delivery-${delivery.id}-kg${kg}`}
+                                        bgColor={randomLightColor(kg)}>{"-"}</DataCell>
+                                );
+                            }
+                        })
+                        grandOrderTotal += subTotal;
+                        let balance = subTotal - received + delivery.balance;
+                        //}
+
+                        const displaySubTotal = subTotal === 0 ? "-" : subTotal;
+                        const displayReceived = received === 0 ? "-" : received;
+                        const date = formatDateToDDMMYY_HHMM(delivery.created_at);
+                        const note = "note"
+                        rows.push([
+                            <tr key={`dRow${i}`}>
+                                <DataCell textNoWrap={""} correction={correction}
+                                    key={`delivery-${i}-date`}>{date}</DataCell>
+                                {/*<DataCell correction={correction} key={`delivery-${i}-note`}>{note}</DataCell>*/}
+                                {temptKgsList}
+                                <DataCell correction={correction} key={`delivery-${i}-sub`}>{displaySubTotal}</DataCell>
+                                <DataCell correction={correction}
+                                    key={`delivery-${i}-online`}>{dashIfZero(online)}</DataCell>
+                                <DataCell correction={correction} key={`delivery-${i}-cash`}>{dashIfZero(cash)}</DataCell>
+                                <DataCell correction={correction}
+                                    key={`delivery-${i}-received`}>{displayReceived}</DataCell>
+                                <DataCell correction={correction}
+                                    key={`delivery-${i}-balance`}>{(balance < 1) ? "-" : balance}</DataCell>
+                            </tr>
+                        ]);
+                    } catch (err) {
+                        console.warn(err);
+                    }
+                })
+            }
         } catch (e) {
             console.log(e);
         }
@@ -348,16 +348,16 @@ export const Report = ({isLogged}) => {
             ...[...KGS].sort((a, b) => a - b).map(kg => {
                 const color = randomLightColor(kg);
                 return (<>
-                    <th key={`h2kg${kg}1`} className="!text-center !border-b-0" style={{backgroundColor: color}}>
+                    <th key={`h2kg${kg}1`} className="!text-center !border-b-0" style={{ backgroundColor: color }}>
                         {kg}kg
                     </th>
-                    <th key={`h3mt${kg}2`} className="!text-center !border-b-0" style={{backgroundColor: color}}>
+                    <th key={`h3mt${kg}2`} className="!text-center !border-b-0" style={{ backgroundColor: color }}>
                         mt
                     </th>
-                    <th key={`h4krate${kg}3`} className="!text-center !border-b-0" style={{backgroundColor: color}}>
+                    <th key={`h4krate${kg}3`} className="!text-center !border-b-0" style={{ backgroundColor: color }}>
                         rate
                     </th>
-                    <th key={`h2total${kg}4`} className="!text-center !border-b-0" style={{backgroundColor: color}}>
+                    <th key={`h2total${kg}4`} className="!text-center !border-b-0" style={{ backgroundColor: color }}>
                         total
                     </th>
                 </>)
@@ -375,7 +375,7 @@ export const Report = ({isLogged}) => {
                 sx={{
                     padding: 1,
                     flexGrow: 1,
-                    flexDirection: {xs: 'column', md: 'row'} // Stack direction changes on mobile
+                    flexDirection: { xs: 'column', md: 'row' } // Stack direction changes on mobile
                 }}
                 gap={1}
             >
@@ -384,8 +384,8 @@ export const Report = ({isLogged}) => {
                     gap={1}
                     sx={{
                         display: isLogged ? "block" : "none",
-                        width: {xs: '100%', md: 'auto'}, // Full width on mobile
-                        minWidth: {xs: '100%', md: '350px'}, // Control minimum width
+                        width: { xs: '100%', md: 'auto' }, // Full width on mobile
+                        minWidth: { xs: '100%', md: '350px' }, // Control minimum width
                     }}
                 >
                     <Stack>
@@ -395,17 +395,17 @@ export const Report = ({isLogged}) => {
                             alignContent={"center"}
                             alignItems={"center"}
                             sx={{
-                                flexDirection: {xs: 'column', md: 'row'}, // Stack vertically on mobile
+                                flexDirection: { xs: 'column', md: 'row' }, // Stack vertically on mobile
                                 width: '100%'
                             }}
                         >
-                                   <span style={{
-                                       fontWeight: "bold",
-                                       color: "black",
-                                       width: {xs: '100%', md: 'auto'}
-                                   }}>
-                                        Customer&nbsp;:&nbsp;
-                                   </span>
+                            <span style={{
+                                fontWeight: "bold",
+                                color: "black",
+                                width: { xs: '100%', md: 'auto' }
+                            }}>
+                                Customer&nbsp;:&nbsp;
+                            </span>
                             <Autocomplete
                                 options={customers}
                                 //getOptionLabel={(c) => c ? titleCase(`${c.user.name} : ${c.user.address}`) : 'Select User'}
@@ -422,55 +422,55 @@ export const Report = ({isLogged}) => {
                                     }
                                 }}
                                 renderOption={(props, option) => {
-                                    const {key, ownerState, ...otherProps} = props;
+                                    const { key, ownerState, ...otherProps } = props;
                                     if (!option?.user) return null;
                                     return (
                                         <li {...otherProps} key={option.id}>
                                             <Stack className="group bg-white p-2 ps-2 shadow-md hover:!bg-blue-100"
-                                                   direction="column">
+                                                direction="column">
                                                 <Stack direction="row" gap={1} alignItems="center">
-                                                    <FaRegUserCircle/>
+                                                    <FaRegUserCircle />
                                                     <span
                                                         className="!text-black !font-bold">{titleCase(option.user.name)}</span>
                                                 </Stack>
                                                 <Stack direction="row" gap={1} alignItems="center">
-                                                    <GrLocation/>
+                                                    <GrLocation />
                                                     <span
                                                         className="!text-black">{titleCase(option.user.address)}</span>
                                                 </Stack></Stack>
-                                            <Divider orientation="horizontal"/>
+                                            <Divider orientation="horizontal" />
                                         </li>
                                     );
                                 }}
                                 placeholder="Select User"
-                                sx={{width: '100%', minWidth: {xs: '100%', md: '200px'}}}
+                                sx={{ width: '100%', minWidth: { xs: '100%', md: '200px' } }}
                                 className="!text-black !font-bold"
                             />
                         </Stack>
                     </Stack>
 
-                    <Divider sx={{backgroundColor: "#979797", m: 1}}/>
+                    <Divider sx={{ backgroundColor: "#979797", m: 1 }} />
 
                     <Stack gap={2}>
                         <Stack
                             gap={1}
                             sx={{
-                                flexDirection: {xs: 'column', md: 'row'},
-                                alignItems: {xs: 'flex-start', md: 'center'}
+                                flexDirection: { xs: 'column', md: 'row' },
+                                alignItems: { xs: 'flex-start', md: 'center' }
                             }}
                         >
-                                   <span style={{
-                                       fontWeight: "bold",
-                                       color: "black",
-                                       minWidth: {xs: '100%', md: 'auto'},
-                                       wordBreak: 'keep-all',
-                                       whiteSpace: 'nowrap'
-                                   }}>
-                                        <span>Date</span><span> </span><span>Start</span><span>:</span>
-                                   </span>
+                            <span style={{
+                                fontWeight: "bold",
+                                color: "black",
+                                minWidth: { xs: '100%', md: 'auto' },
+                                wordBreak: 'keep-all',
+                                whiteSpace: 'nowrap'
+                            }}>
+                                <span>Date</span><span> </span><span>Start</span><span>:</span>
+                            </span>
                             <Input
                                 type="date"
-                                sx={{width: "100%"}}
+                                sx={{ width: "100%" }}
                                 onChange={(event) => {
                                     setStartDate(event.target.value);
                                 }}
@@ -481,21 +481,21 @@ export const Report = ({isLogged}) => {
                         <Stack
                             gap={1}
                             sx={{
-                                flexDirection: {xs: 'column', md: 'row'},
-                                alignItems: {xs: 'flex-start', md: 'center'}
+                                flexDirection: { xs: 'column', md: 'row' },
+                                alignItems: { xs: 'flex-start', md: 'center' }
                             }}
                         >
-                                   <span style={{
-                                       fontWeight: "bold",
-                                       color: "black",
-                                       minWidth: {xs: '100%', md: 'auto'},
-                                       whiteSpace: 'nowrap'
-                                   }}>
-                                        End Date :
-                                   </span>
+                            <span style={{
+                                fontWeight: "bold",
+                                color: "black",
+                                minWidth: { xs: '100%', md: 'auto' },
+                                whiteSpace: 'nowrap'
+                            }}>
+                                End Date :
+                            </span>
                             <Input
                                 type="date"
-                                sx={{width: "100%"}}
+                                sx={{ width: "100%" }}
                                 onChange={(event) => {
                                     setEndDate(event.target.value);
                                 }}
@@ -506,14 +506,14 @@ export const Report = ({isLogged}) => {
                         <Stack
                             gap={1}
                             sx={{
-                                flexDirection: {xs: 'column', md: 'row'},
-                                alignItems: {xs: 'flex-start', md: 'center'}
+                                flexDirection: { xs: 'column', md: 'row' },
+                                alignItems: { xs: 'flex-start', md: 'center' }
                             }}
                         >
                             <span style={{
                                 fontWeight: "bold",
                                 color: "black",
-                                minWidth: {xs: '100%', md: 'auto'},
+                                minWidth: { xs: '100%', md: 'auto' },
                                 whiteSpace: 'nowrap'
                             }}>Outstanding :</span>
                             <Switch
@@ -527,11 +527,11 @@ export const Report = ({isLogged}) => {
 
                     </Stack>
 
-                    <Divider sx={{backgroundColor: "#979797", m: 1}}/>
+                    <Divider sx={{ backgroundColor: "#979797", m: 1 }} />
 
                     <Button
                         variant="contained"
-                        sx={{backgroundColor: "#263043", color: "white", width: "100%"}}
+                        sx={{ backgroundColor: "#263043", color: "white", width: "100%" }}
                         onClick={() => handleSubmit()}
                     >
                         OK
@@ -555,14 +555,14 @@ export const Report = ({isLogged}) => {
                 <Stack
                     sx={{
                         overflow: "auto",
-                        width: {xs: '100%', md: 'auto'},
+                        width: { xs: '100%', md: 'auto' },
                         flexGrow: 1
                     }}
                 >
                     <Stack
                         sx={{
-                            padding: {xs: 1, md: 4},
-                            m: {xs: 0, md: 2},
+                            padding: { xs: 1, md: 4 },
+                            m: { xs: 0, md: 2 },
                             overflow: "auto",
                             flexGrow: 1,
                             height: "100%",
@@ -577,7 +577,7 @@ export const Report = ({isLogged}) => {
                         direction={"column"}
                         ref={contentRef}
                     >
-                        <Heading/>
+                        <Heading />
                         {
                             (report) ? (
                                 <>
@@ -599,49 +599,49 @@ export const Report = ({isLogged}) => {
                                         }}
                                     >
                                         <thead>
-                                        <tr className="!border-b-0">
-                                            <th className="!border-b-0">
-                                        <span style={{fontWeight: "bold", color: "black"}}>
-                                                  {
-                                                      `Customer : ${titleCase(report.customer.user.name)}`
-                                                  }
-                                             </span>
-                                            </th>
-                                            <th className="!border-b-0">
-                                        <span style={{fontWeight: "bold", color: "black"}}>
-                                                  {
-                                                      `Address : ${titleCase(report.customer.user.address)}`
-                                                  }
-                                             </span>
-                                            </th>
-                                            <th className="!border-b-0">
-                                        <span style={{fontWeight: "bold", color: "black"}}>
-                                                  {
-                                                      `Phone No. : ${report.customer.user.phone_no}`
-                                                  }
-                                             </span>
-                                            </th>
-                                            <th className="!border-b-0">
-                                        <span style={{fontWeight: "bold", color: "black"}}>
-                                                  {
-                                                      `Bill Date Range : ${startDate} to ${endDate}`
-                                                  }
-                                             </span>
-                                            </th>
-
-                                            {addOutstanding ? <>
+                                            <tr className="!border-b-0">
                                                 <th className="!border-b-0">
-                                            <span style={{fontWeight: "bold", color: "black"}}>
-                                                  {
-                                                      `Outstanding : ₹${decimalFix(apiOutstanding - (grandOrderTotal - (grandTotalOnline + grandTotalCash)))}`
-                                                  }
-                                        </span>
-                                                    <Divider className="w-full" orientation={"vertical"}
-                                                             sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                                    <span style={{ fontWeight: "bold", color: "black" }}>
+                                                        {
+                                                            `Customer : ${titleCase(report.customer.user.name)}`
+                                                        }
+                                                    </span>
                                                 </th>
-                                            </> : <></>
-                                            }
-                                        </tr>
+                                                <th className="!border-b-0">
+                                                    <span style={{ fontWeight: "bold", color: "black" }}>
+                                                        {
+                                                            `Address : ${titleCase(report.customer.user.address)}`
+                                                        }
+                                                    </span>
+                                                </th>
+                                                <th className="!border-b-0">
+                                                    <span style={{ fontWeight: "bold", color: "black" }}>
+                                                        {
+                                                            `Phone No. : ${report.customer.user.phone_no}`
+                                                        }
+                                                    </span>
+                                                </th>
+                                                <th className="!border-b-0">
+                                                    <span style={{ fontWeight: "bold", color: "black" }}>
+                                                        {
+                                                            `Bill Date Range : ${startDate} to ${endDate}`
+                                                        }
+                                                    </span>
+                                                </th>
+
+                                                {addOutstanding ? <>
+                                                    <th className="!border-b-0">
+                                                        <span style={{ fontWeight: "bold", color: "black" }}>
+                                                            {
+                                                                `Outstanding : ₹${decimalFix(apiOutstanding - (grandOrderTotal - (grandTotalOnline + grandTotalCash)))}`
+                                                            }
+                                                        </span>
+                                                        <Divider className="w-full" orientation={"vertical"}
+                                                            sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
+                                                    </th>
+                                                </> : <></>
+                                                }
+                                            </tr>
                                         </thead>
                                     </Table>
                                     <Table
@@ -665,16 +665,16 @@ export const Report = ({isLogged}) => {
                                         }}
                                     >
                                         <thead>
-                                        <tr key={"headerRow"}>
-                                            {
-                                                heads
-                                            }
-                                        </tr>
+                                            <tr key={"headerRow"}>
+                                                {
+                                                    heads
+                                                }
+                                            </tr>
                                         </thead>
                                         <tbody>
-                                        {
-                                            rows
-                                        }
+                                            {
+                                                rows
+                                            }
                                         </tbody>
                                     </Table>
                                     <Table
@@ -694,103 +694,103 @@ export const Report = ({isLogged}) => {
                                         }}
                                     >
                                         <thead>
-                                        <tr className="!border-t-0">
-                                            <th className="!border-t-0 !border-b-1">
-                                                <span style={{fontWeight: "bold", color: "black"}}>
+                                            <tr className="!border-t-0">
+                                                <th className="!border-t-0 !border-b-1">
+                                                    <span style={{ fontWeight: "bold", color: "black" }}>
 
-                                                </span>
-                                            </th>
-                                        </tr>
+                                                    </span>
+                                                </th>
+                                            </tr>
                                         </thead>
                                     </Table>
-                                    <Divider sx={{backgroundColor: "#979797", opacity: 0.5, m: 1}}/>
+                                    <Divider sx={{ backgroundColor: "#979797", opacity: 0.5, m: 1 }} />
                                     <Stack direction="row" gap={2}>
                                         <Divider className="w-full" orientation={"vertical"}
-                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                            sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
                                         {
                                             [...KGS].sort((a, b) => a - b).map((kg, index) => {
                                                 return (<><Stack direction="column">
-                                                        <span
-                                                            className="font-bold text-black">{`${kg}KG`} : {toNumber(KGS_COUNT[`sent${kg}`])}</span>
-                                                        <Divider className="w-full" orientation={"horizontal"}
-                                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
-                                                        <span
-                                                            className="font-bold text-black">{`NC`} : {toNumber(KGS_COUNT[`nc${kg}`])}</span>
-                                                        <Divider className="w-full" orientation={"horizontal"}
-                                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
-                                                        <span
-                                                            className="font-bold text-black">{`Total`} : {toNumber(KGS_COUNT[`sent${kg}`]) + toNumber(KGS_COUNT[`nc${kg}`])}</span>
-                                                        <Divider className="w-full" orientation={"horizontal"}
-                                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
-                                                        <span
-                                                            className="font-bold text-black">{`MT`} : {toNumber(KGS_COUNT[`mt${kg}`])}</span>
-                                                        <Divider className="w-full" orientation={"horizontal"}
-                                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
-                                                        <span
-                                                            className="font-bold text-black">{`Pending`} : {toNumber(KGS_COUNT[`sent${kg}`]) - toNumber(KGS_COUNT[`mt${kg}`])}</span>
-                                                    </Stack>
-                                                        <Divider className="w-full" orientation={"vertical"}
-                                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
-                                                    </>
+                                                    <span
+                                                        className="font-bold text-black">{`${kg}KG`} : {toNumber(KGS_COUNT[`sent${kg}`])}</span>
+                                                    <Divider className="w-full" orientation={"horizontal"}
+                                                        sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
+                                                    <span
+                                                        className="font-bold text-black">{`NC`} : {toNumber(KGS_COUNT[`nc${kg}`])}</span>
+                                                    <Divider className="w-full" orientation={"horizontal"}
+                                                        sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
+                                                    <span
+                                                        className="font-bold text-black">{`Total`} : {toNumber(KGS_COUNT[`sent${kg}`]) + toNumber(KGS_COUNT[`nc${kg}`])}</span>
+                                                    <Divider className="w-full" orientation={"horizontal"}
+                                                        sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
+                                                    <span
+                                                        className="font-bold text-black">{`MT`} : {toNumber(KGS_COUNT[`mt${kg}`])}</span>
+                                                    <Divider className="w-full" orientation={"horizontal"}
+                                                        sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
+                                                    <span
+                                                        className="font-bold text-black">{`Pending`} : {toNumber(KGS_COUNT[`sent${kg}`]) - toNumber(KGS_COUNT[`mt${kg}`])}</span>
+                                                </Stack>
+                                                    <Divider className="w-full" orientation={"vertical"}
+                                                        sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
+                                                </>
                                                 )
                                             })
                                         }
                                     </Stack>
-                                    <Divider sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                    <Divider sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
                                     <Stack direction="row" gap={2}>
                                         <Divider className="w-full" orientation={"vertical"}
-                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                            sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
                                         <span
                                             className="font-bold text-black">{`Total KG : ${grandQtyKgTotal}`}kg</span>
                                         <Divider className="w-full" orientation={"vertical"}
-                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                            sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
                                         <span className="font-bold text-black">{`Total MT: ${grandMtKgTotal}`}kg</span>
                                         <Divider className="w-full" orientation={"vertical"}
-                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                            sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
                                         <span
                                             className="font-bold text-black">{`Total Pending: ${(grandQtyKgTotal - grandMtKgTotal)}`}kg</span>
                                     </Stack>
-                                    <Divider sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                    <Divider sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
                                     <Stack direction="row" gap={2}>
                                         <Divider className="w-full" orientation={"vertical"}
-                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
+                                            sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
                                         <span className="font-bold text-black">
-                                                  {
-                                                      `Grand Total : ₹${decimalFix(grandOrderTotal)}`
-                                                  }
-                                             </span>
+                                            {
+                                                `Grand Total : ₹${decimalFix(grandOrderTotal)}`
+                                            }
+                                        </span>
                                         <Divider className="w-full" orientation={"vertical"}
-                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
-                                        <span style={{fontWeight: "bold", color: "#001BB7"}}>
-                                                  {
-                                                      `Total Cash : ₹${decimalFix(grandTotalCash)}`
-                                                  }
-                                             </span>
+                                            sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
+                                        <span style={{ fontWeight: "bold", color: "#001BB7" }}>
+                                            {
+                                                `Total Cash : ₹${decimalFix(grandTotalCash)}`
+                                            }
+                                        </span>
                                         <Divider className="w-full" orientation={"vertical"}
-                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
-                                        <span style={{fontWeight: "bold", color: "#001BB7"}}>
-                                                  {
-                                                      `Total Online : ₹${decimalFix(grandTotalOnline)}`
-                                                  }
-                                             </span>
+                                            sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
+                                        <span style={{ fontWeight: "bold", color: "#001BB7" }}>
+                                            {
+                                                `Total Online : ₹${decimalFix(grandTotalOnline)}`
+                                            }
+                                        </span>
                                         <Divider className="w-full" orientation={"vertical"}
-                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
-                                        <span style={{fontWeight: "bold", color: "#0A6847"}}>
-                                                  {
-                                                      `Total Received : ₹${decimalFix(grandTotalOnline + grandTotalCash)}`
-                                                  }
-                                             </span>
+                                            sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
+                                        <span style={{ fontWeight: "bold", color: "#0A6847" }}>
+                                            {
+                                                `Total Received : ₹${decimalFix(grandTotalOnline + grandTotalCash)}`
+                                            }
+                                        </span>
                                         <Divider className="w-full" orientation={"vertical"}
-                                                 sx={{backgroundColor: "#979797", opacity: 0.5}}/>
-                                        <span style={{fontWeight: "bold", color: "#af4831"}}>
-                                                  {
+                                            sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
+                                        <span style={{ fontWeight: "bold", color: "#af4831" }}>
+                                            {
 
-                                                      `Total Remaining : ₹${decimalFix(grandOrderTotal - (grandTotalOnline + grandTotalCash))}`
-                                                  }
-                                             </span>
+                                                `Total Remaining : ₹${decimalFix(grandOrderTotal - (grandTotalOnline + grandTotalCash))}`
+                                            }
+                                        </span>
                                     </Stack>
-                                    <Divider sx={{backgroundColor: "#979797", opacity: 0.5}}/>
-                                    <Ending/>
+                                    <Divider sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
+                                    <Ending />
                                 </>
                             ) : (<>
                                 {
@@ -846,27 +846,27 @@ export const Report = ({isLogged}) => {
                                         ));
                                     }}
                                     sx={{
-                                        width: {xs: '100%', md: 'auto'}
+                                        width: { xs: '100%', md: 'auto' }
                                     }}
                                 >
                                     {
-                                        isBillLoading ? <CircularProgress/> : "Send Bill To Customer"
+                                        isBillLoading ? <CircularProgress /> : "Send Bill To Customer"
                                     }
                                 </Button>
                             </> : <></>
                         }
-                        <Divider sx={{backgroundColor: "#979797", m: 1, opacity: 0.5}}/>
+                        <Divider sx={{ backgroundColor: "#979797", m: 1, opacity: 0.5 }} />
                         <Button
                             onClick={() => {
                                 reactToPrintFn()
                             }}
                             sx={{
-                                width: {xs: '100%', md: 'auto'}
+                                width: { xs: '100%', md: 'auto' }
                             }}
                         >
                             {"Print"}
                         </Button>
-                        <Divider sx={{backgroundColor: "#979797", m: 1, opacity: 0.5}}/>
+                        <Divider sx={{ backgroundColor: "#979797", m: 1, opacity: 0.5 }} />
                         <Button
                             onClick={() => {
                                 reactToPrintDwnFn()
@@ -874,7 +874,7 @@ export const Report = ({isLogged}) => {
                                 //download file as PDF
                             }}
                             sx={{
-                                width: {xs: '100%', md: 'auto'}
+                                width: { xs: '100%', md: 'auto' }
                             }}
                         >
                             {"Download Bill"}
@@ -887,7 +887,7 @@ export const Report = ({isLogged}) => {
 
     const DeliveryBoy = () => {
         return (
-            <Stack sx={{width: "100%", height: "100%"}}>
+            <Stack sx={{ width: "100%", height: "100%" }}>
                 Delivery reports
             </Stack>
         );
@@ -896,28 +896,28 @@ export const Report = ({isLogged}) => {
     const Purchase = () => {
         const [showBreakdown, setShowBreakdown] = useState(false);
         const allGases = useSelector(state => state.gas);
-        const {plants, plantsLoading, plantsError, plantsUpdateSuccess} = useSelector(state => state.plants);
-        const {orders, loading, error} = useSelector(state => state.purchaseOrders);
+        const { plants, plantsLoading, plantsError, plantsUpdateSuccess } = useSelector(state => state.plants);
+        const { orders, loading, error } = useSelector(state => state.purchaseOrders);
         const [startDate, setStartDate] = useState(() => {
 
-                try {
-                    if (orderData.orderDate) {
-                        const [day, month, year] = orderData.orderDate.split('-');
-                        const formattedDate = new Date(Date.UTC(year, month - 1, day));
-                        const dateString = formattedDate.toISOString().slice(0, 10); // Gets YYYY-MM-DD
-                        console.log(dateString)
-                        return dateString;
-                    }
-                } catch (e) {
-                    console.warn(e)
+            try {
+                if (orderData.orderDate) {
+                    const [day, month, year] = orderData.orderDate.split('-');
+                    const formattedDate = new Date(Date.UTC(year, month - 1, day));
+                    const dateString = formattedDate.toISOString().slice(0, 10); // Gets YYYY-MM-DD
+                    console.log(dateString)
+                    return dateString;
                 }
-
-                const now = new Date();
-                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-                const formattedDate = startOfMonth.toLocaleDateString('en-GB').split('/').reverse().join('-');
-                console.log(formattedDate)
-                return formattedDate;
+            } catch (e) {
+                console.warn(e)
             }
+
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const formattedDate = startOfMonth.toLocaleDateString('en-GB').split('/').reverse().join('-');
+            console.log(formattedDate)
+            return formattedDate;
+        }
         );
         const [endDate, setEndDate] = useState(() => {
             try {
@@ -940,7 +940,7 @@ export const Report = ({isLogged}) => {
         });
         useEffect(() => {
             if (orders.length === 0) {
-                dispatch(fetchOrders({startDate, endDate}));
+                dispatch(fetchOrders({ startDate, endDate }));
             }
             if (plants.length === 0) {
                 dispatch(getPlants());
@@ -950,11 +950,11 @@ export const Report = ({isLogged}) => {
             }
         }, [dispatch, startDate, endDate]);
         const handleSubmit = () => {
-            dispatch(fetchOrders({startDate, endDate}));
+            dispatch(fetchOrders({ startDate, endDate }));
         }
         //console.log(orders,);
         return (
-            <Stack sx={{width: "100%", height: "100%"}} direction={"row"} gap={1}>
+            <Stack sx={{ width: "100%", height: "100%" }} direction={"row"} gap={1}>
                 <Sheet>
                     <Stack gap={1}>
                         <Input
@@ -1041,22 +1041,22 @@ export const Report = ({isLogged}) => {
                         />
                         <Button
                             variant="contained"
-                            sx={{backgroundColor: "#263043", color: "white", width: "100%"}}
+                            sx={{ backgroundColor: "#263043", color: "white", width: "100%" }}
                             onClick={() => handleSubmit()}
                         >
                             OK
                         </Button>
                     </Stack>
                 </Sheet>
-                <Divider orientation={"vertical"} sx={{m: 1, backgroundColor: "#979797"}}/>
-                <Sheet sx={{flexGrow: 1}}>
+                <Divider orientation={"vertical"} sx={{ m: 1, backgroundColor: "#979797" }} />
+                <Sheet sx={{ flexGrow: 1 }}>
                     <Stack>
-                        <LinearProgress sx={{display: (loading || plantsLoading) ? "block" : "none"}}/>
+                        <LinearProgress sx={{ display: (loading || plantsLoading) ? "block" : "none" }} />
                         {
                             (!loading && !plantsLoading && allGases.data != null && plants.length > 0) ? (
                                 <>
                                     <OrderRow orders={orders} allGas={allGases.data} plants={plants}
-                                              showBreakdown={showBreakdown} setShowBreakdown={setShowBreakdown}/>
+                                        showBreakdown={showBreakdown} setShowBreakdown={setShowBreakdown} />
                                 </>
                             ) : (<pre>Loading</pre>)
                         }
@@ -1073,9 +1073,9 @@ export const Report = ({isLogged}) => {
             overflow: "auto",
         }}>
             <Box>
-                <LinearProgress sx={{display: (reportLoading || customersLoading) ? "block" : "none"}}/>
+                <LinearProgress sx={{ display: (reportLoading || customersLoading) ? "block" : "none" }} />
             </Box>
-            <Stack sx={{display: isLogged ? "flex" : "none", flexDirection: "row", gap: 1,}}>
+            <Stack sx={{ display: isLogged ? "flex" : "none", flexDirection: "row", gap: 1, }}>
                 <Button variant="soft" onClick={() => setSelected(CUSTOMER)}>
                     Customer
                 </Button>
@@ -1086,10 +1086,10 @@ export const Report = ({isLogged}) => {
                     Purchase
                 </Button>
             </Stack>
-            <Divider sx={{m: 1, backgroundColor: "#979797", display: isLogged ? "block" : "none",}}/>
-            {selected === CUSTOMER && <Customer/>}
-            {selected === DELIVERY && <DeliveryBoy/>}
-            {selected === PURCHASE && <Purchase/>}
+            <Divider sx={{ m: 1, backgroundColor: "#979797", display: isLogged ? "block" : "none", }} />
+            {selected === CUSTOMER && <Customer />}
+            {selected === DELIVERY && <DeliveryBoy />}
+            {selected === PURCHASE && <Purchase />}
         </Stack>
     );
 };
@@ -1104,9 +1104,9 @@ function formatDate(d) {
     return formattedDate;
 }
 
-function OrderRow({orders, allGas, plants, showBreakdown, setShowBreakdown}) {
+function OrderRow({ orders, allGas, plants, showBreakdown, setShowBreakdown }) {
     const contentRef = useRef();
-    const reactToPrintFn = useReactToPrint({contentRef})
+    const reactToPrintFn = useReactToPrint({ contentRef })
     const [selected, setSelected] = React.useState(null);
     //console.log(plants)
 
@@ -1247,7 +1247,7 @@ function OrderRow({orders, allGas, plants, showBreakdown, setShowBreakdown}) {
                         setSelected(null)
                     }}
                 >
-                    <FaArrowLeft/>
+                    <FaArrowLeft />
                 </Card>
                 <Card
                     variant="solid"
@@ -1267,7 +1267,7 @@ function OrderRow({orders, allGas, plants, showBreakdown, setShowBreakdown}) {
                         reactToPrintFn()
                     }}
                 >
-                    <span style={{fontWeight: "bold"}}>Print</span>
+                    <span style={{ fontWeight: "bold" }}>Print</span>
                 </Card>
                 <Divider
                     sx={{
@@ -1293,7 +1293,7 @@ function OrderRow({orders, allGas, plants, showBreakdown, setShowBreakdown}) {
                         setShowBreakdown(!showBreakdown)
                     }}
                 >
-                    <span style={{fontWeight: "bold"}}>Breakdown</span>
+                    <span style={{ fontWeight: "bold" }}>Breakdown</span>
                 </Card>
             </Stack>
 
@@ -1303,7 +1303,7 @@ function OrderRow({orders, allGas, plants, showBreakdown, setShowBreakdown}) {
                 borderRadius: "sm",
                 border: "1px solid #979797",
             }}>
-                <Heading/>
+                <Heading />
                 <Table
                     borderAxis="both"
                     size="sm"
@@ -1322,29 +1322,29 @@ function OrderRow({orders, allGas, plants, showBreakdown, setShowBreakdown}) {
                     }}
                 >
                     <thead>
-                    <tr>
-                        <th>Order No.</th>
-                        <th>Order Date</th>
-                        <th colSpan={2}>Plant</th>
-                        {/* <th>Scheme</th> */}
-                        <th>Rate</th>
-                        <th>Gas</th>
-                        <th>Qty</th>
-                        <th>Total Kg</th>
-                        <th>Rate</th>
-                        <th>Total</th>
-                        <th>MT Qty</th>
-                        <th>Return Qty</th>
-                        <th>Total Return Kg</th>
-                    </tr>
+                        <tr>
+                            <th>Order No.</th>
+                            <th>Order Date</th>
+                            <th colSpan={2}>Plant</th>
+                            {/* <th>Scheme</th> */}
+                            <th>Rate</th>
+                            <th>Gas</th>
+                            <th>Qty</th>
+                            <th>Total Kg</th>
+                            <th>Rate</th>
+                            <th>Total</th>
+                            <th>MT Qty</th>
+                            <th>Return Qty</th>
+                            <th>Total Return Kg</th>
+                        </tr>
                     </thead>
                     <tbody>
-                    {
-                        rows
-                    }
+                        {
+                            rows
+                        }
                     </tbody>
                 </Table>
-                <Ending/>
+                <Ending />
             </Stack>
         </Stack>
     </Stack>
@@ -1353,15 +1353,15 @@ function OrderRow({orders, allGas, plants, showBreakdown, setShowBreakdown}) {
 function Heading() {
     return (
         <>
-               <span style={{
-                   fontWeight: "bold",
-                   color: "black",
-                   fontSize: "xx-large",
-                   textAlign: "center"
-               }}>SHREE RAM DISTRIBUTORS
-               </span>
-            <span style={{color: "black", textAlign: "center"}}><i>Address:SHREE RAM DISTRIBUTOR SHOP NO. 3 OPP ESSAR PUMP , NEAR DADRA GARDEN VAPI SILVASSA ROAD DADRA , DADRA NAGAR HAVELI (U.T.), <br/> Phone: +917984240723, Email : jitenrpande@gmail.com
-               </i></span>
+            <span style={{
+                fontWeight: "bold",
+                color: "black",
+                fontSize: "xx-large",
+                textAlign: "center"
+            }}>SHREE RAM DISTRIBUTORS
+            </span>
+            <span style={{ color: "black", textAlign: "center" }}><i>Address:SHREE RAM DISTRIBUTOR SHOP NO. 3 OPP ESSAR PUMP , NEAR DADRA GARDEN VAPI SILVASSA ROAD DADRA , DADRA NAGAR HAVELI (U.T.), <br />GST: 26APTPP2340E1ZT, Phone: +917984240723, Email : jitenrpande@gmail.com
+            </i></span>
             {/*<Divider sx={{backgroundColor: "#979797", m: 1}}/>*/}
         </>
     )
