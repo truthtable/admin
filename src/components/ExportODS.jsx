@@ -1,52 +1,89 @@
 import React from 'react';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 
+/**
+ * ExportODS — exports data as a styled .xlsx file.
+ *
+ * Props:
+ *   headers     : string[]            — column header labels
+ *   data        : any[][]             — rows of cell values
+ *   rowColors   : (string|null)[]     — optional, hex fill per row e.g. "#FFFF00"; null = no fill
+ *   sumColumns  : string[]            — column name substrings that get a SUM total row
+ *   filename    : string              — output filename (no extension)
+ */
 const ExportODS = (props) => {
-    const handleExport = () => {
-        const wb = XLSX.utils.book_new();
+    const handleExport = async () => {
+        const wb = new ExcelJS.Workbook();
+        const ws = wb.addWorksheet('Sheet1');
 
-        // Create worksheet from data
-        const wsData = [
-            props.headers.map(h => h.label || h),
-            ...props.data
-        ];
+        const headers = props.headers.map(h => h.label || h);
+        const rowColors = props.rowColors || [];
 
-        const ws = XLSX.utils.aoa_to_sheet(wsData);
-
-        // Define columns to sum
-        const columnsToSum = props.sumColumns || ['sub total', 'online', 'cash', 'total payment', 'balance', 'total'];
-
-        // Add formula row at the end
-        const lastRowIndex = wsData.length; // 0-indexed
-        // Add "Total" text in the first column of the formula row
-        ws[`A${lastRowIndex + 1}`] = {
-            t: 's',
-            v: 'Total'
+        // --- Header row ---
+        const headerRow = ws.addRow(headers);
+        headerRow.font = { bold: true };
+        headerRow.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFD3D3D3' }, // light grey header
         };
 
-        // Find column indices and add sum formulas
-        columnsToSum.forEach(columnName => {
-            props.headers.forEach((header, columnIndex) => {
-                const headerText = (header.label || header).toLowerCase();
+        // --- Data rows ---
+        props.data.forEach((rowData, idx) => {
+            const row = ws.addRow(rowData);
 
-                // Check if the header contains the column name
-                if (headerText.includes(columnName.toLowerCase())) {
-                    const col = XLSX.utils.encode_col(columnIndex);
-                    ws[`${col}${lastRowIndex + 1}`] = {
-                        t: 'n',
-                        f: `SUM(${col}2:${col}${lastRowIndex})`
+            const color = rowColors[idx];
+            if (color) {
+                // Strip leading '#', prepend 'FF' for full opacity ARGB
+                const argb = 'FF' + color.replace('#', '');
+                row.eachCell({ includeEmpty: true }, (cell) => {
+                    cell.fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb },
                     };
-                }
-            });
+                });
+            }
+
+            row.font = { bold: true };
         });
 
-        // Update range to include formula row
-        const range = XLSX.utils.decode_range(ws['!ref']);
-        range.e.r = lastRowIndex;
-        ws['!ref'] = XLSX.utils.encode_range(range);
+        // --- Total row with SUM formulas ---
+        const columnsToSum = props.sumColumns || ['sub total', 'online', 'cash', 'total payment', 'balance', 'total'];
+        const dataStartRow = 2; // row 1 = header
+        const dataEndRow   = 1 + props.data.length;
+        const totalRowIdx  = dataEndRow + 1;
 
-        XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
-        XLSX.writeFile(wb, `${props.filename}.xlsx`, {bookType: 'xlsx'});
+        const totalRow = ws.addRow([]);
+        totalRow.getCell(1).value = 'Total';
+        totalRow.font = { bold: true };
+        totalRow.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFD3D3D3' },
+        };
+
+        headers.forEach((header, colIdx) => {
+            if (columnsToSum.some(name => header.toLowerCase().includes(name.toLowerCase()))) {
+                const colLetter = ws.getColumn(colIdx + 1).letter;
+                totalRow.getCell(colIdx + 1).value = {
+                    formula: `SUM(${colLetter}${dataStartRow}:${colLetter}${dataEndRow})`
+                };
+            }
+        });
+
+        // --- Column widths ---
+        ws.columns.forEach((col, i) => {
+            col.width = Math.max(headers[i]?.length || 8, 10);
+        });
+
+        // --- Write & download ---
+        const buffer = await wb.xlsx.writeBuffer();
+        const blob = new Blob([buffer], {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        });
+        saveAs(blob, `${props.filename}.xlsx`);
     };
 
     return (
@@ -54,7 +91,7 @@ const ExportODS = (props) => {
             onClick={handleExport}
             className="inline-block px-4 whitespace-nowrap bg-green-200 py-1.5 ms-1 hover:bg-green-700 hover:text-white text-black rounded-md transition duration-200 font-bold"
         >
-            {props.children ? props.children : "Download"}
+            {props.children ? props.children : 'Download'}
         </button>
     );
 };

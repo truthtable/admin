@@ -391,6 +391,7 @@ export default function DeliveryHistory() {
     const {
         columns,
         csvData,
+        rowColors,
         deliveriesMapList,
         kgSet,
         kgsCount,
@@ -402,6 +403,7 @@ export default function DeliveryHistory() {
         const cols = [];
         const deliveriesMapList = [];
         const csvData = [];
+        const rowColors = [];
 
         let totalAmount = 0;
         let totalPaid = 0;
@@ -503,10 +505,12 @@ export default function DeliveryHistory() {
             const temptKgsList = [];
             const tempCsvList = [];
             const tempNcCsvList = [];
+            const tempMtNcCsvList = [];
             const gasObjs = gasDataMap.toObject();
             const deliveryBalance = toNumber(delivery.balance);
             let normalSubTotal = 0;
             let nCSubTotal = 0;
+            let mtNcSubTotal = 0;
             let subTotal = 0;
             let received = 0;
             let cash = 0;
@@ -542,6 +546,7 @@ export default function DeliveryHistory() {
                     const ncTotal = temp.ncRate ? (toNumber(temp.nc) * toNumber(temp.ncRate)) : "-";
                     nCSubTotal += temp.ncRate ? ncTotal : 0;
                     const mtNcTotal = temp.mt_ncRate ? (toNumber(temp.mt_nc) * toNumber(temp.mt_ncRate)) : "-";
+                    mtNcSubTotal += temp.mt_ncRate ? mtNcTotal : 0;
                     subTotal += (temp.rate ? total : 0) + (temp.ncRate ? ncTotal : 0) - (temp.mt_ncRate ? mtNcTotal : 0)
 
                     //console.log(temp)
@@ -615,6 +620,13 @@ export default function DeliveryHistory() {
                         temp.ncRate || "",
                         (ncTotal === "-") ? "" : ncTotal
                     );
+
+                    tempMtNcCsvList.push(
+                        "",
+                        temp.mt_nc || "",
+                        temp.mt_ncRate || "",
+                        (mtNcTotal === "-") ? "" : (mtNcTotal ? -mtNcTotal : "")
+                    );
                 } else {
                     temptKgsList.push(
                         <DataCell correction={correction} key={`1delivery-${i}-kg${kg}`}
@@ -628,6 +640,7 @@ export default function DeliveryHistory() {
                     );
                     tempCsvList.push("", "", "", "");
                     tempNcCsvList.push("", "", "", "");
+                    tempMtNcCsvList.push("", "", "", "");
                 }
             });
 
@@ -781,6 +794,7 @@ export default function DeliveryHistory() {
 
             const isAllGasEmpty = tempCsvList.every(item => item === "");
             const isAllNcGasEmpty = tempNcCsvList.every(item => item === "");
+            const isAllMtNcGasEmpty = tempMtNcCsvList.every(item => item === "");
 
             if (isAdmin) {
                 csvData.push([
@@ -794,7 +808,26 @@ export default function DeliveryHistory() {
                     "",
                     deliveryBalance
                 ]);
+                rowColors.push("#BEE3F8"); // light blue for admin/balance rows
             } else {
+                // NC return row (red) — received empty MT NC cylinders
+                if (!isAllMtNcGasEmpty) {
+                    csvData.push([
+                        date,
+                        customerName,
+                        "NC MT",
+                        ...tempMtNcCsvList,
+                        -mtNcSubTotal,
+                        "",
+                        "",
+                        "",
+                        // sole type → full balance; mixed → just this row's deduction
+                        (isAllGasEmpty && isAllNcGasEmpty) ? balance : -mtNcSubTotal
+                    ]);
+                    rowColors.push("#FF6B6B"); // red
+                }
+
+                // NC delivered row (blue)
                 if (!isAllNcGasEmpty) {
                     csvData.push([
                         date,
@@ -805,11 +838,14 @@ export default function DeliveryHistory() {
                         isAllGasEmpty ? online : "",
                         isAllGasEmpty ? cash : "",
                         isAllGasEmpty ? received : "",
-                        isAllGasEmpty ? balance : nCSubTotal
+                        // sole type → full balance (accounts for payment); mixed → NC portion only
+                        (isAllGasEmpty && isAllMtNcGasEmpty) ? balance : nCSubTotal
                     ]);
+                    rowColors.push("#FFE066"); // yellow
                 }
 
-                if (!isAllGasEmpty || (isAllNcGasEmpty && received !== "" && received !== "-" && received !== 0)) {
+                // Normal delivered row (black)
+                if (!isAllGasEmpty || (isAllNcGasEmpty && isAllMtNcGasEmpty && received !== "" && received !== "-" && received !== 0)) {
                     csvData.push([
                         date,
                         customerName,
@@ -819,8 +855,10 @@ export default function DeliveryHistory() {
                         online,
                         cash,
                         received,
-                        isAllNcGasEmpty ? balance : (toNumber(normalSubTotal) - toNumber(received))
+                        // always show normal portion minus full payment
+                        toNumber(normalSubTotal) - toNumber(received)
                     ]);
+                    rowColors.push("#B8F0B8"); // light green
                 }
             }
         });
@@ -851,6 +889,7 @@ export default function DeliveryHistory() {
         return {
             columns: cols,
             csvData,
+            rowColors,
             deliveriesMapList,
             kgSet: new Set(KGS),
             kgsCount: { ...KGS_COUNT },
@@ -988,6 +1027,7 @@ export default function DeliveryHistory() {
                                                 <ExportODS
                                                     headers={headers}
                                                     data={csvData}
+                                                    rowColors={rowColors}
                                                     filename={`${customerName}Deliveries_${formatDateToDDMMYY(dateStart)}_TO_${formatDateToDDMMYY(dateEnd)}`}
                                                     sumColumns={['kg', 'mt', 'sub total', 'total payment', 'balance']}
                                                 >
