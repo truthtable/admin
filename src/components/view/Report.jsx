@@ -47,19 +47,33 @@ export const Report = ({ isLogged }) => {
 
     const contentRef = useRef();
     const reactToPrintFn = useReactToPrint({ contentRef })
-    const reactToPrintDwnFn = useReactToPrint({
-        contentRef,
-        documentTitle: 'Report',
-        print: async (printIframe) => {
-            const document = printIframe.contentDocument;
-            if (document) {
-                const html = document.documentElement.outerHTML;
-                // For PDF, you'll need a library like html2pdf or jsPDF
-                const html2pdf = (await import('html2pdf.js')).default;
-                html2pdf().from(html).save('report.pdf');
-            }
+    const [isDownloading, setIsDownloading] = React.useState(false);
+    const downloadBillAsPdf = () => {
+        const element = contentRef.current;
+        if (!element) {
+            alert('No report content to download.');
+            return;
         }
-    });
+        setIsDownloading(true);
+        // defer so React can paint the loading overlay before blocking
+        setTimeout(async () => {
+            try {
+                const html2pdf = (await import('html2pdf.js')).default;
+                await html2pdf()
+                    .set({
+                        margin: 8,
+                        filename: 'report.pdf',
+                        image: { type: 'jpeg', quality: 0.92 },
+                        html2canvas: { scale: 1, useCORS: true, logging: false },
+                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+                    })
+                    .from(element)
+                    .save();
+            } finally {
+                setIsDownloading(false);
+            }
+        }, 50);
+    };
     const [selected, setSelected] = React.useState(() => (
         orderData?.orderId ? PURCHASE : CUSTOMER
     ));
@@ -220,15 +234,21 @@ export const Report = ({ isLogged }) => {
                             //console.log(gas);
                             const k = `kg${gas.gas_cylinder.kg}`;
                             const entry = {};
-                            if (gas.nc) {
+                            if (gas.nc && !gas.is_empty) {
                                 entry.nc = toNumber(gas.quantity);
                                 entry.ncRate = toNumber(gas.price);
                                 KGS_COUNT[`nc${gas.gas_cylinder.kg}`] = toNumber(gas.quantity) + (KGS_COUNT[`nc${gas.gas_cylinder.kg}`] || 0);
                                 grandQtyTotal += toNumber(gas.quantity);
                                 grandQtyKgTotal += toNumber(gas.quantity) * toNumber(gas.gas_cylinder.kg);
-                            } else if (gas.is_empty) {
+                            } else if (gas.is_empty && !gas.nc) {
                                 entry.mt = toNumber(gas.quantity);
                                 KGS_COUNT[`mt${gas.gas_cylinder.kg}`] = (KGS_COUNT[`mt${gas.gas_cylinder.kg}`] || 0) + toNumber(gas.quantity);
+                                grandMtTotal += toNumber(gas.quantity);
+                                grandMtKgTotal += toNumber(gas.quantity) * toNumber(gas.gas_cylinder.kg);
+                            } else if (gas.is_empty && gas.nc) {
+                                entry.mt_nc = toNumber(gas.quantity);
+                                entry.mt_ncRate = toNumber(gas.price);
+                                KGS_COUNT[`mt_nc${gas.gas_cylinder.kg}`] = (KGS_COUNT[`mt_nc${gas.gas_cylinder.kg}`] || 0) + toNumber(gas.quantity);
                                 grandMtTotal += toNumber(gas.quantity);
                                 grandMtKgTotal += toNumber(gas.quantity) * toNumber(gas.gas_cylinder.kg);
                             } else {
@@ -244,6 +264,7 @@ export const Report = ({ isLogged }) => {
                         const gasObjs = gasDataMap.toObject();
                         let normalSubTotal = 0;
                         let nCSubTotal = 0;
+                        let mtNcSubTotal = 0;
                         let subTotal = 0;
                         let received = 0;
                         let cash = 0;
@@ -267,7 +288,9 @@ export const Report = ({ isLogged }) => {
                                 normalSubTotal += temp.rate ? total : 0;
                                 const ncTotal = temp.ncRate ? (toNumber(temp.nc) * toNumber(temp.ncRate)) : "-";
                                 nCSubTotal += temp.ncRate ? ncTotal : 0;
-                                subTotal += (temp.rate ? total : 0) + (temp.ncRate ? ncTotal : 0);
+                                const mtNcTotal = temp.mt_ncRate ? (toNumber(temp.mt_nc) * toNumber(temp.mt_ncRate)) : "-";
+                                mtNcSubTotal += temp.mt_ncRate ? mtNcTotal : 0;
+                                subTotal += (temp.rate ? total : 0) + (temp.ncRate ? ncTotal : 0) - (temp.mt_ncRate ? mtNcTotal : 0);
 
                                 temptKgsList.push(
                                     <DataCell correction={correction} key={`1delivery-${delivery.id}-kg${kg}`}
@@ -277,15 +300,33 @@ export const Report = ({ isLogged }) => {
                                             <hr className="border-black opacity-30 h-0.5 w-full" />
                                             <span className="text-blue-700">{temp.nc}</span>
                                         </>)}
+                                        {temp.mt_nc && (<>
+                                            <hr className="border-black opacity-30 h-0.5 w-full" />
+                                            <span className="text-red-700">-</span>
+                                        </>)}
                                     </DataCell>,
                                     <DataCell correction={correction} key={`2delivery-${delivery.id}-kg${kg}`}
-                                        bgColor={randomLightColor(kg)}>{temp.mt || "-"}</DataCell>,
+                                        bgColor={randomLightColor(kg)}>
+                                        {temp.mt || "-"}
+                                        {temp.nc && (<>
+                                            <hr className="border-black opacity-30 h-0.5 w-full" />
+                                            <span className="text-blue-700">-</span>
+                                        </>)}
+                                        {temp.mt_nc && (<>
+                                            <hr className="border-black opacity-30 h-0.5 w-full" />
+                                            <span className="text-red-700">{temp.mt_nc}</span>
+                                        </>)}
+                                    </DataCell>,
                                     <DataCell correction={correction} key={`3delivery-${delivery.id}-kg${kg}`}
                                         bgColor={randomLightColor(kg)}>
                                         <span>{temp.rate || "-"}</span>
                                         {temp.nc && (<>
                                             <hr className="border-black opacity-30 h-0.5 w-full" />
                                             <span className="text-blue-700">{temp.ncRate}</span>
+                                        </>)}
+                                        {temp.mt_nc && (<>
+                                            <hr className="border-black opacity-30 h-0.5 w-full" />
+                                            <span className="text-red-700">{temp.mt_ncRate}</span>
                                         </>)}
                                     </DataCell>,
                                     <DataCell correction={correction} key={`4delivery-${delivery.id}-kg${kg}`}
@@ -294,6 +335,10 @@ export const Report = ({ isLogged }) => {
                                         {temp.nc && (<>
                                             <hr className="border-black opacity-30 h-0.5 w-full" />
                                             <span className="text-blue-700">{ncTotal}</span>
+                                        </>)}
+                                        {temp.mt_nc && (<>
+                                            <hr className="border-black opacity-30 h-0.5 w-full" />
+                                            <span className="text-red-700">-{mtNcTotal}</span>
                                         </>)}
                                     </DataCell>
                                 );
@@ -726,6 +771,11 @@ export const Report = ({ isLogged }) => {
                                                         className="font-bold text-black">{`MT`} : {toNumber(KGS_COUNT[`mt${kg}`])}</span>
                                                     <Divider className="w-full" orientation={"horizontal"}
                                                         sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
+                                                    {toNumber(KGS_COUNT[`mt_nc${kg}`]) > 0 && (<>
+                                                        <span className="font-bold text-red-700">{`NC Return`} : {toNumber(KGS_COUNT[`mt_nc${kg}`])}</span>
+                                                        <Divider className="w-full" orientation={"horizontal"}
+                                                            sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
+                                                    </>)}
                                                     <span
                                                         className="font-bold text-black">{`Pending`} : {toNumber(KGS_COUNT[`sent${kg}`]) - toNumber(KGS_COUNT[`mt${kg}`])}</span>
                                                 </Stack>
@@ -869,7 +919,7 @@ export const Report = ({ isLogged }) => {
                         <Divider sx={{ backgroundColor: "#979797", m: 1, opacity: 0.5 }} />
                         <Button
                             onClick={() => {
-                                reactToPrintDwnFn()
+                                downloadBillAsPdf()
                                 // downloadPDFContent()
                                 //download file as PDF
                             }}
@@ -1090,6 +1140,19 @@ export const Report = ({ isLogged }) => {
             {selected === CUSTOMER && <Customer />}
             {selected === DELIVERY && <DeliveryBoy />}
             {selected === PURCHASE && <Purchase />}
+            {isDownloading && (
+                <Box sx={{
+                    position: 'fixed', inset: 0, zIndex: 9999,
+                    backgroundColor: 'rgba(0,0,0,0.55)',
+                    display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', justifyContent: 'center', gap: 2,
+                }}>
+                    <CircularProgress size="lg" />
+                    <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                        Generating PDF… please wait
+                    </span>
+                </Box>
+            )}
         </Stack>
     );
 };
