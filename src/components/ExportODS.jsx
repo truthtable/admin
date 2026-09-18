@@ -12,57 +12,53 @@ import { saveAs } from 'file-saver';
  *   sumColumns  : string[]            — column name substrings that get a SUM total row
  *   filename    : string              — output filename (no extension)
  */
+
+const THIN_BORDER = {
+    top:    { style: 'thin', color: { argb: 'FF000000' } },
+    left:   { style: 'thin', color: { argb: 'FF000000' } },
+    bottom: { style: 'thin', color: { argb: 'FF000000' } },
+    right:  { style: 'thin', color: { argb: 'FF000000' } },
+};
+
+/** Apply Arial font + border (+ optional fill) to every cell in a row. */
+function styleRow(row, { argbFill = null, bold = true } = {}) {
+    row.eachCell({ includeEmpty: true }, (cell) => {
+        cell.font   = { name: 'Arial', bold, size: 10 };
+        cell.border = THIN_BORDER;
+        if (argbFill) {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: argbFill } };
+        }
+    });
+}
+
 const ExportODS = (props) => {
     const handleExport = async () => {
         const wb = new ExcelJS.Workbook();
         const ws = wb.addWorksheet('Sheet1');
 
-        const headers = props.headers.map(h => h.label || h);
-        const rowColors = props.rowColors || [];
+        const headers    = props.headers.map(h => h.label || h);
+        const rowColors  = props.rowColors || [];
+        const numCols    = headers.length;
 
         // --- Header row ---
         const headerRow = ws.addRow(headers);
-        headerRow.font = { bold: true };
-        headerRow.fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FFD3D3D3' }, // light grey header
-        };
+        styleRow(headerRow, { argbFill: 'FFD3D3D3', bold: true });
 
         // --- Data rows ---
         props.data.forEach((rowData, idx) => {
-            const row = ws.addRow(rowData);
-
+            const row   = ws.addRow(rowData);
             const color = rowColors[idx];
-            if (color) {
-                // Strip leading '#', prepend 'FF' for full opacity ARGB
-                const argb = 'FF' + color.replace('#', '');
-                row.eachCell({ includeEmpty: true }, (cell) => {
-                    cell.fill = {
-                        type: 'pattern',
-                        pattern: 'solid',
-                        fgColor: { argb },
-                    };
-                });
-            }
-
-            row.font = { bold: true };
+            const argbFill = color ? ('FF' + color.replace('#', '')) : null;
+            styleRow(row, { argbFill, bold: true });
         });
 
         // --- Total row with SUM formulas ---
         const columnsToSum = props.sumColumns || ['sub total', 'online', 'cash', 'total payment', 'balance', 'total'];
-        const dataStartRow = 2; // row 1 = header
+        const dataStartRow = 2;                    // row 1 = header
         const dataEndRow   = 1 + props.data.length;
-        const totalRowIdx  = dataEndRow + 1;
 
         const totalRow = ws.addRow([]);
         totalRow.getCell(1).value = 'Total';
-        totalRow.font = { bold: true };
-        totalRow.fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FFD3D3D3' },
-        };
 
         headers.forEach((header, colIdx) => {
             if (columnsToSum.some(name => header.toLowerCase().includes(name.toLowerCase()))) {
@@ -73,7 +69,9 @@ const ExportODS = (props) => {
             }
         });
 
-        // --- Column widths ---
+        styleRow(totalRow, { argbFill: 'FFD3D3D3', bold: true });
+
+        // --- Column widths (auto-size heuristic) ---
         ws.columns.forEach((col, i) => {
             col.width = Math.max(headers[i]?.length || 8, 10);
         });

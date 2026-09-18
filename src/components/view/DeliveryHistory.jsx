@@ -48,6 +48,14 @@ import { addNewGasDeliveryReset } from "../../redux/delivery/gasEditDelivery.js"
 import { resetCustomerPaymentsUpdateOrCreateSuccess } from "../../redux/customerPaymentsUpdateOrCreate.js";
 import { IoClose } from "react-icons/io5";
 
+
+// ── Sheet row colors ─────────────────────────────────────────────────────────
+const ROW_COLOR_NC_MT = '#F7E0E9'; // red   — NC MT return row
+const ROW_COLOR_NC = '#F8F1E2'; // yellow — NC delivered row
+const ROW_COLOR_NORMAL = '#ffffff'; // green  — normal delivered row
+const ROW_COLOR_BALANCE = '#d5edfb'; // blue   — admin / outstanding balance row
+// ─────────────────────────────────────────────────────────────────────────────
+
 const DeliveryRow = React.memo(function DeliveryRow({ row }) {
     return row;
 });
@@ -808,7 +816,7 @@ export default function DeliveryHistory() {
                     "",
                     deliveryBalance
                 ]);
-                rowColors.push("#BEE3F8"); // light blue for admin/balance rows
+                rowColors.push(ROW_COLOR_BALANCE); // light blue for admin/balance rows
             } else {
                 // NC return row (red) — received empty MT NC cylinders
                 if (!isAllMtNcGasEmpty) {
@@ -824,7 +832,7 @@ export default function DeliveryHistory() {
                         // sole type → full balance; mixed → just this row's deduction
                         (isAllGasEmpty && isAllNcGasEmpty) ? balance : -mtNcSubTotal
                     ]);
-                    rowColors.push("#FF6B6B"); // red
+                    rowColors.push(ROW_COLOR_NC_MT); // red
                 }
 
                 // NC delivered row (blue)
@@ -841,7 +849,7 @@ export default function DeliveryHistory() {
                         // sole type → full balance (accounts for payment); mixed → NC portion only
                         (isAllGasEmpty && isAllMtNcGasEmpty) ? balance : nCSubTotal
                     ]);
-                    rowColors.push("#FFE066"); // yellow
+                    rowColors.push(ROW_COLOR_NC); // yellow
                 }
 
                 // Normal delivered row (black)
@@ -858,7 +866,7 @@ export default function DeliveryHistory() {
                         // always show normal portion minus full payment
                         toNumber(normalSubTotal) - toNumber(received)
                     ]);
-                    rowColors.push("#B8F0B8"); // light green
+                    rowColors.push(ROW_COLOR_NORMAL); // light green
                 }
             }
         });
