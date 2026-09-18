@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
     Autocomplete,
     Box,
@@ -16,15 +16,15 @@ import {
     Switch,
     Table
 } from "@mui/joy";
-import {useDispatch, useSelector} from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
     deleteDeliveryByIdList,
     fetchDeliveries,
     UPDATE_DELIVERY_SUCCESS_RESET
 } from "../../redux/actions/deliveryActions.js";
-import {fetchGasData} from "../../state/GasList.jsx";
-import {fetchUser} from "../../redux/actions/userActions.js";
-import {UPDATE_GAS_DELIVERY_SUCCESS_RESET} from "../../redux/actions/gasDeliveryActions.js";
+import { fetchGasData } from "../../state/GasList.jsx";
+import { fetchUser } from "../../redux/actions/userActions.js";
+import { UPDATE_GAS_DELIVERY_SUCCESS_RESET } from "../../redux/actions/gasDeliveryActions.js";
 import gasServices from "../../services/gas-services.jsx";
 import {
     createGasOptions,
@@ -39,16 +39,16 @@ import {
     titleCase,
     toNumber
 } from "../../Tools.jsx";
-import {GasEditUi} from "./GasEditUi.jsx";
+import { GasEditUi } from "./GasEditUi.jsx";
 import MapObjectManager from "../class/MapArrayManager.jsx";
-import {MdCallMade, MdCallMissedOutgoing, MdCallReceived, MdDeleteForever, MdEdit} from "react-icons/md";
+import { MdCallMade, MdCallMissedOutgoing, MdCallReceived, MdDeleteForever, MdEdit } from "react-icons/md";
 import ExportODS from "../ExportODS.jsx";
-import {FaArrowDown} from "react-icons/fa";
-import {addNewGasDeliveryReset} from "../../redux/delivery/gasEditDelivery.js";
-import {resetCustomerPaymentsUpdateOrCreateSuccess} from "../../redux/customerPaymentsUpdateOrCreate.js";
-import {IoClose} from "react-icons/io5";
+import { FaArrowDown } from "react-icons/fa";
+import { addNewGasDeliveryReset } from "../../redux/delivery/gasEditDelivery.js";
+import { resetCustomerPaymentsUpdateOrCreateSuccess } from "../../redux/customerPaymentsUpdateOrCreate.js";
+import { IoClose } from "react-icons/io5";
 
-const DeliveryRow = React.memo(function DeliveryRow({row}) {
+const DeliveryRow = React.memo(function DeliveryRow({ row }) {
     return row;
 });
 export default function DeliveryHistory() {
@@ -60,9 +60,9 @@ export default function DeliveryHistory() {
     const deliveries = deliveriesData.deliveries;
     const loading = deliveriesData.loading;
     const updateSuccess = deliveriesData.updateSuccess;
-    const {userDataLoading, users} = useSelector((state) => state.user);
+    const { userDataLoading, users } = useSelector((state) => state.user);
     const allGasData = useSelector((state) => state.gas);
-    const {gasDeliverysSucsess} = useSelector((state) => state.gasDelivery);
+    const { gasDeliverysSucsess } = useSelector((state) => state.gasDelivery);
 
     const [isAddNewDeliveryModal, setIsAddNewDeliveryModal] = useState(false);
     const [shouldReload, setShouldReload] = useState(false);
@@ -166,12 +166,12 @@ export default function DeliveryHistory() {
 
     // Memoize gas options for UI
     const deleveryGasEditUiGasList = useMemo(() =>
-            createGasOptions(allGasData.data),
+        createGasOptions(allGasData.data),
         [allGasData.data]
     );
 
     // Memoize customer and delivery boy lists
-    const {CUSTOMER_LIST, ADMIN_LIST, DELIVERY_BOY_LIST} = useMemo(() => {
+    const { CUSTOMER_LIST, ADMIN_LIST, DELIVERY_BOY_LIST } = useMemo(() => {
         const customerList = [];
         const adminList = new Map();
         const deliveryBoyList = new Map();
@@ -192,7 +192,7 @@ export default function DeliveryHistory() {
                     const address = titleCase(user.address);
                     const diaryNumber = user.customers[0]?.diaryNumber;
                     let diaryNumberText = `- : `;
-                    if(diaryNumber!=null){
+                    if (diaryNumber != null) {
                         diaryNumberText = `${diaryNumber} : `
                     }
                     customerList.push({
@@ -203,14 +203,14 @@ export default function DeliveryHistory() {
             });
         }
 
-        return {CUSTOMER_LIST: customerList, ADMIN_LIST: adminList, DELIVERY_BOY_LIST: deliveryBoyList};
+        return { CUSTOMER_LIST: customerList, ADMIN_LIST: adminList, DELIVERY_BOY_LIST: deliveryBoyList };
     }, [users]);
 
     //console.log(ADMIN_LIST)
 
     const loadData = useCallback(({
-                                      force = false,
-                                  }) => {
+        force = false,
+    }) => {
 
         const fetchDeliveriesParams = {
             dateStart: dateStart,
@@ -243,7 +243,7 @@ export default function DeliveryHistory() {
 
     const handleEditClick = useCallback((delivery, date) => {
         setEditRow(delivery.id);
-        setEditDelivery({...delivery, formattedDate: date});
+        setEditDelivery({ ...delivery, formattedDate: date });
     }, []);
 
     const handleEditClose = useCallback(() => {
@@ -271,7 +271,7 @@ export default function DeliveryHistory() {
     };
 
     const debouncedLoadForCustomer = useDebouncedCallback((id) => {
-        loadData({force: true, customerId: id});
+        loadData({ force: true, customerId: id });
     }, 400);
 
     const setDeliverBoyId = useCallback((id) => {
@@ -291,7 +291,7 @@ export default function DeliveryHistory() {
         const fullHash = window.location.hash.substring(1);
         const [path, rawQuery = ''] = fullHash.split('?');
         const params = new URLSearchParams(rawQuery);
-        const updates = {dateStart, dateEnd, customerId, deliverBoyId};
+        const updates = { dateStart, dateEnd, customerId, deliverBoyId };
 
         Object.entries(updates).forEach(([key, val]) => {
             if (val == null || val === '') {
@@ -318,56 +318,56 @@ export default function DeliveryHistory() {
 
     useEffect(() => {
         if (shouldReload) {
-            if(!loading) {
-                loadData({force: true});
+            if (!loading) {
+                loadData({ force: true });
             }
             setShouldReload(false);
         }
-    }, [shouldReload,loading]);
+    }, [shouldReload, loading]);
 
     useEffect(() => {
         updateUrlParams(dateStart, dateEnd);
     }, [dateStart, dateEnd, customerId, deliverBoyId, updateUrlParams]);
 
     useEffect(() => {
-        loadData({force: true});
+        loadData({ force: true });
     }, [customerId, deliverBoyId, dateStart, dateEnd, descending]);
 
     useEffect(() => {
         // console.log(deliveriesEdit)
         if (deliveriesEdit.isSuccessful) {
             //console.log("Reloading due to successful delivery edit/add");
-            loadData({force: true});
+            loadData({ force: true });
             dispatch(addNewGasDeliveryReset())
         }
     }, [deliveriesEdit]);
 
     useEffect(() => {
         if (gasDeliverysSucsess) {
-            dispatch({type: UPDATE_GAS_DELIVERY_SUCCESS_RESET});
-            loadData({force: true});
+            dispatch({ type: UPDATE_GAS_DELIVERY_SUCCESS_RESET });
+            loadData({ force: true });
         }
     }, [gasDeliverysSucsess, dispatch]);
 
     useEffect(() => {
         if (updateSuccess) {
-            dispatch({type: UPDATE_DELIVERY_SUCCESS_RESET});
-            loadData({force: true});
+            dispatch({ type: UPDATE_DELIVERY_SUCCESS_RESET });
+            loadData({ force: true });
         }
     }, [updateSuccess, dispatch]);
 
     useEffect(() => {
         if (customerPaymentsUpdateOrCreate.isCustomerPaymentsUpdateOrCreateSuccess) {
             dispatch(resetCustomerPaymentsUpdateOrCreateSuccess())
-            loadData({force: true});
+            loadData({ force: true });
         }
     }, [customerPaymentsUpdateOrCreate, dispatch]);
 
     const handleSuccess = useCallback(() => {
-        loadData({force: true});
+        loadData({ force: true });
     }, [loadData]);
 
-    const DeleteCheckBox = ({id}) => {
+    const DeleteCheckBox = ({ id }) => {
         return (<>
             <Stack>
                 <Checkbox
@@ -427,25 +427,25 @@ export default function DeliveryHistory() {
         //console.log("Sorting deliveries");
         const sortedDeliveries = [...deliveries]
             .filter(delivery => {
-                    if (deliverBoyId !== null && delivery.courier_boy.id !== deliverBoyId) return false;
-                    if (customerId !== null && delivery.customer.id !== customerId) return false;
-                    if (dateStart && dateEnd) {
-                        const mDateStart = new Date(dateStart);
-                        mDateStart.setHours(0, 0, 0, 0);
+                if (deliverBoyId !== null && delivery.courier_boy.id !== deliverBoyId) return false;
+                if (customerId !== null && delivery.customer.id !== customerId) return false;
+                if (dateStart && dateEnd) {
+                    const mDateStart = new Date(dateStart);
+                    mDateStart.setHours(0, 0, 0, 0);
 
-                        const mDateEnd = new Date(dateEnd);
-                        mDateEnd.setHours(23, 59, 59, 999);
+                    const mDateEnd = new Date(dateEnd);
+                    mDateEnd.setHours(23, 59, 59, 999);
 
-                        const deliveryDate = new Date(delivery.created_at);
-                        // Reset time to compare only dates
-                        const deliveryDateOnly = new Date(deliveryDate.getFullYear(), deliveryDate.getMonth(), deliveryDate.getDate());
+                    const deliveryDate = new Date(delivery.created_at);
+                    // Reset time to compare only dates
+                    const deliveryDateOnly = new Date(deliveryDate.getFullYear(), deliveryDate.getMonth(), deliveryDate.getDate());
 
-                        if (deliveryDateOnly < mDateStart || deliveryDateOnly > mDateEnd) {
-                            return false;
-                        }
+                    if (deliveryDateOnly < mDateStart || deliveryDateOnly > mDateEnd) {
+                        return false;
                     }
-                    return true;
                 }
+                return true;
+            }
             )
             .sort((a, b) => {
                 const dateA = new Date(a.created_at);
@@ -474,23 +474,29 @@ export default function DeliveryHistory() {
         sortedDeliveries.forEach((delivery, i) => {
             const correction = delivery.correction;
             const gasDataMap = new MapObjectManager();
-
+            //console.log("delivery.gas_deliveries", delivery.gas_deliveries);
             delivery.gas_deliveries.forEach((gas) => {
                 const k = `kg${gas.kg}`;
                 const entry = {};
 
-                if (gas.nc) {
+                if (gas.nc && !gas.is_empty) {
                     entry.nc = toNumber(gas.quantity);
                     entry.ncRate = toNumber(gas.gas_price);
                     KGS_COUNT[`nc_${gas.kg}`] = toNumber(gas.quantity) + (KGS_COUNT[`nc_${gas.kg}`] || 0);
-                } else if (gas.is_empty) {
+                } else if (gas.is_empty && !gas.nc) {
                     entry.mt = toNumber(gas.quantity);
                     KGS_COUNT[`mt_${gas.kg}`] = (KGS_COUNT[`mt_${gas.kg}`] || 0) + toNumber(gas.quantity);
+                } else if (gas.is_empty && gas.nc) {
+                    entry.mt_nc = toNumber(gas.quantity);
+                    entry.mt_ncRate = toNumber(gas.gas_price);
+                    KGS_COUNT[`mt_nc_${gas.kg}`] = (KGS_COUNT[`mt_nc_${gas.kg}`] || 0) + toNumber(gas.quantity);
                 } else {
                     entry.qty = toNumber(gas.quantity);
                     entry.rate = toNumber(gas.gas_price);
                     KGS_COUNT[`qty_${gas.kg}`] = (KGS_COUNT[`qty_${gas.kg}`] || 0) + toNumber(gas.quantity);
                 }
+                //console.log("gas", gas);
+
                 gasDataMap.merge(k, entry);
             });
 
@@ -509,6 +515,9 @@ export default function DeliveryHistory() {
             let oldBal = 0;
             let newBal = 0;
 
+            //console.log("gasObjs", gasObjs);
+
+
             delivery?.payments?.forEach(payment => {
                 const amount = toNumber(payment.amount);
                 if (payment.method === 0) {
@@ -525,39 +534,71 @@ export default function DeliveryHistory() {
 
             const sortedKGS = [...KGS].sort((a, b) => a - b);
             sortedKGS.forEach(kg => {
+
                 const temp = gasObjs[`kg${kg}`];
                 if (temp) {
                     const total = temp.rate ? (toNumber(temp.qty) * toNumber(temp.rate)) : "-";
                     normalSubTotal += temp.rate ? total : 0;
                     const ncTotal = temp.ncRate ? (toNumber(temp.nc) * toNumber(temp.ncRate)) : "-";
                     nCSubTotal += temp.ncRate ? ncTotal : 0;
-                    subTotal += (temp.rate ? total : 0) + (temp.ncRate ? ncTotal : 0);
+                    const mtNcTotal = temp.mt_ncRate ? (toNumber(temp.mt_nc) * toNumber(temp.mt_ncRate)) : "-";
+                    subTotal += (temp.rate ? total : 0) + (temp.ncRate ? ncTotal : 0) - (temp.mt_ncRate ? mtNcTotal : 0)
 
-                    //console.log("Rendering...")
+                    //console.log(temp)
 
                     temptKgsList.push(
                         <DataCell correction={correction} key={`1delivery-${i}-kg${kg}`} bgColor={randomLightColor(kg)}>
                             <span>{temp.qty || "-"}</span>
                             {temp.nc && (<>
-                                <hr className="border-black opacity-30 h-0.5 w-full"/>
+                                <hr className="border-black opacity-30 h-0.5 w-full" />
                                 <span className="text-blue-700">{temp.nc}</span>
                             </>)}
+                            {
+                                temp.mt_nc && (<>
+                                    <hr className="border-black opacity-30 h-0.5 w-full" />
+                                    <span className="text-red-700">-</span>
+                                </>)
+                            }
                         </DataCell>,
                         <DataCell correction={correction} key={`2delivery-${i}-kg${kg}`}
-                                  bgColor={randomLightColor(kg)}>{temp.mt || "-"}</DataCell>,
+                            bgColor={randomLightColor(kg)}>
+                            {temp.mt || "-"}
+                            {temp.nc && (<>
+                                <hr className="border-black opacity-30 h-0.5 w-full" />
+                                <span className="text-blue-700">-</span>
+                            </>)}
+                            {
+                                temp.mt_nc && (<>
+                                    <hr className="border-black opacity-30 h-0.5 w-full" />
+                                    <span className="text-red-700">{temp.mt_nc}</span>
+                                </>)
+                            }
+                        </DataCell>,
                         <DataCell correction={correction} key={`3delivery-${i}-kg${kg}`} bgColor={randomLightColor(kg)}>
                             <span>{temp.rate || "-"}</span>
-                            {temp.nc && (<>
-                                <hr className="border-black opacity-30 h-0.5 w-full"/>
+                            {temp.ncRate && (<>
+                                <hr className="border-black opacity-30 h-0.5 w-full" />
                                 <span className="text-blue-700">{temp.ncRate}</span>
                             </>)}
+                            {
+                                temp.mt_nc && (<>
+                                    <hr className="border-black opacity-30 h-0.5 w-full" />
+                                    <span className="text-red-700">{temp.mt_ncRate}</span>
+                                </>)
+                            }
                         </DataCell>,
                         <DataCell correction={correction} key={`4delivery-${i}-kg${kg}`} bgColor={randomLightColor(kg)}>
                             <span>{total}</span>
                             {temp.nc && (<>
-                                <hr className="border-black opacity-30 h-0.5 w-full"/>
+                                <hr className="border-black opacity-30 h-0.5 w-full" />
                                 <span className="text-blue-700">{ncTotal}</span>
                             </>)}
+                            {
+                                temp.mt_nc && (<>
+                                    <hr className="border-black opacity-30 h-0.5 w-full" />
+                                    <span className="text-red-700">-{mtNcTotal}</span>
+                                </>)
+                            }
                         </DataCell>
                     );
 
@@ -577,13 +618,13 @@ export default function DeliveryHistory() {
                 } else {
                     temptKgsList.push(
                         <DataCell correction={correction} key={`1delivery-${i}-kg${kg}`}
-                                  bgColor={randomLightColor(kg)}>{"-"}</DataCell>,
+                            bgColor={randomLightColor(kg)}>{"-"}</DataCell>,
                         <DataCell correction={correction} key={`2delivery-${i}-kg${kg}`}
-                                  bgColor={randomLightColor(kg)}>{"-"}</DataCell>,
+                            bgColor={randomLightColor(kg)}>{"-"}</DataCell>,
                         <DataCell correction={correction} key={`3delivery-${i}-kg${kg}`}
-                                  bgColor={randomLightColor(kg)}>{"-"}</DataCell>,
+                            bgColor={randomLightColor(kg)}>{"-"}</DataCell>,
                         <DataCell correction={correction} key={`4delivery-${i}-kg${kg}`}
-                                  bgColor={randomLightColor(kg)}>{"-"}</DataCell>
+                            bgColor={randomLightColor(kg)}>{"-"}</DataCell>
                     );
                     tempCsvList.push("", "", "", "");
                     tempNcCsvList.push("", "", "", "");
@@ -599,9 +640,9 @@ export default function DeliveryHistory() {
             const date = formatDateToDDMMYY_HHMM(delivery.created_at);
             const customerName = titleCase(delivery.customer.name);
             let diaryNo = delivery.customer.diaryNumber
-            if(diaryNo!=null){
+            if (diaryNo != null) {
                 diaryNo = `[${diaryNo}] `;
-            }else{
+            } else {
                 diaryNo = ``;
             }
 
@@ -617,10 +658,10 @@ export default function DeliveryHistory() {
                         row={
                             <tr key={`dRow${i}-${delivery.id}`}>
                                 {deleteMode ? <>
-                                        <td>
-                                            <DeleteCheckBox id={delivery.id}/>
-                                        </td>
-                                    </> :
+                                    <td>
+                                        <DeleteCheckBox id={delivery.id} />
+                                    </td>
+                                </> :
                                     <>
                                         <DataCell key={`delivery-${i}-remark`} correction={correction}>
                                             <Chip
@@ -628,7 +669,7 @@ export default function DeliveryHistory() {
                                                 onClick={() => handleEditClick(delivery, date)}
                                                 size="sm"
                                             >
-                                                <MdEdit/>
+                                                <MdEdit />
                                             </Chip>
                                             {
                                                 (editRow === delivery.id) && <GasEditUi
@@ -657,15 +698,15 @@ export default function DeliveryHistory() {
                                     </>}
                                 <DataCell correction={correction} key={`delivery-${i}-date`}>{date}</DataCell>
                                 <DataCell correction={correction}
-                                          key={`delivery-${i}-name`}>{customerName}[OUTSTANDING]</DataCell>
+                                    key={`delivery-${i}-name`}>{customerName}[OUTSTANDING]</DataCell>
                                 {temptKgsList}
                                 <DataCell correction={correction} key={`delivery-${i}-sub`}>{deliveryBalance}</DataCell>
                                 <DataCell correction={correction}
-                                          key={`delivery-${i}-online`}>{dashIfZero(online)}</DataCell>
+                                    key={`delivery-${i}-online`}>{dashIfZero(online)}</DataCell>
                                 <DataCell correction={correction}
-                                          key={`delivery-${i}-cash`}>{dashIfZero(cash)}</DataCell>
+                                    key={`delivery-${i}-cash`}>{dashIfZero(cash)}</DataCell>
                                 <DataCell correction={correction}
-                                          key={`delivery-${i}-received`}>{displayReceived}</DataCell>
+                                    key={`delivery-${i}-received`}>{displayReceived}</DataCell>
                                 <DataCell correction={correction} key={`delivery-${i}-balance`}>{
                                     deliveryBalance
                                 }</DataCell>
@@ -683,10 +724,10 @@ export default function DeliveryHistory() {
                             >
                                 {
                                     deleteMode ? <>
-                                            <td>
-                                                <DeleteCheckBox id={delivery.id}/>
-                                            </td>
-                                        </> :
+                                        <td>
+                                            <DeleteCheckBox id={delivery.id} />
+                                        </td>
+                                    </> :
                                         <>
                                             <DataCell key={`delivery-${i}-remark`} correction={correction}>
                                                 <Chip
@@ -694,7 +735,7 @@ export default function DeliveryHistory() {
                                                     onClick={() => handleEditClick(delivery, date)}
                                                     size="sm"
                                                 >
-                                                    <MdEdit/>
+                                                    <MdEdit />
                                                 </Chip>
                                                 {
                                                     (editRow === delivery.id) && <GasEditUi
@@ -726,11 +767,11 @@ export default function DeliveryHistory() {
                                 {temptKgsList}
                                 <DataCell correction={correction} key={`delivery-${i}-sub`}>{displaySubTotal}</DataCell>
                                 <DataCell correction={correction}
-                                          key={`delivery-${i}-online`}>{dashIfZero(online)}</DataCell>
+                                    key={`delivery-${i}-online`}>{dashIfZero(online)}</DataCell>
                                 <DataCell correction={correction}
-                                          key={`delivery-${i}-cash`}>{dashIfZero(cash)}</DataCell>
+                                    key={`delivery-${i}-cash`}>{dashIfZero(cash)}</DataCell>
                                 <DataCell correction={correction}
-                                          key={`delivery-${i}-received`}>{displayReceived}</DataCell>
+                                    key={`delivery-${i}-received`}>{displayReceived}</DataCell>
                                 <DataCell correction={correction} key={`delivery-${i}-balance`}>{balance}</DataCell>
                             </tr>
                         }
@@ -786,25 +827,25 @@ export default function DeliveryHistory() {
 
         // Build columns
         cols.push(
-            {column: "date", color: "white"},
-            {column: "customer", color: "white"}
+            { column: "date", color: "white" },
+            { column: "customer", color: "white" }
         );
 
         [...KGS].sort((a, b) => a - b).forEach((kg) => {
             cols.push(
-                {column: `${kg}kg`, color: randomLightColor(kg)},
-                {column: "mt", color: randomLightColor(kg)},
-                {column: "rate", color: randomLightColor(kg)},
-                {column: "total", color: randomLightColor(kg)}
+                { column: `${kg}kg`, color: randomLightColor(kg) },
+                { column: "mt", color: randomLightColor(kg) },
+                { column: "rate", color: randomLightColor(kg) },
+                { column: "total", color: randomLightColor(kg) }
             );
         });
 
         cols.push(
-            {column: "sub total", color: "white"},
-            {column: "online", color: "white"},
-            {column: "cash", color: "white"},
-            {column: "total payment", color: "white"},
-            {column: "balance", color: "white"}
+            { column: "sub total", color: "white" },
+            { column: "online", color: "white" },
+            { column: "cash", color: "white" },
+            { column: "total payment", color: "white" },
+            { column: "balance", color: "white" }
         );
 
         return {
@@ -812,7 +853,7 @@ export default function DeliveryHistory() {
             csvData,
             deliveriesMapList,
             kgSet: new Set(KGS),
-            kgsCount: {...KGS_COUNT},
+            kgsCount: { ...KGS_COUNT },
             grandTotalAmount: totalAmount,
             grandTotalPaid: totalPaid,
             grandTotalCash: totalCash,
@@ -884,9 +925,9 @@ export default function DeliveryHistory() {
                     alignItems: "center",
                 }}
             >
-                <LinearProgress/>
+                <LinearProgress />
             </Box>
-            <Sheet sx={{flexGrow: 1, width: "100%", height: "100%"}}>
+            <Sheet sx={{ flexGrow: 1, width: "100%", height: "100%" }}>
                 <Table
                     aria-label="collapsible table"
                     size="md"
@@ -916,102 +957,80 @@ export default function DeliveryHistory() {
                     }}
                 >
                     <thead>
-                    <tr className="!p-0 !m-0">
-                        <th colSpan={columns.length + 1} className="!p-0 !m-0">
-                            <Stack
-                                direction="column"
-                                className="!p-0 !m-0 w-full"
-                            >
-                                <Divider className="bg-white h-1"/>
+                        <tr className="!p-0 !m-0">
+                            <th colSpan={columns.length + 1} className="!p-0 !m-0">
                                 <Stack
-                                    sx={{
-                                        width: "100%",
-                                        // flexGrow: 1,
-                                        alignItems: "center",
-                                    }}
-                                    className="!p-0 !m-0"
-                                    direction="row"
-                                    gap={1}
-                                    alignContent={"end"}
-                                    justifyContent={"flex-start"}
+                                    direction="column"
+                                    className="!p-0 !m-0 w-full"
                                 >
-                                    {
-                                        !deleteMode && (<>
-                                            {/*<ExportCSV*/}
-                                            {/*    headers={headers}*/}
-                                            {/*    data={csvData}*/}
-                                            {/*    filename={`deliveries_${formatDateToDDMMYY(dateStart)}_TO_${formatDateToDDMMYY(dateEnd)}.csv`}*/}
-                                            {/*>*/}
-                                            {/*    Download File*/}
-                                            {/*</ExportCSV>*/}
-                                            <ExportODS
-                                                headers={headers}
-                                                data={csvData}
-                                                filename={`${customerName}Deliveries_${formatDateToDDMMYY(dateStart)}_TO_${formatDateToDDMMYY(dateEnd)}`}
-                                                sumColumns={['kg', 'mt', 'sub total', 'total payment', 'balance']}
-                                            >
-                                                <Stack
-                                                    direction="row"
-                                                    gap={0.5}
-                                                    alignItems="center"
-                                                >
-                                                    <FaArrowDown/>
-                                                    <span>Download</span>
-                                                </Stack>
-                                            </ExportODS>
-                                            <Divider sx={{backgroundColor: "grey"}} orientation="vertical"/>
-                                            <GasEditUi
-                                                selectedGasList={[]}
-                                                customer={0}
-                                                deliveryBoy={null}
-                                                deleveryId={0}
-                                                payments={[]}
-                                                correction={false}
-                                                openEdit={isAddNewDeliveryModal}
-                                                isOutstanding={false}
-                                                isAddNewDeliveryModal={true}
-                                                gasList={gasList}
-                                                CUSTOMER_LIST={CUSTOMER_LIST}
-                                                DELIVERY_BOY_LIST={DELIVERY_BOY_LIST}
-                                                deleveryGasEditUiGasList={deleveryGasEditUiGasList}
-                                                onSuccess={handleSuccess}
-                                                createdAt={null}
-                                            />
-
-                                        </>)
-                                    }
-                                    <Divider sx={{flexGrow: 1, opacity: 0}}/>
-                                    <Button
-                                        color={deleteMode ? "primary" : "danger"}
-                                        variant={deleteMode ? "solid" : "outlined"}
-                                        size="sm"
-                                        onClick={() => {
-                                            if (deleteMode) {
-                                                setDeleteIds([]);
-                                            }
-                                            setDeleteMode(!deleteMode);
+                                    <Divider className="bg-white h-1" />
+                                    <Stack
+                                        sx={{
+                                            width: "100%",
+                                            // flexGrow: 1,
+                                            alignItems: "center",
                                         }}
+                                        className="!p-0 !m-0"
+                                        direction="row"
+                                        gap={1}
+                                        alignContent={"end"}
+                                        justifyContent={"flex-start"}
                                     >
-                                        <Stack
-                                            direction="row"
-                                            gap={0.5}
-                                            alignItems="center"
-                                        >
-                                            {deleteMode ? <IoClose/> : <MdDeleteForever/>}
-                                            <span className="font-black transition-all duration-300">
-                                                {
-                                                    deleteMode ? "Cancel" : "Delete"
-                                                }
-                                            </span>
-                                        </Stack>
-                                    </Button>
-                                    {
-                                        deleteMode && (<Button
-                                            color="danger"
-                                            variant="solid"
+                                        {
+                                            !deleteMode && (<>
+                                                {/*<ExportCSV*/}
+                                                {/*    headers={headers}*/}
+                                                {/*    data={csvData}*/}
+                                                {/*    filename={`deliveries_${formatDateToDDMMYY(dateStart)}_TO_${formatDateToDDMMYY(dateEnd)}.csv`}*/}
+                                                {/*>*/}
+                                                {/*    Download File*/}
+                                                {/*</ExportCSV>*/}
+                                                <ExportODS
+                                                    headers={headers}
+                                                    data={csvData}
+                                                    filename={`${customerName}Deliveries_${formatDateToDDMMYY(dateStart)}_TO_${formatDateToDDMMYY(dateEnd)}`}
+                                                    sumColumns={['kg', 'mt', 'sub total', 'total payment', 'balance']}
+                                                >
+                                                    <Stack
+                                                        direction="row"
+                                                        gap={0.5}
+                                                        alignItems="center"
+                                                    >
+                                                        <FaArrowDown />
+                                                        <span>Download</span>
+                                                    </Stack>
+                                                </ExportODS>
+                                                <Divider sx={{ backgroundColor: "grey" }} orientation="vertical" />
+                                                <GasEditUi
+                                                    selectedGasList={[]}
+                                                    customer={0}
+                                                    deliveryBoy={null}
+                                                    deleveryId={0}
+                                                    payments={[]}
+                                                    correction={false}
+                                                    openEdit={isAddNewDeliveryModal}
+                                                    isOutstanding={false}
+                                                    isAddNewDeliveryModal={true}
+                                                    gasList={gasList}
+                                                    CUSTOMER_LIST={CUSTOMER_LIST}
+                                                    DELIVERY_BOY_LIST={DELIVERY_BOY_LIST}
+                                                    deleveryGasEditUiGasList={deleveryGasEditUiGasList}
+                                                    onSuccess={handleSuccess}
+                                                    createdAt={null}
+                                                />
+
+                                            </>)
+                                        }
+                                        <Divider sx={{ flexGrow: 1, opacity: 0 }} />
+                                        <Button
+                                            color={deleteMode ? "primary" : "danger"}
+                                            variant={deleteMode ? "solid" : "outlined"}
                                             size="sm"
                                             onClick={() => {
-                                                handleDeleteSubmit();
+                                                if (deleteMode) {
+                                                    setDeleteIds([]);
+                                                }
+                                                setDeleteMode(!deleteMode);
                                             }}
                                         >
                                             <Stack
@@ -1019,206 +1038,232 @@ export default function DeliveryHistory() {
                                                 gap={0.5}
                                                 alignItems="center"
                                             >
-                                                <MdDeleteForever/>
-                                                <span className="font-black transition-all duration-300">Delete</span>
+                                                {deleteMode ? <IoClose /> : <MdDeleteForever />}
+                                                <span className="font-black transition-all duration-300">
+                                                    {
+                                                        deleteMode ? "Cancel" : "Delete"
+                                                    }
+                                                </span>
                                             </Stack>
-                                        </Button>)
-                                    }
-                                    <Divider sx={{flexGrow: 1, opacity: 0}}/>
-                                    {
-                                        !deleteMode && (<>
-                                            <span style={{fontWeight: "bold", color: "black", whiteSpace: "nowrap"}}>Reverse Order</span>
-                                            <Switch
-                                                checked={descending}
-                                                onChange={(event) => {
-                                                    setDescending(event.target.checked);
+                                        </Button>
+                                        {
+                                            deleteMode && (<Button
+                                                color="danger"
+                                                variant="solid"
+                                                size="sm"
+                                                onClick={() => {
+                                                    handleDeleteSubmit();
                                                 }}
-                                            />
-                                            <Divider sx={{backgroundColor: "grey"}} orientation="vertical"/>
-                                            <span style={{fontWeight: "bold", color: "black", whiteSpace: "nowrap"}}>
-                         Customer :
-                    </span>
-                                            <Autocomplete
-                                                placeholder="Select Customer"
-                                                options={[{id: null, label: "Show All"}, ...CUSTOMER_LIST]}
-                                                value={[{
-                                                    id: null,
-                                                    label: "Show All"
-                                                }, ...CUSTOMER_LIST].find(option => option.id === customerId) || null}
-                                                getOptionLabel={(option) => option.label}
-                                                isOptionEqualToValue={(option, value) => option?.id === value?.id}
-                                                onChange={(_, value) => {
-                                                    //setCustomerId(value?.id ?? null);
-                                                    const id = value?.id ?? null;
-                                                    setSessionVal("customerId", id); // immediate session update if desired
-                                                    setTheCustomerId(id);             // immediate UI update
-                                                    debouncedLoadForCustomer(id);     // debounced network/load
-                                                }}
-                                                sx={{fontWeight: 'bold', minWidth: 150}}
-                                            />
-                                            <Divider sx={{backgroundColor: "grey"}} orientation="vertical"/>
-                                            <span style={{fontWeight: "bold", color: "black", whiteSpace: "nowrap"}}>
-                         Delivery Boy :
-                    </span>
-                                            <Select
-                                                defaultValue={deliverBoyId || null}
-                                                placeholder="Select Delivery Boy"
-                                                onChange={(event, value) => {
-                                                    setDeliverBoyId(value === "" ? null : value);
-                                                }}
-                                                sx={{minWidth: 150}}
                                             >
-                                                <Option value="">Show All</Option>
-                                                {[...DELIVERY_BOY_LIST.entries()].map(([courierId, user]) => (
-                                                    <Option key={courierId} value={courierId}>
-                                                        {titleCase(user.name)}
-                                                    </Option>
-                                                ))}
-                                            </Select>
-                                            <Divider sx={{backgroundColor: "grey"}} orientation="vertical"/>
-                                            <span style={{fontWeight: "bold", color: "black", whiteSpace: "nowrap"}}>
-                         Date :
-                    </span>
-                                            <Input
-                                                type="date"
-                                                defaultValue={dateStart}
-                                                onChange={(event) => {
-                                                    setDateStart(event.target.value);
-                                                }}
-                                                sx={{minWidth: 150}}
-                                            />
-                                            <Input
-                                                type="date"
-                                                defaultValue={dateEnd}
-                                                onChange={(event) => {
-                                                    setDateEnd(event.target.value);
-                                                }}
-                                                sx={{minWidth: 150}}
-                                            />
-                                        </>)
-                                    }
+                                                <Stack
+                                                    direction="row"
+                                                    gap={0.5}
+                                                    alignItems="center"
+                                                >
+                                                    <MdDeleteForever />
+                                                    <span className="font-black transition-all duration-300">Delete</span>
+                                                </Stack>
+                                            </Button>)
+                                        }
+                                        <Divider sx={{ flexGrow: 1, opacity: 0 }} />
+                                        {
+                                            !deleteMode && (<>
+                                                <span style={{ fontWeight: "bold", color: "black", whiteSpace: "nowrap" }}>Reverse Order</span>
+                                                <Switch
+                                                    checked={descending}
+                                                    onChange={(event) => {
+                                                        setDescending(event.target.checked);
+                                                    }}
+                                                />
+                                                <Divider sx={{ backgroundColor: "grey" }} orientation="vertical" />
+                                                <span style={{ fontWeight: "bold", color: "black", whiteSpace: "nowrap" }}>
+                                                    Customer :
+                                                </span>
+                                                <Autocomplete
+                                                    placeholder="Select Customer"
+                                                    options={[{ id: null, label: "Show All" }, ...CUSTOMER_LIST]}
+                                                    value={[{
+                                                        id: null,
+                                                        label: "Show All"
+                                                    }, ...CUSTOMER_LIST].find(option => option.id === customerId) || null}
+                                                    getOptionLabel={(option) => option.label}
+                                                    isOptionEqualToValue={(option, value) => option?.id === value?.id}
+                                                    onChange={(_, value) => {
+                                                        //setCustomerId(value?.id ?? null);
+                                                        const id = value?.id ?? null;
+                                                        setSessionVal("customerId", id); // immediate session update if desired
+                                                        setTheCustomerId(id);             // immediate UI update
+                                                        debouncedLoadForCustomer(id);     // debounced network/load
+                                                    }}
+                                                    sx={{ fontWeight: 'bold', minWidth: 150 }}
+                                                />
+                                                <Divider sx={{ backgroundColor: "grey" }} orientation="vertical" />
+                                                <span style={{ fontWeight: "bold", color: "black", whiteSpace: "nowrap" }}>
+                                                    Delivery Boy :
+                                                </span>
+                                                <Select
+                                                    defaultValue={deliverBoyId || null}
+                                                    placeholder="Select Delivery Boy"
+                                                    onChange={(event, value) => {
+                                                        setDeliverBoyId(value === "" ? null : value);
+                                                    }}
+                                                    sx={{ minWidth: 150 }}
+                                                >
+                                                    <Option value="">Show All</Option>
+                                                    {[...DELIVERY_BOY_LIST.entries()].map(([courierId, user]) => (
+                                                        <Option key={courierId} value={courierId}>
+                                                            {titleCase(user.name)}
+                                                        </Option>
+                                                    ))}
+                                                </Select>
+                                                <Divider sx={{ backgroundColor: "grey" }} orientation="vertical" />
+                                                <span style={{ fontWeight: "bold", color: "black", whiteSpace: "nowrap" }}>
+                                                    Date :
+                                                </span>
+                                                <Input
+                                                    type="date"
+                                                    defaultValue={dateStart}
+                                                    onChange={(event) => {
+                                                        setDateStart(event.target.value);
+                                                    }}
+                                                    sx={{ minWidth: 150 }}
+                                                />
+                                                <Input
+                                                    type="date"
+                                                    defaultValue={dateEnd}
+                                                    onChange={(event) => {
+                                                        setDateEnd(event.target.value);
+                                                    }}
+                                                    sx={{ minWidth: 150 }}
+                                                />
+                                            </>)
+                                        }
+                                    </Stack>
+                                    <Divider className="bg-white h-1" />
                                 </Stack>
-                                <Divider className="bg-white h-1"/>
-                            </Stack>
-                        </th>
-                    </tr>
-                    <tr>
-                        <th style={{width: 40}} aria-label="empty"/>
-                        {columns.map((col, index) => (
-                            <th
-                                key={`${index}_${col.column}`}
-                                style={{
-                                    textAlign: "center",
-                                    backgroundColor: col.color,
-                                    wordBreak: "break-space",
-                                }}
-                            >
-                                {col.column}
                             </th>
-                        ))}
-                    </tr>
+                        </tr>
+                        <tr>
+                            <th style={{ width: 40 }} aria-label="empty" />
+                            {columns.map((col, index) => (
+                                <th
+                                    key={`${index}_${col.column}`}
+                                    style={{
+                                        textAlign: "center",
+                                        backgroundColor: col.color,
+                                        wordBreak: "break-space",
+                                    }}
+                                >
+                                    {col.column}
+                                </th>
+                            ))}
+                        </tr>
                     </thead>
                     <tbody>
-                    {deliveriesMapList.length === 0 && (
-                        <tr>
-                            <td colSpan={columns.length + 1}
-                                style={{textAlign: "center", fontWeight: "bold", fontSize: "1.8em"}}>
-                                {
-                                    (!loading) ? "No Deliveries Found" : "Please Wait..."
-                                }
-                            </td>
-                        </tr>
-                    )}
-                    {
-                        deliveriesMapList
-                    }
+                        {deliveriesMapList.length === 0 && (
+                            <tr>
+                                <td colSpan={columns.length + 1}
+                                    style={{ textAlign: "center", fontWeight: "bold", fontSize: "1.8em" }}>
+                                    {
+                                        (!loading) ? "No Deliveries Found" : "Please Wait..."
+                                    }
+                                </td>
+                            </tr>
+                        )}
+                        {
+                            deliveriesMapList
+                        }
                     </tbody>
                     <tfoot>
-                    <tr>
-                        <td colSpan={columns.length + 1}>
-                            <Stack
-                                direction="row"
-                                gap={1}
-                                alignItems="center"
-                            >
-                                {
-                                    [...(kgSet || [])].sort((a, b) => a - b).map((kg, index) => (
-                                        <Stack
-                                            key={`kgCountList${index}`}
-                                            className="rounded-md py-0.5 px-2.5 border border-transparent text-xs !font-mono text-black transition-all shadow-sm"
-                                            direction="row"
-                                            gap={.5}
-                                            alignItems="center"
-                                            sx={{
-                                                backgroundColor: randomLightColor(kg),
-                                            }}
-                                        >
-                                            <span>{kg}kg</span>
-                                            <Divider className="!bg-black" orientation="vertical"/>
-                                            <MdCallMade size={"0.8em"}/>
-                                            <span>
-                                                {`nc: ${(kgsCount?.[`nc_${kg}`] || 0)} + ${(kgsCount?.[`qty_${kg}`] || 0)} = ${(kgsCount?.[`qty_${kg}`] || 0) + (kgsCount?.[`nc_${kg}`] || 0)}`}
-                                            </span>
-                                            <Divider className="!bg-black" orientation="vertical"/>
-                                            <MdCallReceived
-                                                size={"0.8em"}
+                        <tr>
+                            <td colSpan={columns.length + 1}>
+                                <Stack
+                                    direction="row"
+                                    gap={1}
+                                    alignItems="center"
+                                >
+                                    {
+                                        [...(kgSet || [])].sort((a, b) => a - b).map((kg, index) => (
+                                            <Stack
+                                                key={`kgCountList${index}`}
+                                                className="rounded-md py-0.5 px-2.5 border border-transparent text-xs !font-mono text-black transition-all shadow-sm"
+                                                direction="row"
+                                                gap={.5}
+                                                alignItems="center"
+                                                sx={{
+                                                    backgroundColor: randomLightColor(kg),
+                                                }}
+                                            >
+                                                <span>{kg}kg</span>
+                                                <Divider className="!bg-black" orientation="vertical" />
+                                                <MdCallMade size={"0.8em"} />
+                                                <span>
+                                                    {`nc:${(kgsCount?.[`nc_${kg}`] || 0)} + ${(kgsCount?.[`qty_${kg}`] || 0)} = ${(kgsCount?.[`qty_${kg}`] || 0) + (kgsCount?.[`nc_${kg}`] || 0)}`}
+                                                </span>
+                                                <Divider className="!bg-black" orientation="vertical" />
+                                                <MdCallReceived
+                                                    size={"0.8em"}
                                                 /* style={{
                                                      fontSize: "0.5em",
                                                  }}*/
-                                            />
-                                            <span>{kgsCount?.[`mt_${kg}`] || 0}</span>
-                                            <Divider className="!bg-black" orientation="vertical"/>
-                                            <MdCallMissedOutgoing size={"0.8em"}/>
-                                            <span>{(kgsCount?.[`qty_${kg}`] || 0) - (kgsCount?.[`mt_${kg}`] || 0)}</span>
-                                        </Stack>
-                                    ))
-                                }
-                                <Divider className="!bg-transparent flex-grow" orientation="vertical"/>
-                                <Stack
-                                    className="rounded-md  py-0.5 px-2.5 border border-transparent text-sm text-black transition-all shadow-sm"
-                                    direction="row"
-                                    gap={1}
-                                    alignItems="center"
-                                    sx={{
-                                        backgroundColor: "#BBDCE5",
-                                    }}
-                                >
-                                    <span
-                                        className="text-black !font-mono text-xs">Amt: ₹{decimalFix(grandTotalAmount)}</span>
-                                </Stack>
-                                <Stack
-                                    className="rounded-md  py-0.5 px-2.5 border border-transparent text-sm text-black transition-all shadow-sm"
-                                    direction="row"
-                                    gap={1}
-                                    alignItems="center"
-                                    sx={{
-                                        backgroundColor: "#D3ECCD",
-                                    }}
-                                >
-                                    <span
-                                        className="text-black !font-mono text-xs">Cash: ₹{decimalFix(grandTotalCash)} + Online : ₹{decimalFix(grandTotalOnline)} = ₹{decimalFix(grandTotalPaid)}</span>
-                                    {/* <span
+                                                />
+                                                <span>
+                                                    {
+                                                        `nc:${kgsCount?.[`mt_nc_${kg}`] || 0} + ${kgsCount?.[`mt_${kg}`] || 0} = ${kgsCount?.[`mt_${kg}`] + kgsCount?.[`mt_nc_${kg}`] || 0}`
+                                                    }
+                                                </span>
+                                                <Divider className="!bg-black" orientation="vertical" />
+                                                <MdCallMissedOutgoing size={"0.8em"} />
+                                                <span>{(kgsCount?.[`qty_${kg}`] || 0) - (kgsCount?.[`mt_${kg}`] || 0)}</span>
+                                            </Stack>
+                                        ))
+                                    }
+                                    <Divider className="!bg-transparent flex-grow" orientation="vertical" />
+                                    <Stack
+                                        className="rounded-md  py-0.5 px-2.5 border border-transparent text-sm text-black transition-all shadow-sm"
+                                        direction="row"
+                                        gap={1}
+                                        alignItems="center"
+                                        sx={{
+                                            backgroundColor: "#BBDCE5",
+                                        }}
+                                    >
+                                        <span
+                                            className="text-black !font-mono text-xs">Amt: ₹{decimalFix(grandTotalAmount)}</span>
+                                    </Stack>
+                                    <Stack
+                                        className="rounded-md  py-0.5 px-2.5 border border-transparent text-sm text-black transition-all shadow-sm"
+                                        direction="row"
+                                        gap={1}
+                                        alignItems="center"
+                                        sx={{
+                                            backgroundColor: "#D3ECCD",
+                                        }}
+                                    >
+                                        <span
+                                            className="text-black !font-mono text-xs">Cash: ₹{decimalFix(grandTotalCash)} + Online : ₹{decimalFix(grandTotalOnline)} = ₹{decimalFix(grandTotalPaid)}</span>
+                                        {/* <span
                                         className="text-black">Online ₹{decimalFix(grandTotalPaid)}</span>
                                     <span
                                         className="text-black">Cash ₹{decimalFix(grandTotalPaid)}</span>
                                     <span
                                         className="text-black">Total ₹{decimalFix(grandTotalPaid)}</span>*/}
+                                    </Stack>
+                                    <Stack
+                                        className="rounded-md  py-0.5 px-2.5 border border-transparent text-xs text-black transition-all shadow-sm"
+                                        direction="row"
+                                        gap={1}
+                                        alignItems="center"
+                                        sx={{
+                                            backgroundColor: "#FFF1CA",
+                                        }}
+                                    >
+                                        <span
+                                            className="text-black !font-mono text-xs ">Bal: ₹{decimalFix(grandTotalAmount - grandTotalPaid)}</span>
+                                    </Stack>
                                 </Stack>
-                                <Stack
-                                    className="rounded-md  py-0.5 px-2.5 border border-transparent text-xs text-black transition-all shadow-sm"
-                                    direction="row"
-                                    gap={1}
-                                    alignItems="center"
-                                    sx={{
-                                        backgroundColor: "#FFF1CA",
-                                    }}
-                                >
-                                    <span
-                                        className="text-black !font-mono text-xs ">Bal: ₹{decimalFix(grandTotalAmount - grandTotalPaid)}</span>
-                                </Stack>
-                            </Stack>
-                        </td>
-                    </tr>
+                            </td>
+                        </tr>
                     </tfoot>
                 </Table>
             </Sheet>
@@ -1227,14 +1272,14 @@ export default function DeliveryHistory() {
 }
 
 export const DataCell = React.memo(({
-                                        bgColor = "#ffffff",
-                                        correction = false,
-                                        textNoWrap = "!text-nowrap",
-                                        colspan = 0,
-                                        children
-                                    }) => {
+    bgColor = "#ffffff",
+    correction = false,
+    textNoWrap = "!text-nowrap",
+    colspan = 0,
+    children
+}) => {
     return (
-        <td colSpan={colspan} style={{backgroundColor: `${bgColor}`}}>
+        <td colSpan={colspan} style={{ backgroundColor: `${bgColor}` }}>
             <div
                 className={`${textNoWrap} !p-1`}
                 style={{

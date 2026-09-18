@@ -1,12 +1,12 @@
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import "./App.css";
-import {HashRouter, Route, Routes} from "react-router-dom";
-import {Header, Home, Sidebar} from "./components";
+import { HashRouter, Route, Routes } from "react-router-dom";
+import { Header, Home, Sidebar } from "./components";
 
 import Warehouse from "./components/view/Warehouse.jsx";
 
-import {ViewCustomer,} from "./crud";
+import { ViewCustomer, } from "./crud";
 import {
     Box,
     Button,
@@ -21,21 +21,21 @@ import {
     Stack,
     Typography,
 } from "@mui/joy";
-import {useDispatch, useSelector} from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 // import { fetchCheckLogin } from "./state/CheckLogin";
 // import { getUserDataFromCookie } from "./services/Api";
 import DeliveryBoyDetails from "./components/view/DeliveryBoyDetails.jsx";
 import Expences from "./components/view/Expences.jsx";
 import Purchase from "./components/view/Purchase.jsx";
-import {Report} from "./components/view/Report.jsx";
+import { Report } from "./components/view/Report.jsx";
 // import DeliveryHistory from "./components/view/DeliveryHistory.jsx";
 import deliveryHistory from "./components/view/DeliveryHistory.jsx";
-import {FcHighPriority} from "react-icons/fc";
-import {clearError, login, validateOtp} from "./redux/authSlice.js";
-import {getU, removeU} from "./db/users.js";
-import {FaArrowRightToBracket} from "react-icons/fa6";
-import {FaUserCircle} from "react-icons/fa";
-import {IoCloseSharp} from "react-icons/io5";
+import { FcHighPriority } from "react-icons/fc";
+import { clearError, login, validateOtp } from "./redux/authSlice.js";
+import { getU, removeU } from "./db/users.js";
+import { FaArrowRightToBracket } from "react-icons/fa6";
+import { FaUserCircle } from "react-icons/fa";
+import { IoCloseSharp } from "react-icons/io5";
 import GasUi from "./components/view/GasUi.jsx";
 import Attendance from "./components/attendance/Attendance.jsx";
 
@@ -52,6 +52,7 @@ function App() {
     const loginData = useSelector((state) => state.loginV2);
 
     const [otp, setOtp] = useState("");
+    const otpDebounceRef = useRef(null);
     let isLogoded = sessionStorage?.getItem("authToken") !== null;
     let otpVerification = sessionStorage?.getItem("otpToken") !== null;
     //console.log(otpVerification, isLogoded)
@@ -125,7 +126,7 @@ function App() {
                 orientation="vertical"
                 size="lg"
                 variant="outlined"
-                sx={{mt: 10}}
+                sx={{ mt: 10 }}
             >
                 <Stack
                     direction="column"
@@ -219,87 +220,87 @@ function App() {
                     </Button>
                     {
                         (us.length > 0) ? (<>
-                                <Divider/>
-                                <span>
-                                    Saved Login
-                                </span>
-                                <Stack
-                                    direction={"column"}
-                                    spacing={.5}
-                                    sx={{
-                                        display:
-                                            loginData.isLoading
-                                                ? "none"
-                                                : "block",
-                                    }}
-                                >
-                                    {us.map((item, index) => (
-                                        <Box
-                                            key={`user-card-${index}${item.i}`}
+                            <Divider />
+                            <span>
+                                Saved Login
+                            </span>
+                            <Stack
+                                direction={"column"}
+                                spacing={.5}
+                                sx={{
+                                    display:
+                                        loginData.isLoading
+                                            ? "none"
+                                            : "block",
+                                }}
+                            >
+                                {us.map((item, index) => (
+                                    <Box
+                                        key={`user-card-${index}${item.i}`}
+                                        sx={{
+                                            display: "flex",
+                                            flexDirection: "row",
+                                            gap: .5,
+                                        }}
+                                    >
+                                        <Button
+                                            variant={"soft"}
+                                            color={"danger"}
+                                            onClick={() => {
+                                                try {
+                                                    removeU(item.i).then(() => {
+                                                        const updatedUs = us.filter(u => u.i !== item.i);
+                                                        setUs(updatedUs);
+                                                    });
+                                                } catch (e) {
+                                                    console.error(e);
+                                                }
+                                            }}
                                             sx={{
-                                                display: "flex",
-                                                flexDirection: "row",
-                                                gap: .5,
+                                                cursor: "pointer",
                                             }}
                                         >
-                                            <Button
-                                                variant={"soft"}
-                                                color={"danger"}
-                                                onClick={() => {
-                                                    try {
-                                                        removeU(item.i).then(() => {
-                                                            const updatedUs = us.filter(u => u.i !== item.i);
-                                                            setUs(updatedUs);
-                                                        });
-                                                    } catch (e) {
-                                                        console.error(e);
-                                                    }
-                                                }}
-                                                sx={{
-                                                    cursor: "pointer",
-                                                }}
+                                            <IoCloseSharp />
+                                        </Button>
+                                        <Card
+                                            variant={"soft"}
+                                            color={"success"}
+                                            onClick={() => {
+                                                dispatch(
+                                                    login(item.i, item.c)
+                                                );
+                                            }}
+                                            sx={{
+                                                cursor: "pointer",
+                                                flexGrow: 1,
+                                                transition: "all 0.3s ease-in-out",
+                                                //hover effect
+                                                "&:hover": {
+                                                    backgroundColor: "#59AC77",
+                                                    color: "white",
+                                                }
+                                            }}
+                                        >
+                                            <Stack
+                                                direction={"row"}
+                                                spacing={2}
+                                                alignItems={"center"}
                                             >
-                                                <IoCloseSharp/>
-                                            </Button>
-                                            <Card
-                                                variant={"soft"}
-                                                color={"success"}
-                                                onClick={() => {
-                                                    dispatch(
-                                                        login(item.i, item.c)
-                                                    );
-                                                }}
-                                                sx={{
-                                                    cursor: "pointer",
-                                                    flexGrow: 1,
-                                                    transition: "all 0.3s ease-in-out",
-                                                    //hover effect
-                                                    "&:hover": {
-                                                        backgroundColor: "#59AC77",
-                                                        color: "white",
-                                                    }
-                                                }}
-                                            >
-                                                <Stack
-                                                    direction={"row"}
-                                                    spacing={2}
-                                                    alignItems={"center"}
-                                                >
-                                                    <FaUserCircle/>
-                                                    <span>
+                                                <FaUserCircle />
+                                                <span>
                                                     <strong>{item.i}</strong>
                                                 </span>
-                                                    <Box sx={{flexGrow: 1}}/>
-                                                    <span>
+                                                <Box sx={{ flexGrow: 1 }} />
+                                                <span>
                                                     Login
                                                 </span>
-                                                    <FaArrowRightToBracket/>
-                                                </Stack>
-                                            </Card>
-                                        </Box>
-                                    ))}
-                                </Stack>
-                            </>
+                                                <FaArrowRightToBracket />
+                                            </Stack>
+                                        </Card>
+                                    </Box>
+                                ))}
+                            </Stack>
+                        </>
                         ) : (
                             <>
                             </>
@@ -329,14 +330,14 @@ function App() {
                 }}
             >
                 <Typography level="title-lg"
-                            sx={{
-                                fontWeight: "bold",
-                                fontSize: "16px",
-                            }}
+                    sx={{
+                        fontWeight: "bold",
+                        fontSize: "16px",
+                    }}
                 >
                     Shree Ram Distributer
                 </Typography>
-                <FcHighPriority style={{fontSize: "128px",}}/>
+                <FcHighPriority style={{ fontSize: "128px", }} />
                 <Typography level="title-lg" sx={{
                     fontWeight: "bold",
                     fontSize: "32px",
@@ -367,17 +368,17 @@ function App() {
                 }}
             >
                 <Stack
-                    sx={{width: "100vw", p: 1,}}
+                    sx={{ width: "100vw", p: 1, }}
                     direction="row"
                     alignContent={"center"}
                     justifyContent={"flex-start"}
                     alignItems={"center"}
                 >
-                    <Header OpenSidebar={OpenSidebar}/>
-                    <img src="vite.svg" style={{height: "48px"}} alt="logo"/>
+                    <Header OpenSidebar={OpenSidebar} />
+                    <img src="vite.svg" style={{ height: "48px" }} alt="logo" />
                     <Typography
                         level="title-lg"
-                        sx={{fontWeight: "bold", color: "#9e9ea4"}}
+                        sx={{ fontWeight: "bold", color: "#9e9ea4" }}
                     >
                         Shree Ram Distributer
                     </Typography>
@@ -385,11 +386,11 @@ function App() {
                 {
                     (isLogoded) ? <HashRouter>
                         <Stack
-                            sx={{flexGrow: 1, overflow: "hidden"}}
+                            sx={{ flexGrow: 1, overflow: "hidden" }}
                             direction="row"
                         >
                             <Box
-                                sx={{height: "100%",}}
+                                sx={{ height: "100%", }}
                             >
                                 <Sidebar
                                     openSidebarToggle={openSidebarToggle}
@@ -405,8 +406,8 @@ function App() {
                                 }}
                             >
                                 <Routes>
-                                    <Route path="/" Component={Home}/>{/*✅*/}
-                                    <Route path="/admin/" Component={Home}/>{/*✅*/}
+                                    <Route path="/" Component={Home} />{/*✅*/}
+                                    <Route path="/admin/" Component={Home} />{/*✅*/}
                                     {/* delivery boy */}
                                     <Route
                                         path="/admin/readDeliveryBoy"
@@ -414,7 +415,7 @@ function App() {
                                     />{/*✅*/}
                                     <Route
                                         path="/admin/expense"
-                                        element={<Expences/>}
+                                        element={<Expences />}
                                     />
                                     {/* wherehouse */}
                                     <Route
@@ -447,7 +448,7 @@ function App() {
                                     />
                                     <Route
                                         path="/admin/report"
-                                        element={<Report isLogged={true}/>}
+                                        element={<Report isLogged={true} />}
                                     />
                                 </Routes>
                             </Box>
@@ -455,7 +456,7 @@ function App() {
                     </HashRouter> : (
                         (isReportPathValid) ? <HashRouter>
                             <Stack
-                                sx={{flexGrow: 1, overflow: "hidden"}}
+                                sx={{ flexGrow: 1, overflow: "hidden" }}
                                 direction="row"
                             >
                                 <Box
@@ -468,15 +469,15 @@ function App() {
                                     <Routes>
                                         <Route
                                             path="/admin/report"
-                                            element={<Report isLogged={false}/>}
+                                            element={<Report isLogged={false} />}
                                         />
                                     </Routes>
                                 </Box>
                             </Stack>
                         </HashRouter> : (
-                            (!otpVerification) ? <LoginUI/> : <>
+                            (!otpVerification) ? <LoginUI /> : <>
                                 <Stack
-                                    sx={{flexGrow: 1, overflow: "hidden"}}
+                                    sx={{ flexGrow: 1, overflow: "hidden" }}
                                     direction="column"
                                     justifyContent="flex-start"
                                     alignItems="center"
@@ -492,7 +493,26 @@ function App() {
                                         variant="soft"
                                         type="number"
                                         onChange={(event) => {
-                                            setOtp(event.target.value);
+                                            console.log(1);
+                                            const val = event.target.value;
+                                            setOtp(val);
+                                            // clear any pending debounce
+                                            if (otpDebounceRef.current) clearTimeout(otpDebounceRef.current);
+                                            if (val.length === 6) {
+                                                console.log("OTP: ", val);
+                                                // 800ms debounce — skip if request already in-flight
+                                                otpDebounceRef.current = setTimeout(() => {
+                                                    if (!loginData.isLoading) {
+                                                        dispatch(validateOtp(val));
+                                                    }
+                                                }, 800);
+                                            }
+                                        }}
+                                        onKeyDown={(event) => {
+                                            if (event.key === "Enter") {
+                                                if (otpDebounceRef.current) clearTimeout(otpDebounceRef.current);
+                                                dispatch(validateOtp(otp));
+                                            }
                                         }}
                                     />
                                     <CircularProgress
