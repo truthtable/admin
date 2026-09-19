@@ -55,24 +55,82 @@ export const Report = ({ isLogged }) => {
             return;
         }
         setIsDownloading(true);
-        // defer so React can paint the loading overlay before blocking
-        setTimeout(async () => {
-            try {
-                const html2pdf = (await import('html2pdf.js')).default;
-                await html2pdf()
-                    .set({
-                        margin: 8,
-                        filename: 'report.pdf',
-                        image: { type: 'jpeg', quality: 0.92 },
-                        html2canvas: { scale: 1, useCORS: true, logging: false },
-                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
-                    })
-                    .from(element)
-                    .save();
-            } finally {
-                setIsDownloading(false);
-            }
-        }, 50);
+        // Double rAF: first frame schedules React paint, second ensures browser actually painted
+        requestAnimationFrame(() => {
+            requestAnimationFrame(async () => {
+                try {
+                    const html2pdf = (await import('html2pdf.js')).default;
+                    await html2pdf()
+                        .set({
+                            margin: [4, 4, 4, 4],
+                            filename: 'report.pdf',
+                            image: { type: 'jpeg', quality: 0.95 },
+                            html2canvas: {
+                                scale: 1.0,
+                                useCORS: true,
+                                logging: false,
+                                scrollY: 0,
+                                windowWidth: element.scrollWidth,
+                                windowHeight: element.scrollHeight,
+                                onclone: (clonedDoc) => {
+                                    // 1. Fix oklch — html2canvas 1.4.x can't parse it (Tailwind v4 uses it)
+                                    clonedDoc.querySelectorAll('style').forEach(s => {
+                                        s.textContent = s.textContent.replace(/oklch\([^)]*\)/g, 'transparent');
+                                    });
+                                    // 2. Remove overflow/height constraints so full content is captured
+                                    clonedDoc.querySelectorAll('*').forEach(el => {
+                                        const s = el.style;
+                                        if (s.overflow === 'auto' || s.overflow === 'hidden' || s.overflow === 'scroll') {
+                                            s.overflow = 'visible';
+                                        }
+                                        if (s.overflowX || s.overflowY) {
+                                            s.overflowX = 'visible';
+                                            s.overflowY = 'visible';
+                                        }
+                                        if (s.height && s.height !== 'auto') s.height = 'auto';
+                                        if (s.maxHeight) s.maxHeight = 'none';
+                                    });
+                                    // 3. Prevent crops at page breaks — applies to table rows AND div-based summary sections
+                                    clonedDoc.querySelectorAll('tr, td, th, div, p, section, aside, figure').forEach(el => {
+                                        el.style.pageBreakInside = 'avoid';
+                                        el.style.breakInside = 'avoid';
+                                    });
+                                    // 4. Reduce font size for compact PDF output
+                                    clonedDoc.querySelectorAll('*').forEach(el => {
+                                        const cs = window.getComputedStyle(
+                                            element.querySelectorAll('*')[
+                                            [...clonedDoc.querySelectorAll('*')].indexOf(el)
+                                            ] || document.body
+                                        );
+                                        const fs = parseFloat(cs.fontSize);
+                                        if (fs > 0) el.style.fontSize = `${fs * 0.75}px`;
+                                    });
+                                    // 5. Bake computed colors as inline styles so elements keep their look
+                                    const origEls = element.querySelectorAll('*');
+                                    const clonedEls = clonedDoc.querySelectorAll('*');
+                                    origEls.forEach((origEl, i) => {
+                                        const clonedEl = clonedEls[i];
+                                        if (!clonedEl) return;
+                                        const cs = window.getComputedStyle(origEl);
+                                        ['color', 'background-color', 'border-color', 'border-top-color', 'border-bottom-color'].forEach(prop => {
+                                            const val = cs.getPropertyValue(prop);
+                                            if (val && val !== 'rgba(0, 0, 0, 0)') {
+                                                clonedEl.style.setProperty(prop, val);
+                                            }
+                                        });
+                                    });
+                                },
+                            },
+                            pagebreak: { mode: ['css', 'legacy'], before: ['#pdf-summary'] },
+                            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                        })
+                        .from(element)
+                        .save();
+                } finally {
+                    setIsDownloading(false);
+                }
+            });
+        });
     };
     const [selected, setSelected] = React.useState(() => (
         orderData?.orderId ? PURCHASE : CUSTOMER
@@ -190,6 +248,7 @@ export const Report = ({ isLogged }) => {
         const KGS = new Set();
         const KGS_COUNT = []
         const rows = [];
+        const pdfRows = [];  // plain data for jsPDF download
         const heads = [];
 
         const apiTotalPaid = report?.totalPaid || 0;
@@ -231,6 +290,9 @@ export const Report = ({ isLogged }) => {
                     const gasDataMap = new MapObjectManager();
                     try {
                         delivery.gas_deliveries.forEach((gas, index) => {
+
+
+
                             //console.log(gas);
                             const k = `kg${gas.gas_cylinder.kg}`;
                             const entry = {};
@@ -293,7 +355,7 @@ export const Report = ({ isLogged }) => {
                                 subTotal += (temp.rate ? total : 0) + (temp.ncRate ? ncTotal : 0) - (temp.mt_ncRate ? mtNcTotal : 0);
 
                                 temptKgsList.push(
-                                    <DataCell correction={correction} key={`1delivery-${delivery.id}-kg${kg}`}
+                                    <DataCell correction={correction} fontWeight={"normal"} key={`1delivery-${delivery.id}-kg${kg}`}
                                         bgColor={randomLightColor(kg)}>
                                         <span>{temp.qty || "-"}</span>
                                         {temp.nc && (<>
@@ -305,7 +367,7 @@ export const Report = ({ isLogged }) => {
                                             <span className="text-red-700">-</span>
                                         </>)}
                                     </DataCell>,
-                                    <DataCell correction={correction} key={`2delivery-${delivery.id}-kg${kg}`}
+                                    <DataCell correction={correction} fontWeight={"normal"} key={`2delivery-${delivery.id}-kg${kg}`}
                                         bgColor={randomLightColor(kg)}>
                                         {temp.mt || "-"}
                                         {temp.nc && (<>
@@ -317,7 +379,7 @@ export const Report = ({ isLogged }) => {
                                             <span className="text-red-700">{temp.mt_nc}</span>
                                         </>)}
                                     </DataCell>,
-                                    <DataCell correction={correction} key={`3delivery-${delivery.id}-kg${kg}`}
+                                    <DataCell correction={correction} fontWeight={"normal"} key={`3delivery-${delivery.id}-kg${kg}`}
                                         bgColor={randomLightColor(kg)}>
                                         <span>{temp.rate || "-"}</span>
                                         {temp.nc && (<>
@@ -329,7 +391,7 @@ export const Report = ({ isLogged }) => {
                                             <span className="text-red-700">{temp.mt_ncRate}</span>
                                         </>)}
                                     </DataCell>,
-                                    <DataCell correction={correction} key={`4delivery-${delivery.id}-kg${kg}`}
+                                    <DataCell correction={correction} fontWeight={"normal"} key={`4delivery-${delivery.id}-kg${kg}`}
                                         bgColor={randomLightColor(kg)}>
                                         <span>{total}</span>
                                         {temp.nc && (<>
@@ -344,13 +406,13 @@ export const Report = ({ isLogged }) => {
                                 );
                             } else {
                                 temptKgsList.push(
-                                    <DataCell correction={correction} key={`1delivery-${delivery.id}-kg${kg}`}
+                                    <DataCell correction={correction} fontWeight={"normal"} key={`1delivery-${delivery.id}-kg${kg}`}
                                         bgColor={randomLightColor(kg)}>{"-"}</DataCell>,
-                                    <DataCell correction={correction} key={`2delivery-${delivery.id}-kg${kg}`}
+                                    <DataCell correction={correction} fontWeight={"normal"} key={`2delivery-${delivery.id}-kg${kg}`}
                                         bgColor={randomLightColor(kg)}>{"-"}</DataCell>,
-                                    <DataCell correction={correction} key={`3delivery-${delivery.id}-kg${kg}`}
+                                    <DataCell correction={correction} fontWeight={"normal"} key={`3delivery-${delivery.id}-kg${kg}`}
                                         bgColor={randomLightColor(kg)}>{"-"}</DataCell>,
-                                    <DataCell correction={correction} key={`4delivery-${delivery.id}-kg${kg}`}
+                                    <DataCell correction={correction} fontWeight={"normal"} key={`4delivery-${delivery.id}-kg${kg}`}
                                         bgColor={randomLightColor(kg)}>{"-"}</DataCell>
                                 );
                             }
@@ -365,19 +427,42 @@ export const Report = ({ isLogged }) => {
                         const note = "note"
                         rows.push([
                             <tr key={`dRow${i}`}>
-                                <DataCell textNoWrap={""} correction={correction}
+                                <DataCell textNoWrap={""} fontWeight={"normal"} correction={correction}
                                     key={`delivery-${i}-date`}>{date}</DataCell>
                                 {/*<DataCell correction={correction} key={`delivery-${i}-note`}>{note}</DataCell>*/}
                                 {temptKgsList}
-                                <DataCell correction={correction} key={`delivery-${i}-sub`}>{displaySubTotal}</DataCell>
-                                <DataCell correction={correction}
+                                <DataCell correction={correction} fontWeight={"normal"} key={`delivery-${i}-sub`}>{displaySubTotal}</DataCell>
+                                <DataCell correction={correction} fontWeight={"normal"} key={`delivery-${i}-cash`}>{dashIfZero(cash)}</DataCell>
+                                <DataCell correction={correction} fontWeight={"normal"}
                                     key={`delivery-${i}-online`}>{dashIfZero(online)}</DataCell>
-                                <DataCell correction={correction} key={`delivery-${i}-cash`}>{dashIfZero(cash)}</DataCell>
-                                <DataCell correction={correction}
+                                <DataCell correction={correction} fontWeight={"normal"}
                                     key={`delivery-${i}-received`}>{displayReceived}</DataCell>
-                                <DataCell correction={correction}
-                                    key={`delivery-${i}-balance`}>{(balance < 1) ? "-" : balance}</DataCell>
+                                <DataCell correction={correction} fontWeight={"normal"}
+                                    key={`delivery-${i}-balance`}>{balance === 0 ? "-" : balance}</DataCell>
                             </tr>
+                        ]);
+                        // plain data row for PDF
+                        const sortedKGSForPdf = [...KGS].sort((a, b) => a - b);
+                        const pdfKgCells = sortedKGSForPdf.flatMap(kg => {
+                            const t = gasDataMap.toObject()[`kg${kg}`];
+                            if (!t) return ['-', '-', '-', '-'];
+                            const tot = t.rate ? toNumber(t.qty) * toNumber(t.rate) : '-';
+                            const ncTot = t.ncRate ? toNumber(t.nc) * toNumber(t.ncRate) : '-';
+                            const mtNcTot = t.mt_ncRate ? toNumber(t.mt_nc) * toNumber(t.mt_ncRate) : '-';
+                            const qtyCell = [t.qty || '-', t.nc ? `NC:${t.nc}` : '', t.mt_nc ? `NC-MT:-` : ''].filter(Boolean).join('\n');
+                            const mtCell = [t.mt || '-', t.nc ? '-' : '', t.mt_nc ? String(t.mt_nc) : ''].filter(Boolean).join('\n');
+                            const rateCell = [t.rate || '-', t.ncRate ? `NC:${t.ncRate}` : '', t.mt_ncRate ? `NC-MT:${t.mt_ncRate}` : ''].filter(Boolean).join('\n');
+                            const totalCell = [tot, ncTot !== '-' ? `NC:${ncTot}` : '', mtNcTot !== '-' ? `NC-MT:-${mtNcTot}` : ''].filter(x => x !== '' && x !== '-').join('\n') || '-';
+                            return [qtyCell, mtCell, rateCell, totalCell];
+                        });
+                        pdfRows.push([
+                            date,
+                            ...pdfKgCells,
+                            displaySubTotal,
+                            dashIfZero(online),
+                            dashIfZero(cash),
+                            displayReceived,
+                            balance === 0 ? '-' : balance,
                         ]);
                     } catch (err) {
                         console.warn(err);
@@ -389,30 +474,65 @@ export const Report = ({ isLogged }) => {
         }
         //console.log(KGS_COUNT)
         heads.push([
-            <th key="h1date" className="!text-center !border-b-0">date</th>,
+            <th key="h1date" className="!text-center !border-b-0 bcrbi">date</th>,
             ...[...KGS].sort((a, b) => a - b).map(kg => {
                 const color = randomLightColor(kg);
                 return (<>
-                    <th key={`h2kg${kg}1`} className="!text-center !border-b-0" style={{ backgroundColor: color }}>
+                    <th key={`h2kg${kg}1`} className="!text-center !border-b-0 bcrbi" style={{ backgroundColor: color }}>
                         {kg}kg
                     </th>
-                    <th key={`h3mt${kg}2`} className="!text-center !border-b-0" style={{ backgroundColor: color }}>
+                    <th key={`h3mt${kg}2`} className="!text-center !border-b-0 bcrbi" style={{ backgroundColor: color }}>
                         mt
                     </th>
-                    <th key={`h4krate${kg}3`} className="!text-center !border-b-0" style={{ backgroundColor: color }}>
+                    <th key={`h4krate${kg}3`} className="!text-center !border-b-0 bcrbi" style={{ backgroundColor: color }}>
                         rate
                     </th>
-                    <th key={`h2total${kg}4`} className="!text-center !border-b-0" style={{ backgroundColor: color }}>
+                    <th key={`h2total${kg}4`} className="!text-center !border-b-0 bcrbi" style={{ backgroundColor: color }}>
                         total
                     </th>
                 </>)
             }),
-            <th key={`subt234`} className="!text-center !border-b-0">sub total</th>,
-            <th key={`cash345`} className="!text-center !border-b-0">cash</th>,
-            <th key={`upi34`} className="!text-center !border-b-0">online</th>,
-            <th key={`ttl354`} className="!text-center !border-b-0">total</th>,
-            <th key={`bal345`} className="!text-center !border-b-0">balance</th>,
+            <th key={`subt234`} className="!text-center !border-b-0 bcrbi">sub total</th>,
+            <th key={`cash345`} className="!text-center !border-b-0 bcrbi">cash</th>,
+            <th key={`upi34`} className="!text-center !border-b-0 bcrbi">online</th>,
+            <th key={`ttl354`} className="!text-center !border-b-0 bcrbi">total</th>,
+            <th key={`bal345`} className="!text-center !border-b-0 bcrbi">balance</th>,
         ])
+
+        // jsPDF autoTable header (plain strings)
+        const pdfHead = [
+            'Date',
+            ...[...KGS].sort((a, b) => a - b).flatMap(kg => [`${kg}kg`, 'MT', 'Rate', 'Total']),
+            'Sub Total', 'Online', 'Cash', 'Received', 'Balance',
+        ];
+
+        const handleDownloadPdf = async () => {
+            const jsPDF = (await import('jspdf')).default;
+            const autoTable = (await import('jspdf-autotable')).default;
+            const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+            const customerName = report?.customer?.user?.name ? titleCase(report.customer.user.name) : '';
+            const address = report?.customer?.user?.address ? titleCase(report.customer.user.address) : '';
+            const phone = report?.customer?.user?.phone_no || '';
+            doc.setFontSize(9);
+            doc.text(`Customer: ${customerName}`, 10, 8);
+            doc.text(`Address: ${address}`, 100, 8);
+            doc.text(`Phone: ${phone}`, 190, 8);
+            doc.text(`Period: ${startDate} to ${endDate}`, 240, 8);
+            autoTable(doc, {
+                head: [pdfHead],
+                body: pdfRows,
+                startY: 12,
+                styles: { fontSize: 7, cellPadding: 1 },
+                headStyles: { fillColor: [38, 48, 67], textColor: 255, fontStyle: 'bold' },
+                alternateRowStyles: { fillColor: [245, 245, 245] },
+                margin: { left: 5, right: 5 },
+            });
+            // Summary footer
+            const finalY = (doc.lastAutoTable?.finalY ?? 20) + 6;
+            doc.setFontSize(8);
+            doc.text(`Grand Total: ₹${decimalFix(grandOrderTotal)}   Cash: ₹${decimalFix(grandTotalCash)}   Online: ₹${decimalFix(grandTotalOnline)}   Received: ₹${decimalFix(grandTotalCash + grandTotalOnline)}   Remaining: ₹${decimalFix(grandOrderTotal - (grandTotalCash + grandTotalOnline) + grandTotalBalance)}`, 10, finalY);
+            doc.save(`${customerName.replace(/ /g, '_')}_Report_${startDate}_to_${endDate}.pdf`);
+        };
 
 
         return (
@@ -601,7 +721,8 @@ export const Report = ({ isLogged }) => {
                     sx={{
                         overflow: "auto",
                         width: { xs: '100%', md: 'auto' },
-                        flexGrow: 1
+                        flexGrow: 1,
+
                     }}
                 >
                     <Stack
@@ -629,6 +750,8 @@ export const Report = ({ isLogged }) => {
                                     <Table
                                         variant="outlined"
                                         color="neutral"
+                                        size="md"
+                                        className="bcri"
                                         sx={{
                                             width: "100%",
                                             tableLayout: "auto",
@@ -646,28 +769,28 @@ export const Report = ({ isLogged }) => {
                                         <thead>
                                             <tr className="!border-b-0">
                                                 <th className="!border-b-0">
-                                                    <span style={{ fontWeight: "bold", color: "black" }}>
+                                                    <span style={{ color: "black" }}>
                                                         {
                                                             `Customer : ${titleCase(report.customer.user.name)}`
                                                         }
                                                     </span>
                                                 </th>
                                                 <th className="!border-b-0">
-                                                    <span style={{ fontWeight: "bold", color: "black" }}>
+                                                    <span style={{ color: "black" }}>
                                                         {
                                                             `Address : ${titleCase(report.customer.user.address)}`
                                                         }
                                                     </span>
                                                 </th>
                                                 <th className="!border-b-0">
-                                                    <span style={{ fontWeight: "bold", color: "black" }}>
+                                                    <span style={{ color: "black" }}>
                                                         {
                                                             `Phone No. : ${report.customer.user.phone_no}`
                                                         }
                                                     </span>
                                                 </th>
                                                 <th className="!border-b-0">
-                                                    <span style={{ fontWeight: "bold", color: "black" }}>
+                                                    <span style={{ color: "black" }}>
                                                         {
                                                             `Bill Date Range : ${startDate} to ${endDate}`
                                                         }
@@ -676,7 +799,7 @@ export const Report = ({ isLogged }) => {
 
                                                 {addOutstanding ? <>
                                                     <th className="!border-b-0">
-                                                        <span style={{ fontWeight: "bold", color: "black" }}>
+                                                        <span style={{ color: "black" }}>
                                                             {
                                                                 `Outstanding : ₹${decimalFix(apiOutstanding - (grandOrderTotal - (grandTotalOnline + grandTotalCash)))}`
                                                             }
@@ -691,9 +814,10 @@ export const Report = ({ isLogged }) => {
                                     </Table>
                                     <Table
                                         borderAxis="both"
-                                        size="md"
+                                        // size="sm"
                                         variant="outlined"
                                         color="neutral"
+                                        className="bcri"
                                         sx={{
                                             width: "100%",
                                             tableLayout: "auto",
@@ -725,6 +849,7 @@ export const Report = ({ isLogged }) => {
                                     <Table
                                         variant="outlined"
                                         color="neutral"
+                                        size="sm"
                                         sx={{
                                             width: "100%",
                                             tableLayout: "auto",
@@ -749,35 +874,35 @@ export const Report = ({ isLogged }) => {
                                         </thead>
                                     </Table>
                                     <Divider sx={{ backgroundColor: "#979797", opacity: 0.5, m: 1 }} />
-                                    <Stack direction="row" gap={2}>
+                                    <Stack direction="row" gap={2} id="pdf-summary">
                                         <Divider className="w-full" orientation={"vertical"}
                                             sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
                                         {
                                             [...KGS].sort((a, b) => a - b).map((kg, index) => {
                                                 return (<><Stack direction="column">
                                                     <span
-                                                        className="font-bold text-black">{`${kg}KG`} : {toNumber(KGS_COUNT[`sent${kg}`])}</span>
+                                                        className="bcrbi text-black">{`${kg} KG`} : {toNumber(KGS_COUNT[`sent${kg}`])}</span>
                                                     <Divider className="w-full" orientation={"horizontal"}
                                                         sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
                                                     <span
-                                                        className="font-bold text-black">{`NC`} : {toNumber(KGS_COUNT[`nc${kg}`])}</span>
+                                                        className="bcrbi text-black">{`NC`} : {toNumber(KGS_COUNT[`nc${kg}`])}</span>
                                                     <Divider className="w-full" orientation={"horizontal"}
                                                         sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
                                                     <span
-                                                        className="font-bold text-black">{`Total`} : {toNumber(KGS_COUNT[`sent${kg}`]) + toNumber(KGS_COUNT[`nc${kg}`])}</span>
+                                                        className="bcrbi text-black">{`Total`} : {toNumber(KGS_COUNT[`sent${kg}`]) + toNumber(KGS_COUNT[`nc${kg}`])}</span>
                                                     <Divider className="w-full" orientation={"horizontal"}
                                                         sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
                                                     <span
-                                                        className="font-bold text-black">{`MT`} : {toNumber(KGS_COUNT[`mt${kg}`])}</span>
+                                                        className="bcrbi text-black">{`MT`} : {toNumber(KGS_COUNT[`mt${kg}`])}</span>
                                                     <Divider className="w-full" orientation={"horizontal"}
                                                         sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
                                                     {toNumber(KGS_COUNT[`mt_nc${kg}`]) > 0 && (<>
-                                                        <span className="font-bold text-red-700">{`NC Return`} : {toNumber(KGS_COUNT[`mt_nc${kg}`])}</span>
+                                                        <span className="bcrbi text-red-700">{`NC Return`} : {toNumber(KGS_COUNT[`mt_nc${kg}`])}</span>
                                                         <Divider className="w-full" orientation={"horizontal"}
                                                             sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
                                                     </>)}
                                                     <span
-                                                        className="font-bold text-black">{`Pending`} : {toNumber(KGS_COUNT[`sent${kg}`]) - toNumber(KGS_COUNT[`mt${kg}`])}</span>
+                                                        className="bcrbi text-black">{`Pending`} : {toNumber(KGS_COUNT[`sent${kg}`]) - toNumber(KGS_COUNT[`mt${kg}`])}</span>
                                                 </Stack>
                                                     <Divider className="w-full" orientation={"vertical"}
                                                         sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
@@ -791,51 +916,51 @@ export const Report = ({ isLogged }) => {
                                         <Divider className="w-full" orientation={"vertical"}
                                             sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
                                         <span
-                                            className="font-bold text-black">{`Total KG : ${grandQtyKgTotal}`}kg</span>
+                                            className="bcrbi text-black">{`Total KG : ${grandQtyKgTotal}`} kg</span>
                                         <Divider className="w-full" orientation={"vertical"}
                                             sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
-                                        <span className="font-bold text-black">{`Total MT: ${grandMtKgTotal}`}kg</span>
+                                        <span className="bcrbi text-black">{`Total MT: ${grandMtKgTotal}`} kg</span>
                                         <Divider className="w-full" orientation={"vertical"}
                                             sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
                                         <span
-                                            className="font-bold text-black">{`Total Pending: ${(grandQtyKgTotal - grandMtKgTotal)}`}kg</span>
+                                            className="bcrbi text-black">{`Total Pending: ${(grandQtyKgTotal - grandMtKgTotal)}`} kg</span>
                                     </Stack>
                                     <Divider sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
                                     <Stack direction="row" gap={2}>
                                         <Divider className="w-full" orientation={"vertical"}
                                             sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
-                                        <span className="font-bold text-black">
+                                        <span className="bcrbi text-black">
                                             {
                                                 `Grand Total : ₹${decimalFix(grandOrderTotal)}`
                                             }
                                         </span>
                                         <Divider className="w-full" orientation={"vertical"}
                                             sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
-                                        <span style={{ fontWeight: "bold", color: "#001BB7" }}>
+                                        <span style={{ color: "#001BB7" }} className="bcrbi text-black" >
                                             {
                                                 `Total Cash : ₹${decimalFix(grandTotalCash)}`
                                             }
                                         </span>
                                         <Divider className="w-full" orientation={"vertical"}
                                             sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
-                                        <span style={{ fontWeight: "bold", color: "#001BB7" }}>
+                                        <span style={{ color: "#001BB7" }} className="bcrbi text-black">
                                             {
                                                 `Total Online : ₹${decimalFix(grandTotalOnline)}`
                                             }
                                         </span>
                                         <Divider className="w-full" orientation={"vertical"}
                                             sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
-                                        <span style={{ fontWeight: "bold", color: "#0A6847" }}>
+                                        <span style={{ color: "#0A6847" }} className="bcrbi text-black">
                                             {
                                                 `Total Received : ₹${decimalFix(grandTotalOnline + grandTotalCash)}`
                                             }
                                         </span>
                                         <Divider className="w-full" orientation={"vertical"}
                                             sx={{ backgroundColor: "#979797", opacity: 0.5 }} />
-                                        <span style={{ fontWeight: "bold", color: "#af4831" }}>
+                                        <span style={{ color: "#af4831" }} className="bcrbi text-black">
                                             {
 
-                                                `Total Remaining : ₹${decimalFix(grandOrderTotal - (grandTotalOnline + grandTotalCash))}`
+                                                `Total Remaining : ₹${decimalFix(grandOrderTotal - (grandTotalOnline + grandTotalCash) + grandTotalBalance)}`
                                             }
                                         </span>
                                     </Stack>
@@ -892,7 +1017,7 @@ export const Report = ({ isLogged }) => {
                                         dispatch(sendBillToCustomer(
                                             currentUrl,
                                             customerNumber,
-                                            decimalFix(grandOrderTotal - (grandTotalOnline + grandTotalCash)).toString()
+                                            decimalFix(grandOrderTotal - (grandTotalOnline + grandTotalCash) + grandTotalBalance).toString()
                                         ));
                                     }}
                                     sx={{
@@ -920,8 +1045,6 @@ export const Report = ({ isLogged }) => {
                         <Button
                             onClick={() => {
                                 downloadBillAsPdf()
-                                // downloadPDFContent()
-                                //download file as PDF
                             }}
                             sx={{
                                 width: { xs: '100%', md: 'auto' }
@@ -1143,7 +1266,7 @@ export const Report = ({ isLogged }) => {
             {isDownloading && (
                 <Box sx={{
                     position: 'fixed', inset: 0, zIndex: 9999,
-                    backgroundColor: 'rgba(0,0,0,0.55)',
+                    backgroundColor: 'rgba(0,0,0,0.6)',
                     display: 'flex', flexDirection: 'column',
                     alignItems: 'center', justifyContent: 'center', gap: 2,
                 }}>
@@ -1416,14 +1539,14 @@ function OrderRow({ orders, allGas, plants, showBreakdown, setShowBreakdown }) {
 function Heading() {
     return (
         <>
-            <span style={{
+            <span className="barlow-condensed-bold" style={{
                 fontWeight: "bold",
                 color: "black",
                 fontSize: "xx-large",
                 textAlign: "center"
             }}>SHREE RAM DISTRIBUTORS
             </span>
-            <span style={{ color: "black", textAlign: "center" }}><i>Address:SHREE RAM DISTRIBUTOR SHOP NO. 3 OPP ESSAR PUMP , NEAR DADRA GARDEN VAPI SILVASSA ROAD DADRA , DADRA NAGAR HAVELI (U.T.), <br />GST: 26APTPP2340E1ZT, Phone: +917984240723, Email : jitenrpande@gmail.com
+            <span className="barlow-condensed-medium-italic" style={{ color: "black", textAlign: "center" }}><i>Address:SHREE RAM DISTRIBUTOR SHOP NO. 3 OPP ESSAR PUMP , NEAR DADRA GARDEN VAPI SILVASSA ROAD DADRA , DADRA NAGAR HAVELI (U.T.), <br />GST: 26APTPP2340E1ZT, Phone: +917984240723, Email : jitenrpande@gmail.com
             </i></span>
             {/*<Divider sx={{backgroundColor: "#979797", m: 1}}/>*/}
         </>

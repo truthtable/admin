@@ -481,7 +481,18 @@ export default function DeliveryHistory() {
             });
         }
 
+
+
         sortedDeliveries.forEach((delivery, i) => {
+
+            let isAdmin = false;
+            // console.log(ADMIN_LIST);
+            // console.log(delivery?.courier_boy.id);
+            // console.log(ADMIN_LIST.get(delivery?.courier_boy.id));
+            if (ADMIN_LIST.get(delivery?.courier_boy.id)) {
+                isAdmin = true;
+            }
+
             const correction = delivery.correction;
             const gasDataMap = new MapObjectManager();
             //console.log("delivery.gas_deliveries", delivery.gas_deliveries);
@@ -548,7 +559,9 @@ export default function DeliveryHistory() {
             sortedKGS.forEach(kg => {
 
                 const temp = gasObjs[`kg${kg}`];
+
                 if (temp) {
+
                     const total = temp.rate ? (toNumber(temp.qty) * toNumber(temp.rate)) : "-";
                     normalSubTotal += temp.rate ? total : 0;
                     const ncTotal = temp.ncRate ? (toNumber(temp.nc) * toNumber(temp.ncRate)) : "-";
@@ -636,6 +649,11 @@ export default function DeliveryHistory() {
                         (mtNcTotal === "-") ? "" : (mtNcTotal ? -mtNcTotal : "")
                     );
                 } else {
+
+                    if (isAdmin) {
+                        subTotal = 0;
+                    }
+
                     temptKgsList.push(
                         <DataCell correction={correction} key={`1delivery-${i}-kg${kg}`}
                             bgColor={randomLightColor(kg)}>{"-"}</DataCell>,
@@ -665,11 +683,6 @@ export default function DeliveryHistory() {
                 diaryNo = `[${diaryNo}] `;
             } else {
                 diaryNo = ``;
-            }
-
-            let isAdmin = false;
-            if (ADMIN_LIST.get(delivery?.courier_boy.id)) {
-                isAdmin = true;
             }
 
             if (isAdmin) {
@@ -793,7 +806,7 @@ export default function DeliveryHistory() {
                                     key={`delivery-${i}-cash`}>{dashIfZero(cash)}</DataCell>
                                 <DataCell correction={correction}
                                     key={`delivery-${i}-received`}>{displayReceived}</DataCell>
-                                <DataCell correction={correction} key={`delivery-${i}-balance`}>{balance}</DataCell>
+                                <DataCell correction={correction} key={`delivery-${i}-balance`}>{decimalFix(balance)}</DataCell>
                             </tr>
                         }
                     />
@@ -1324,7 +1337,8 @@ export const DataCell = React.memo(({
     correction = false,
     textNoWrap = "!text-nowrap",
     colspan = 0,
-    children
+    children,
+    fontWeight = "bold"
 }) => {
     return (
         <td colSpan={colspan} style={{ backgroundColor: `${bgColor}` }}>
@@ -1332,7 +1346,7 @@ export const DataCell = React.memo(({
                 className={`${textNoWrap} !p-1`}
                 style={{
                     color: correction ? "red" : "black",
-                    fontWeight: "bold",
+                    fontWeight: fontWeight,
                     display: "flex",
                     alignItems: (colspan > 0) ? "start" : "center",
                     justifyContent: "center",
