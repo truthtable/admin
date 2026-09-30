@@ -1257,9 +1257,8 @@ export default function DeliveryHistory() {
                                             >
                                                 <span>{kg}kg</span>
                                                 <Divider className="!bg-black" orientation="vertical" />
-                                                <MdCallMade size={"0.8em"} />
                                                 <span>
-                                                    {`nc:${(kgsCount?.[`nc_${kg}`] || 0)} + ${(kgsCount?.[`qty_${kg}`] || 0)} = ${(kgsCount?.[`qty_${kg}`] || 0) + (kgsCount?.[`nc_${kg}`] || 0)}`}
+                                                    {`(nc):${(kgsCount?.[`nc_${kg}`] || 0)} + ${(kgsCount?.[`qty_${kg}`] || 0)} = ${(kgsCount?.[`qty_${kg}`] || 0) + (kgsCount?.[`nc_${kg}`] || 0)}`}
                                                 </span>
                                                 <Divider className="!bg-black" orientation="vertical" />
                                                 <MdCallReceived
@@ -1270,12 +1269,12 @@ export default function DeliveryHistory() {
                                                 />
                                                 <span>
                                                     {
-                                                        `nc:${kgsCount?.[`mt_nc_${kg}`] || 0} + ${kgsCount?.[`mt_${kg}`] || 0} = ${kgsCount?.[`mt_${kg}`] + kgsCount?.[`mt_nc_${kg}`] || 0}`
+                                                        `(mt-nc):${kgsCount?.[`mt_nc_${kg}`] || 0} + (mt):${kgsCount?.[`mt_${kg}`] || 0} = ${kgsCount?.[`mt_${kg}`] + kgsCount?.[`mt_nc_${kg}`] || 0}`
                                                     }
                                                 </span>
                                                 <Divider className="!bg-black" orientation="vertical" />
                                                 <MdCallMissedOutgoing size={"0.8em"} />
-                                                <span>{(kgsCount?.[`qty_${kg}`] || 0) - (kgsCount?.[`mt_${kg}`] || 0)}</span>
+                                                <span>p:{(kgsCount?.[`qty_${kg}`] || 0) - (kgsCount?.[`mt_${kg}`] || 0)}</span>
                                             </Stack>
                                         ))
                                     }
