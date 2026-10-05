@@ -155,10 +155,14 @@ const ViewCustomer = () => {
         return filtered;
     }, [searchableCustomers, sortBy, deferredSearchText, deferredSearchBy]);
     xcombineData = filteredCustomers;
+    // Force-fetch from API on every mount (browser refresh), regardless of cached IndexedDB data
     useEffect(() => {
-        if (c.customers === null && !customerData.isLoading) {
-            dispatch(fetchCustomerData());
+        dispatch(fetchCustomerData());
+        if (gasList.length == 0 && !gasLoading) {
+            dispatch(fetchGas());
         }
+    }, []);
+    useEffect(() => {
         if (gasList.length == 0 && !gasLoading) {
             dispatch(fetchGas())
         }
@@ -171,7 +175,7 @@ const ViewCustomer = () => {
         if (updateCustomer.isSuccessful) {
             dispatch(fetchCustomerData());
         }
-    }, [customerData, gasList, gasLoading, dispatch, updateCustomer, isCustomerPaymentsUpdateOrCreateSuccess]);
+    }, [gasList, gasLoading, dispatch, updateCustomer, isCustomerPaymentsUpdateOrCreateSuccess]);
     useEffect(() => {
         // firebase update
         const unsubscribe = gasServices.listenDataChange(() => {
