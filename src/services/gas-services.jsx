@@ -54,8 +54,13 @@ class gasDataService {
      // };
      listenDataChange = (callback) => {
           const refs = ref(realTimeDB, "root/change/");
+          let isFirst = true;
           // Return the unsubscribe function from onValue
           return onValue(refs, (snapshot) => {
+               if (isFirst) {
+                    isFirst = false;
+                    return; // skip initial emission on subscribe
+               }
                if (callback) {
                     callback();
                }

@@ -216,6 +216,15 @@ export default function DeliveryHistory() {
 
     //console.log(ADMIN_LIST)
 
+    const loadingRef = useRef(loading);
+    const userDataLoadingRef = useRef(userDataLoading);
+    const usersRef = useRef(users);
+    const allGasDataRef = useRef(allGasData);
+    useEffect(() => { loadingRef.current = loading; }, [loading]);
+    useEffect(() => { userDataLoadingRef.current = userDataLoading; }, [userDataLoading]);
+    useEffect(() => { usersRef.current = users; }, [users]);
+    useEffect(() => { allGasDataRef.current = allGasData; }, [allGasData]);
+
     const loadData = useCallback(({
         force = false,
     }) => {
@@ -231,22 +240,23 @@ export default function DeliveryHistory() {
             //api call
             dispatch(fetchDeliveries(fetchDeliveriesParams));
         }
-        if (!userDataLoading && !users && !loading) {
+        if (!userDataLoadingRef.current && !usersRef.current && !loadingRef.current) {
             dispatch(fetchUser());
         }
+        const gas = allGasDataRef.current;
         if (
-            !allGasData.isError
-            && !allGasData.isLoading
-            && !loading
-            && !userDataLoading
+            !gas.isError
+            && !gas.isLoading
+            && !loadingRef.current
+            && !userDataLoadingRef.current
             && (
-                !allGasData.data
-                || allGasData.data.data.length === 0
+                !gas.data
+                || gas.data.data.length === 0
             )
         ) {
             dispatch(fetchGasData());
         }
-    }, [dateStart, dateEnd, customerId, deliverBoyId, loading, dispatch, userDataLoading, users, allGasData, descending]);
+    }, [dateStart, dateEnd, customerId, deliverBoyId, descending, dispatch]);
 
 
     const handleEditClick = useCallback((delivery, date) => {
@@ -311,7 +321,7 @@ export default function DeliveryHistory() {
 
         const newHash = path + (params.toString() ? `?${params}` : '');
         if (`#${newHash}` !== window.location.hash) {
-            window.location.replace(window.location.pathname + window.location.search + `#${newHash}`);
+            history.replaceState(null, '', window.location.pathname + window.location.search + `#${newHash}`);
         }
     }, [customerId, deliverBoyId]);
 
